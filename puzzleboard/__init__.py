@@ -1,3 +1,4 @@
+import json
 import os
 
 from kivy.app import App
@@ -7,10 +8,12 @@ from kivy.lang import Builder
 from kivy.properties import ListProperty, NumericProperty, ObjectProperty
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
+from kivy.uix.splitter import Splitter
 from kivy.uix.widget import Widget
 
 from .prompts import save_puzzle_prompt, load_puzzle_prompt
@@ -20,6 +23,7 @@ panel_file = r'panel.png'
 panel_file_blue = r'panel_blue.png'
 panel_file_white = r'panel_white.png'
 panel_file_corner = r'panel_corner.png'
+category_background_file = r'category_background.png'
 
 Builder.load_string(r"""
 <Panel>:
@@ -38,7 +42,8 @@ Builder.load_string(r"""
         Label:
             id: txt
             color: 0, 0, 0, 0
-            font_size: self.size[0] * .85
+            font_name: 'Helvetica_try_me'
+            font_size: self.size[0]
             bold: True
             halign: 'center'
             valign: 'center'
@@ -52,7 +57,39 @@ Builder.load_string(r"""
             origin: root.center
     canvas.after:
         PopMatrix
-""".format(os.path.join(panels_dir, panel_file)))
+
+<Category>:
+    font_name: 'Helvetica_try_me'
+    canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: r'{}'
+""".format(
+    os.path.join(panels_dir, panel_file),
+    os.path.join(panels_dir, category_background_file)))
+
+def save_variable(key, value):
+    """
+    Save key-value pair in a JSON dict,
+    stored in the file `vars.json`
+    """
+    vars = get_variables()
+    vars[key] = value
+    with open('vars.json', 'w') as f:
+        json.dump(vars, f)
+
+def get_variables():
+    """
+    Get the JSON dict stored in the file `vars.json`.
+    Returns an empty dict if the file does not exist.
+    """
+    
+    try:
+        with open('vars.json') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
 
 def bind_keyboard(widget):
     """Provide keyboard focus to a widget"""
@@ -60,14 +97,112 @@ def bind_keyboard(widget):
     widget._keyboard = Window.request_keyboard(
         widget._keyboard_closed, widget)
     widget._keyboard.bind(on_key_down=widget._on_keyboard_down)
+    
+class PuzzleWithCategory(BoxLayout):
+    """BoxLayout containing the puzzleboard and category strip."""
+    
+    def __init__(self, **kwargs):
+        """Create the layout."""
+        
+        super(PuzzleWithCategory, self).__init__(
+            orientation='vertical', **kwargs)
+        
+        category = Category()
+        
+        self.add_widget(SavableSplitter(
+            'category_splitter',
+            category,
+            sizable_from='bottom'))
+        
+        self.add_widget(SplitterSurround(
+            'puzzleboard',
+            PuzzleLayout(category)))
+
+class SplitterSurround(BoxLayout):
+    """
+    A Layout surrounding its contents with SavableSplitters
+    on all four sides.
+    """
+    
+    def __init__(self, name, widget, **kwargs):
+        """
+        Create the layout.
+        `name` is a prefix appended to the Splitters' names.
+        `widget` is a widget to be placed in the layout.
+        """
+        
+        super(SplitterSurround, self).__init__(
+            orientation='vertical', **kwargs)
+        
+        self.add_widget(SavableSplitter(
+            name + '_top_splitter',
+            Widget(),
+            sizable_from='bottom'))
+        
+        middle = BoxLayout(orientation='horizontal')
+        middle.add_widget(SavableSplitter(
+            name + '_left_splitter',
+            Widget(),
+            sizable_from='right'))
+        middle.add_widget(widget)
+        middle.add_widget(SavableSplitter(
+            name + '_right_splitter',
+            Widget(),
+            sizable_from='left'))
+        self.add_widget(middle)
+        
+        self.add_widget(SavableSplitter(
+            name + '_bottom_splitter',
+            Widget(),
+            sizable_from='top'))
+        
+
+class SavableSplitter(Splitter):
+    """A Splitter that remembers its size hint."""
+    
+    def __init__(self, name, widget, **kwargs):
+        """
+        Create the Splitter.
+        `name` is the string that will be used as a key
+        by `save_variable()`.
+        `widget` is the widget that will be assigned
+        to this Splitter.
+        """
+        
+        super(SavableSplitter, self).__init__(**kwargs)
+        
+        self.min_size = 0
+        self.strip_size = '5pt'
+        
+        # get saved location
+        if self.sizable_from in ['top', 'bottom']:
+            self.size_hint_y = get_variables().get(name)
+            axis = 1
+        else:
+            self.size_hint_x = get_variables().get(name)
+            axis = 0
+        
+        # when the splitter is released, save its location
+        self.bind(
+            on_release=lambda i: save_variable(name,
+                self.size[axis] / self.parent.size[axis]))
+        
+        self.add_widget(widget)
+
+class Category(Label):
+    """Strip displaying the category."""
+    pass
 
 class PuzzleLayout(GridLayout):
     """GridLayout containing all Panels."""
     panel_size = ListProperty([]) # [width, height] from an Image object
+    category_label = ObjectProperty(None)
     
-    def __init__(self, rows=6, cols=16, **kwargs):
+    def __init__(self, category_label, rows=6, cols=16, **kwargs):
         """Create the layout and bind the keyboard."""
         super(PuzzleLayout, self).__init__(rows=rows, cols=cols, **kwargs)
+        self.category_label = category_label
+        
         for i in range(rows):
             for j in range(cols):
                 top_left = (1, 1)
@@ -147,14 +282,14 @@ class PuzzleLayout(GridLayout):
     
     def check_all(self, letter):
         """Check all Panels for a given letter and reveal matches."""
-        reveal_interval = 0.9 # seconds before letter is revealed
-        blue_interval = 0.3 # seconds the panel should be blue
+        reveal_interval = 1.5 # seconds between panels being revealed
+        blue_interval = 0.5 # seconds between panels turning blue
         
         if letter in 'abcdefghijklmnopqrstuvwxyz':
-            # indices in order from top to bottom, left to right
+            # indices in order from top to bottom, right to left
             indices = [
                     i + (j*self.cols)
-                    for i in range(self.cols)
+                    for i in range(self.cols-1, -1, -1)
                         for j in range(self.rows)
                 ][::-1]
             # the number of matches found so far,
@@ -180,11 +315,26 @@ class PuzzleLayout(GridLayout):
     
     def reveal_all(self):
         """Reveal the entire puzzle."""
-        for widget in self.children:
+        reveal_interval = 0.05 # seconds between letters being revealed
+        
+        # indices in order from top to bottom, left to right
+        indices = [
+                i + (j*self.cols)
+                for i in range(self.cols)
+                    for j in range(self.rows)
+            ][::-1]
+        matches = 0
+        for i in indices:
             try:
-                if widget.layout.text_label.text:
-                    widget.layout.show_letter()
+                layout = self.children[i].layout
+                if layout.hidden() and layout.text_label.text:
+                    # schedule panel reveal
+                    Clock.schedule_once(
+                        layout.show_letter,
+                        reveal_interval * (matches + 1))
+                    matches += 1
             except AttributeError:
+                # empty widget
                 pass
     
     def save_puzzle(self):
@@ -212,14 +362,16 @@ class PuzzleLayout(GridLayout):
         """
         Load a puzzle into the puzzleboard.
         """
-        interval = 0.1 # seconds between letters loading
-        puzzle = list(puzzle)
+        interval = 0.05 # seconds between letters loading
+        puzzle_string = list(puzzle['puzzle'])
+        
+        self.category_label.text = puzzle['category']
         
         # set letters
         for widget in self.children[::-1]:
             try:
                 layout = widget.layout
-                letter = puzzle.pop(0)
+                letter = puzzle_string.pop(0)
                 layout.text_label.color = [0, 0, 0, 0]
                 layout.text_label.text = '' if letter == ' ' else letter
                 layout.green()
@@ -462,4 +614,4 @@ class PuzzleBoardApp(App):
     def build(self):
         """Build the app."""
         
-        return PuzzleLayout()
+        return PuzzleWithCategory()

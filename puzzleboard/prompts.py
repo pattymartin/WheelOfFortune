@@ -73,6 +73,9 @@ def load_puzzle_prompt(callback):
     """
     Prompt the user to select a puzzle by name.
     The selected puzzle will then be passed to `callback`.
+    `callback` should be a function accepting a dict
+    with the keys 'category', 'clue', and 'puzzle'.
+    
     Returns a Popup instance.
     """
     
@@ -118,7 +121,7 @@ def load_puzzle_prompt(callback):
             except AttributeError:
                 # empty widget
                 pass
-        selected_puzzles = [puzzles[name]['puzzle'] for name in names]
+        selected_puzzles = [puzzles[name] for name in names]
         callback(selected_puzzles[0])
         
         popup.dismiss()
