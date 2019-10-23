@@ -19,6 +19,7 @@ panels_dir = os.path.join(os.path.dirname(__file__), r'panels')
 panel_file = r'panel.png'
 panel_file_blue = r'panel_blue.png'
 panel_file_white = r'panel_white.png'
+panel_file_corner = r'panel_corner.png'
 
 Builder.load_string(r"""
 <Panel>:
@@ -37,10 +38,20 @@ Builder.load_string(r"""
         Label:
             id: txt
             color: 0, 0, 0, 0
-            font_size: self.size[0]
+            font_size: self.size[0] * .85
             bold: True
             halign: 'center'
             valign: 'center'
+
+<RotatedImage>:
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: 180
+            axis: (root.axis_x, root.axis_y, root.axis_z)
+            origin: root.center
+    canvas.after:
+        PopMatrix
 """.format(os.path.join(panels_dir, panel_file)))
 
 def bind_keyboard(widget):
@@ -59,13 +70,31 @@ class PuzzleLayout(GridLayout):
         super(PuzzleLayout, self).__init__(rows=rows, cols=cols, **kwargs)
         for i in range(rows):
             for j in range(cols):
-                if (
+                top_left = (1, 1)
+                top_right = (1, cols-2)
+                bottom_left = (rows-2, 1)
+                bottom_right = (rows-2, cols-2)
+                corners = [top_left, top_right,
+                           bottom_left, bottom_right]
+                
+                if (i, j) in corners:
+                    source_image = os.path.join(panels_dir, panel_file_corner)
+                    if (i, j) == top_left:
+                        # rotate image 180 degrees
+                        widget = RotatedImage(0, 0, 1, source=source_image)
+                    elif (i, j) == top_right:
+                        # flip image vertically
+                        widget = RotatedImage(1, 0, 0, source=source_image)
+                    elif (i, j) == bottom_left:
+                        # flip image horizontally
+                        widget = RotatedImage(0, 1, 0, source=source_image)
+                    else:
+                        widget = Image(source=source_image)
+                    self.add_widget(widget)
+                elif (
                         i in (0, rows-1)
-                        or j in (0, cols-1)
-                        or (i, j) in [
-                            (1, 1), (1, cols-2),
-                            (rows-2, 1), (rows-2, cols-2)]):
-                    # create blank widgets for the corners and borders.
+                        or j in (0, cols-1)):
+                    # create blank widgets for the borders.
                     # there are hidden widgets along the top, bottom,
                     # left, and right, that are resized to push the panels
                     # into the proper alignment
@@ -415,6 +444,17 @@ class Panel(Button):
             except AttributeError:
                 # empty widget
                 pass
+
+class RotatedImage(Image):
+    axis_x = NumericProperty()
+    axis_y = NumericProperty()
+    axis_z = NumericProperty()
+    
+    def __init__(self, x, y, z, **kwargs):
+        super(RotatedImage, self).__init__(**kwargs)
+        self.axis_x = x
+        self.axis_y = y
+        self.axis_z = z
 
 class PuzzleBoardApp(App):
     """Puzzleboard Kivy App"""
