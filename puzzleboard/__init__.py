@@ -168,14 +168,16 @@ class PuzzleLayout(GridLayout):
             except AttributeError:
                 # empty widget
                 pass
-        save_puzzle_prompt(puzzle, lambda: bind_keyboard(self))
+        prompt = save_puzzle_prompt(puzzle)
+        prompt.bind(on_dismiss=lambda instance: bind_keyboard(self))
+        prompt.open()
     
     def choose_puzzle(self):
         """
         Prompt the user to select a puzzle,
         then load that puzzle.
         """
-        load_puzzle_prompt(self.load_puzzle)
+        load_puzzle_prompt(self.load_puzzle).open()
     
     def load_puzzle(self, puzzle):
         """

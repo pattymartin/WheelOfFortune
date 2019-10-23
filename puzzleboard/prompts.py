@@ -10,19 +10,21 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
+from . import strings
+
 puzzle_file = 'puzzles.json'
 
-def save_puzzle_prompt(puzzle, callback):
+def save_puzzle_prompt(puzzle):
     """
-    Prompt the user to save a puzzle,
-    Then run `callback` when popup is dismissed.
+    Prompt the user to save a puzzle.
+    Returns a Popup instance.
     """
     
     content = BoxLayout(orientation='vertical')
     
-    name_layout, name_label, name_input = _input_layout('Name')
-    cat_layout, cat_label, cat_input = _input_layout('Category')
-    clue_layout, clue_label, clue_input = _input_layout('Clue')
+    name_layout, name_label, name_input = _input_layout(strings.label_name)
+    cat_layout, cat_label, cat_input = _input_layout(strings.label_category)
+    clue_layout, clue_label, clue_input = _input_layout(strings.label_clue)
     
     content.add_widget(name_layout)
     content.add_widget(cat_layout)
@@ -31,33 +33,20 @@ def save_puzzle_prompt(puzzle, callback):
     content.add_widget(Widget())
     
     button_layout = BoxLayout(orientation='horizontal')
-    button_close = Button(text='Close')
-    button_save = Button(text='Save')
+    button_close = Button(text=strings.button_close)
+    button_save = Button(text=strings.button_save)
     button_layout.add_widget(button_close)
     button_layout.add_widget(button_save)
     content.add_widget(button_layout)
     
-    popup = Popup(title='Save puzzle', content=content)
-    
-    def wrap_with_callback(function1, function2):
-        """
-        Wrap `function1` to call `function2` afterwards.
-        """
-        
-        def do_callback(instance=None):
-            if function1:
-                function1()
-            if function2:
-                function2()
-        return do_callback
-    
-    popup.dismiss = wrap_with_callback(popup.dismiss, callback)
+    popup = Popup(title=strings.title_save_puzzle, content=content)
     
     def input_save(instance):
         """
         Get text from the input fields,
         and save the puzzle.
         """
+        
         name = name_input.text
         category = cat_input.text
         clue = clue_input.text
@@ -74,18 +63,19 @@ def save_puzzle_prompt(puzzle, callback):
                 name_label.color = [1, 0, 0, 1]
             if not category:
                 cat_label.color = [1, 0, 0, 1]
-            pass
     
-    button_close.bind(on_press=popup.dismiss)
-    button_save.bind(on_press=input_save)
+    button_close.bind(on_release=popup.dismiss)
+    button_save.bind(on_release=input_save)
     
-    popup.open()
+    return popup
 
 def load_puzzle_prompt(callback):
     """
     Prompt the user to select a puzzle by name.
     The selected puzzle will then be passed to `callback`.
+    Returns a Popup instance.
     """
+    
     content = BoxLayout(orientation='vertical')
     
     puzzle_layout = BoxLayout(orientation='vertical', size_hint=(1, None))
@@ -104,15 +94,15 @@ def load_puzzle_prompt(callback):
     
     button_layout = BoxLayout(orientation='horizontal')
     button_layout.size_hint_y = button_layout.size_hint_min_y
-    button_close = Button(text='Close')
+    button_close = Button(text=strings.button_close)
     button_close.size_hint_y = button_close.size_hint_min_y
-    button_confirm = Button(text='Confirm')
+    button_confirm = Button(text=strings.button_confirm)
     button_confirm.size_hint_y = button_confirm.size_hint_min_y
     button_layout.add_widget(button_close)
     button_layout.add_widget(button_confirm)
     content.add_widget(button_layout)
     
-    popup = Popup(title='Select puzzle', content=content)
+    popup = Popup(title=strings.title_select_puzzle, content=content)
     
     def input_save(instance):
         """
@@ -128,17 +118,15 @@ def load_puzzle_prompt(callback):
             except AttributeError:
                 # empty widget
                 pass
-        selected_puzzles = [
-            puzzles[name]['puzzle']
-            for name in names]
+        selected_puzzles = [puzzles[name]['puzzle'] for name in names]
         callback(selected_puzzles[0])
         
         popup.dismiss()
     
-    button_close.bind(on_press=popup.dismiss)
-    button_confirm.bind(on_press=input_save)
+    button_close.bind(on_release=popup.dismiss)
+    button_confirm.bind(on_release=input_save)
     
-    popup.open()
+    return popup
 
 def yes_no_prompt(text, yes_callback, no_callback):
     """
@@ -146,21 +134,23 @@ def yes_no_prompt(text, yes_callback, no_callback):
     with yes and no buttons.
     Yes and no buttons are bound to `yes_callback` and `no_callback`
     respectively.
+    Returns a Popup instance.
     """
+    
     content = BoxLayout(orientation='vertical')
     content.add_widget(Label(text=text))
     
     button_layout = BoxLayout(orientation='horizontal')
     button_layout.size_hint_y = button_layout.size_hint_min_y
-    button_no = Button(text='No')
+    button_no = Button(text=strings.button_no)
     button_no.size_hint_y = button_no.size_hint_min_y
-    button_yes = Button(text='Yes')
+    button_yes = Button(text=strings.button_yes)
     button_yes.size_hint_y = button_yes.size_hint_min_y
     button_layout.add_widget(button_no)
     button_layout.add_widget(button_yes)
     content.add_widget(button_layout)
     
-    popup = Popup(title='Name exists', content=content)
+    popup = Popup(title=strings.title_name_exists, content=content)
     
     def wrap_with_dismiss(callback):
         """
@@ -173,10 +163,10 @@ def yes_no_prompt(text, yes_callback, no_callback):
             popup.dismiss()
         return do_callback
     
-    button_no.bind(on_press=wrap_with_dismiss(no_callback))
-    button_yes.bind(on_press=wrap_with_dismiss(yes_callback))
+    button_no.bind(on_release=wrap_with_dismiss(no_callback))
+    button_yes.bind(on_release=wrap_with_dismiss(yes_callback))
     
-    popup.open()
+    return popup
 
 def add_puzzle(name, puzzle_dict):
     """
@@ -188,11 +178,11 @@ def add_puzzle(name, puzzle_dict):
     puzzles = read_puzzles()
     if name in puzzles.keys():
         yes_no_prompt(
-            'A puzzle with the name "{}" already exists.\nOverwrite?'.format(
+            strings.label_name_exists.format(
                 name),
             lambda: write_puzzle(puzzles, name, puzzle_dict),
             None
-            )
+            ).open()
     else:
         write_puzzle(puzzles, name, puzzle_dict)
 
