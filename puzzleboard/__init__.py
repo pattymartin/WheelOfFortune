@@ -59,7 +59,8 @@ Builder.load_string(r"""
         PopMatrix
 
 <Category>:
-    font_name: 'Helvetica_try_me'
+    font_name: 'Gotham_Black_Regular'
+    font_size: self.size[1] * .75
     canvas.before:
         Rectangle:
             pos: self.pos
