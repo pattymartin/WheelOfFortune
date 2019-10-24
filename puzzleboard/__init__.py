@@ -243,15 +243,14 @@ class PuzzleLayout(GridLayout):
         bind_keyboard(self)
         
         if self.queue:
-            Clock.schedule_once(self.do_command, 5)
+            Clock.schedule_once(self.check_queue, 5)
     
-    def do_command(self, instance):
+    def check_queue(self, instance):
         """
-        Retrieve commands from the queue and execute them.
+        Check the queue for incoming commands to execute.
         """
-        
         try:
-            command, args = self.queue.get(block=False)
+            command, args = self.queue.a.get(block=False)
             if command == 'letter':
                 # args is a guessed letter
                 self.check_all(args)
@@ -262,7 +261,7 @@ class PuzzleLayout(GridLayout):
                 self.reveal_all()
         except:
             pass
-        Clock.schedule_once(self.do_command, 1)
+        Clock.schedule_once(self.check_queue, 1)
     
     def do_layout(self, *args):
         super(PuzzleLayout, self).do_layout(*args)
@@ -388,6 +387,9 @@ class PuzzleLayout(GridLayout):
         puzzle_string = list(puzzle['puzzle'])
         
         self.category_label.text = puzzle['category'].upper()
+        
+        if self.queue:
+            self.queue.b.put(('puzzle_loaded', puzzle))
         
         # set letters
         for widget in self.children[::-1]:
@@ -638,7 +640,7 @@ class PuzzleboardApp(App):
     def __init__(self, queue=None, **kwargs):
         """
         Create the App.
-        `queue` is a Queue instance from `multiprocessing`.
+        `queue` is a CommQueue instance from `manager`.
         """
         super(PuzzleboardApp, self).__init__(**kwargs)
         self.queue = queue
