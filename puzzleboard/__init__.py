@@ -3,7 +3,6 @@ import os
 
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import ListProperty, NumericProperty, ObjectProperty
 from kivy.uix.anchorlayout import AnchorLayout
@@ -94,15 +93,13 @@ def get_variables():
 
 def bind_keyboard(widget):
     """Provide keyboard focus to a widget"""
-    
-    widget._keyboard = Window.request_keyboard(
-        widget._keyboard_closed, widget)
-    widget._keyboard.bind(on_key_down=widget._on_keyboard_down)
+    # function must be overridden
+    pass
     
 class PuzzleWithCategory(BoxLayout):
     """BoxLayout containing the puzzleboard and category strip."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, queue=None, **kwargs):
         """Create the layout."""
         
         super(PuzzleWithCategory, self).__init__(
@@ -117,7 +114,7 @@ class PuzzleWithCategory(BoxLayout):
         
         self.add_widget(SplitterSurround(
             'puzzleboard',
-            PuzzleLayout(category)))
+            PuzzleLayout(category, queue=queue)))
 
 class SplitterSurround(BoxLayout):
     """
@@ -198,11 +195,13 @@ class PuzzleLayout(GridLayout):
     """GridLayout containing all Panels."""
     panel_size = ListProperty([]) # [width, height] from an Image object
     category_label = ObjectProperty(None)
+    queue = ObjectProperty(None)
     
-    def __init__(self, category_label, rows=6, cols=16, **kwargs):
+    def __init__(self, category_label, rows=6, cols=16, queue=None, **kwargs):
         """Create the layout and bind the keyboard."""
         super(PuzzleLayout, self).__init__(rows=rows, cols=cols, **kwargs)
         self.category_label = category_label
+        self.queue = queue
         
         for i in range(rows):
             for j in range(cols):
@@ -242,6 +241,28 @@ class PuzzleLayout(GridLayout):
                     self.add_widget(panel)
                     self.panel_size = panel.layout.source_image.texture.size
         bind_keyboard(self)
+        
+        if self.queue:
+            Clock.schedule_once(self.do_command, 5)
+    
+    def do_command(self, instance):
+        """
+        Retrieve commands from the queue and execute them.
+        """
+        
+        try:
+            command, args = self.queue.get(block=False)
+            if command == 'letter':
+                # args is a guessed letter
+                self.check_all(args)
+            elif command == 'load':
+                # args is a puzzle to be loaded
+                self.load_puzzle(args)
+            elif command == 'reveal':
+                self.reveal_all()
+        except:
+            pass
+        Clock.schedule_once(self.do_command, 1)
     
     def do_layout(self, *args):
         super(PuzzleLayout, self).do_layout(*args)
@@ -366,7 +387,7 @@ class PuzzleLayout(GridLayout):
         interval = 0.05 # seconds between letters loading
         puzzle_string = list(puzzle['puzzle'])
         
-        self.category_label.text = puzzle['category']
+        self.category_label.text = puzzle['category'].upper()
         
         # set letters
         for widget in self.children[::-1]:
@@ -609,10 +630,20 @@ class RotatedImage(Image):
         self.axis_y = y
         self.axis_z = z
 
-class PuzzleBoardApp(App):
+class PuzzleboardApp(App):
     """Puzzleboard Kivy App"""
+    
+    queue = None
+    
+    def __init__(self, queue=None, **kwargs):
+        """
+        Create the App.
+        `queue` is a Queue instance from `multiprocessing`.
+        """
+        super(PuzzleboardApp, self).__init__(**kwargs)
+        self.queue = queue
     
     def build(self):
         """Build the app."""
         
-        return PuzzleWithCategory()
+        return PuzzleWithCategory(self.queue)
