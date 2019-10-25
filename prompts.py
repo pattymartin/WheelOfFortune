@@ -10,7 +10,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
-import data_caching, strings, used_letters
+import data_caching, strings, used_letters, values
 
 def save_puzzle_prompt(puzzle):
     """
@@ -58,9 +58,9 @@ def save_puzzle_prompt(puzzle):
             popup.dismiss()
         else:
             if not name:
-                name_label.color = [1, 0, 0, 1]
+                name_label.color = values.color_red
             if not category:
-                cat_label.color = [1, 0, 0, 1]
+                cat_label.color = values.color_red
     
     button_close.bind(on_release=popup.dismiss)
     button_save.bind(on_release=input_save)
@@ -210,11 +210,11 @@ class ManagerSettingsPrompt(Popup):
         wedges_label.size_hint_y = 1
         wedges_layout.size_hint_y = 1
         
-        values = data_caching.get_variables()
-        vowel_input.text = str(values.get('vowel_price', ''))
-        min_input.text = str(values.get('min_win', ''))
+        cash_values = data_caching.get_variables()
+        vowel_input.text = str(cash_values.get('vowel_price', ''))
+        min_input.text = str(cash_values.get('min_win', ''))
         wedges_input.text = '\r\n'.join([str(i)
-            for i in values.get('cash_values', [])])
+            for i in cash_values.get('cash_values', [])])
         
         def input_save(instance):
             """
@@ -223,13 +223,13 @@ class ManagerSettingsPrompt(Popup):
             """
             vowel_price = data_caching.str_to_int(vowel_input.text)
             min_win = data_caching.str_to_int(min_input.text)
-            values = [data_caching.str_to_int(line)
+            cash_values = [data_caching.str_to_int(line)
                 for line in wedges_input.text.split()]
             
             data_caching.update_variables({
                 'vowel_price': vowel_price if vowel_price else '',
                 'min_win': min_win if min_win else '',
-                'cash_values': sorted([v for v in values if v])})
+                'cash_values': sorted([v for v in cash_values if v])})
             
             self.dismiss()
         

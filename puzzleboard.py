@@ -12,9 +12,11 @@ from kivy.uix.label import Label
 from kivy.uix.splitter import Splitter
 from kivy.uix.widget import Widget
 
-import data_caching, prompts, strings
+import data_caching, prompts, strings, values
 
 Builder.load_string(r"""
+#:import strings strings
+#:import values values
 <Panel>:
     layout: ll
     LetterLayout:
@@ -27,12 +29,11 @@ Builder.load_string(r"""
         size: self.parent.size
         Image:
             id: src_im
-            source: r'{}'
+            source: strings.file_panel
         Label:
             id: txt
-            color: 0, 0, 0, 0
-            font_name: 'Helvetica_try_me'
-            font_size: self.size[0]
+            font_name: values.font_panel
+            font_size: self.size[0] * values.font_panel_size
             bold: True
             halign: 'center'
             valign: 'center'
@@ -48,16 +49,14 @@ Builder.load_string(r"""
         PopMatrix
 
 <Category>:
-    font_name: 'Gotham_Black_Regular'
-    font_size: self.size[1] * .75
+    font_name: values.font_category
+    font_size: self.size[1] * values.font_category_size
     canvas.before:
         Rectangle:
             pos: self.pos
             size: self.size
-            source: r'{}'
-""".format(
-    strings.file_panel,
-    strings.file_category_background))
+            source: strings.file_category_background
+""")
 
 def bind_keyboard(widget):
     """Provide keyboard focus to a widget"""
@@ -138,7 +137,7 @@ class SavableSplitter(Splitter):
         super(SavableSplitter, self).__init__(**kwargs)
         
         self.min_size = 0
-        self.strip_size = '5pt'
+        self.strip_size = values.splitter_size
         
         # get saved location
         if self.sizable_from in ['top', 'bottom']:
@@ -211,7 +210,7 @@ class PuzzleLayout(GridLayout):
         bind_keyboard(self)
         
         if self.queue:
-            Clock.schedule_once(self.check_queue, 5)
+            Clock.schedule_once(self.check_queue, values.queue_start)
     
     def check_queue(self, instance):
         """
@@ -231,7 +230,7 @@ class PuzzleLayout(GridLayout):
                 App.get_running_app().stop()
         except:
             pass
-        Clock.schedule_once(self.check_queue, 1)
+        Clock.schedule_once(self.check_queue, values.queue_interval)
     
     def do_layout(self, *args):
         super(PuzzleLayout, self).do_layout(*args)
@@ -273,9 +272,6 @@ class PuzzleLayout(GridLayout):
     
     def check_all(self, letter):
         """Check all Panels for a given letter and reveal matches."""
-        reveal_interval = 0.9 # seconds between panels being revealed
-        blue_interval = 0.5 # seconds between panels turning blue
-        
         if letter.lower() in 'abcdefghijklmnopqrstuvwxyz':
             # indices in order from top to bottom, right to left
             indices = [
@@ -294,11 +290,11 @@ class PuzzleLayout(GridLayout):
                         # schedule panel to turn blue
                         Clock.schedule_once(
                             layout.blue,
-                            blue_interval * (matches + 1))
+                            values.blue_interval * matches)
                         # schedule panel to be revealed
                         Clock.schedule_once(
                             layout.show_letter,
-                            reveal_interval * (matches + 1))
+                            values.reveal_interval * matches)
                         matches += 1
                 except AttributeError:
                     # empty widget
@@ -308,8 +304,6 @@ class PuzzleLayout(GridLayout):
     
     def reveal_all(self):
         """Reveal the entire puzzle."""
-        reveal_interval = 0.01 # seconds between letters being revealed
-        
         # indices in order from top to bottom, left to right
         indices = [
                 i + (j*self.cols)
@@ -324,7 +318,7 @@ class PuzzleLayout(GridLayout):
                     # schedule panel reveal
                     Clock.schedule_once(
                         layout.show_letter,
-                        reveal_interval * (matches + 1))
+                        values.solve_reveal_interval * matches)
                     matches += 1
             except AttributeError:
                 # empty widget
@@ -355,7 +349,6 @@ class PuzzleLayout(GridLayout):
         """
         Load a puzzle into the puzzleboard.
         """
-        interval = 0.05 # seconds between letters loading
         puzzle_string = list(puzzle['puzzle'])
         
         self.category_label.text = puzzle['category'].upper()
@@ -392,7 +385,7 @@ class PuzzleLayout(GridLayout):
                     # schedule panel to turn white
                     Clock.schedule_once(
                         layout.hide,
-                        interval * (letters + 1))
+                        values.load_interval * letters)
                     letters += 1
             except AttributeError:
                 # empty widget
@@ -437,11 +430,11 @@ class LetterLayout(AnchorLayout):
     def show_letter(self, td=None):
         """Turn the panel white and reveal the letter."""
         self.white()
-        opacity = self.text_label.color[3] + 0.25
+        opacity = self.text_label.color[3] + values.opacity_adjustment
         if opacity <= 1:
             self.text_label.color = [0, 0, 0, opacity]
         if opacity < 1:
-            Clock.schedule_once(self.show_letter, 0.001)
+            Clock.schedule_once(self.show_letter, values.opacity_interval)
     
     def hide(self, td=None):
         """Hide the letter on this panel."""

@@ -2,6 +2,7 @@ import multiprocessing
 
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.config import Config
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.behaviors.button import ButtonBehavior
@@ -13,9 +14,11 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-import data_caching, prompts, puzzleboard, score, strings
+import data_caching, prompts, puzzleboard, score, strings, values
 
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Builder.load_string("""
+#:import strings strings
 <Button>:
     halign: 'center'
 <SquareButton>:
@@ -28,9 +31,8 @@ Builder.load_string("""
         Rectangle:
             pos: self.pos
             size: self.size
-            source: r'{}'
-""".format(
-    strings.file_settings_icon))
+            source: strings.file_settings_icon
+""")
 
 def bind_keyboard(widget):
     """Provide keyboard focus to a widget"""
@@ -87,7 +89,6 @@ class ManagerLayout(BoxLayout):
         self.ylw_q = ylw_q
         self.blu_q = blu_q
         
-        #self.add_widget(self._exit_layout())
         self.add_widget(self._puzzle_label())
         self.add_widget(self._main_buttons())
         self.add_widget(self._player_bar())
@@ -96,21 +97,7 @@ class ManagerLayout(BoxLayout):
         self.load_settings()
         
         if self.puzzle_queue:
-            Clock.schedule_once(self.check_queue, 5)
-    
-    def _exit_layout(self):
-        """
-        Create a layout containing an exit button
-        """
-        layout = BoxLayout(orientation='horizontal')
-        layout.size_hint_y = 0.15
-        layout.add_widget(Widget())
-        
-        btn_exit = SquareButton(text='X')
-        btn_exit.bind(on_release=self.exit_app)
-        layout.add_widget(btn_exit)
-        
-        return layout
+            Clock.schedule_once(self.check_queue, values.queue_start)
     
     def _puzzle_label(self):
         """
@@ -151,9 +138,12 @@ class ManagerLayout(BoxLayout):
         """
         
         player_bar = BoxLayout(orientation='horizontal')
-        self.btn_red = self._player_button([1, 0, 0, 1], self.select_red)
-        self.btn_ylw = self._player_button([1, 1, 0, 1], self.select_yellow)
-        self.btn_blu = self._player_button([0, 0, 1, 1], self.select_blue)
+        self.btn_red = self._player_button(
+            values.color_red, self.select_red)
+        self.btn_ylw = self._player_button(
+            values.color_yellow, self.select_yellow)
+        self.btn_blu = self._player_button(
+            values.color_blue, self.select_blue)
         player_bar.add_widget(self.btn_red)
         player_bar.add_widget(self.btn_ylw)
         player_bar.add_widget(self.btn_blu)
@@ -182,8 +172,10 @@ class ManagerLayout(BoxLayout):
         
         def score_control():
             score_ctrl_box = BoxLayout(orientation='horizontal')
-            btn_minus = SquareButton(text='-')
-            btn_plus = SquareButton(text='+')
+            btn_minus = Button(text='-')
+            btn_plus = Button(text='+')
+            btn_minus.size_hint_x = 0.5
+            btn_plus.size_hint_x = 0.5
             self.score_edit = TextInput(hint_text=strings.input_adjust_score)
             score_ctrl_box.add_widget(btn_minus)
             score_ctrl_box.add_widget(self.score_edit)
@@ -253,7 +245,7 @@ class ManagerLayout(BoxLayout):
                 self.correct_letter(args)
         except:
             pass
-        Clock.schedule_once(self.check_queue, 1)
+        Clock.schedule_once(self.check_queue, values.queue_interval)
     
     def select_red(self, instance):
         """
@@ -261,7 +253,7 @@ class ManagerLayout(BoxLayout):
         to indicate that the red player has been selected.
         """
         self.selected_player = 1
-        self.selection_color((1, 0.75, 0.75, 1))
+        self.selection_color(values.color_light_red)
     
     def select_yellow(self, instance):
         """
@@ -269,7 +261,7 @@ class ManagerLayout(BoxLayout):
         to indicate that the yellow player has been selected.
         """
         self.selected_player = 2
-        self.selection_color((1, 1, 0.75, 1))
+        self.selection_color(values.color_light_yellow)
     
     def select_blue(self, instance):
         """
@@ -277,7 +269,7 @@ class ManagerLayout(BoxLayout):
         to indicate that the blue player has been selected.
         """
         self.selected_player = 3
-        self.selection_color((0.75, 0.75, 1, 1))
+        self.selection_color(values.color_light_blue)
     
     def selection_color(self, color):
         """
@@ -422,10 +414,6 @@ class ManagerLayout(BoxLayout):
         # TODO
         print("BANK SCORE")
     
-    def get_cash_values(self):
-        # TODO
-        return ('$200', '$300', '$400')
-    
     def cash_settings(self, instance):
         """
         Open a Popup prompting the user
@@ -440,8 +428,9 @@ class ManagerLayout(BoxLayout):
         Load settings from file.
         """
         settings = data_caching.get_variables()
-        self.vowel_price = settings.get('vowel_price', 250)
-        self.min_win = settings.get('min_win', 1000)
+        self.vowel_price = settings.get('vowel_price',
+            values.default_vowel_price)
+        self.min_win = settings.get('min_win', values.default_min_win)
         self.dropdown.values = ['${:,}'.format(value)
             for value in settings.get('cash_values', [])]
     
@@ -514,13 +503,13 @@ if __name__ == '__main__':
         args=(puzzle_q, red_q, ylw_q, blu_q))
     red = multiprocessing.Process(
         target=launchScore,
-        args=((1, 0, 0, 1), red_q))
+        args=(values.color_red, red_q))
     ylw = multiprocessing.Process(
         target=launchScore,
-        args=((1, 1, 0, 1), ylw_q))
+        args=(values.color_yellow, ylw_q))
     blu = multiprocessing.Process(
         target=launchScore,
-        args=((0, 0, 1, 1), blu_q))
+        args=((values.color_blue, blu_q)))
     
     manager_process.start()
     red.start()

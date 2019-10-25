@@ -4,7 +4,10 @@ from kivy.lang import Builder
 from kivy.properties import NumericProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 
+import values
+
 Builder.load_string("""
+#:import values values
 <ScoreLayout>:
     size: self.parent.size if self.parent else (100, 100)
     canvas.before:
@@ -15,30 +18,30 @@ Builder.load_string("""
             size: self.size
     Label:
         text: self.parent.name
-        font_name: 'Gotham_Black_Regular'
-        font_size: self.size[1] / 2
+        font_name: values.font_score
+        font_size: self.size[1] * values.font_score_name_size
     Label:
         text: '${:,}'.format(self.parent.score)
-        font_name: 'Gotham_Black_Regular'
-        font_size: self.size[1]
+        font_name: values.font_score
+        font_size: self.size[1] * values.font_score_size
     Label:
         text: '${:,}'.format(self.parent.total)
-        font_name: 'Gotham_Black_Regular'
-        font_size: self.size[1] / 2
+        font_name: values.font_score
+        font_size: self.size[1] * values.font_score_total_size
 """)
 
 class ScoreLayout(BoxLayout):
-    bg_color = ObjectProperty((0, 0, 0, 1))
+    bg_color = ObjectProperty(values.color_red)
     name = StringProperty('')
     score = NumericProperty(0)
     total = NumericProperty(0)
     
-    def __init__(self, bg_color=(0, 0, 0, 1), queue=None, **kwargs):
+    def __init__(self, bg_color=values.color_red, queue=None, **kwargs):
         super(ScoreLayout, self).__init__(orientation='vertical', **kwargs)
         self.bg_color = bg_color
         self.queue = queue
         if self.queue:
-            Clock.schedule_once(self.check_queue, 5)
+            Clock.schedule_once(self.check_queue, values.queue_start)
     
     def check_queue(self, instance):
         try:
@@ -53,4 +56,4 @@ class ScoreLayout(BoxLayout):
                 App.get_running_app().stop()
         except:
             pass
-        Clock.schedule_once(self.check_queue, 1)
+        Clock.schedule_once(self.check_queue, values.queue_interval)
