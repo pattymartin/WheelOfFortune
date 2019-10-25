@@ -308,7 +308,7 @@ class PuzzleLayout(GridLayout):
     
     def reveal_all(self):
         """Reveal the entire puzzle."""
-        reveal_interval = 0.05 # seconds between letters being revealed
+        reveal_interval = 0.01 # seconds between letters being revealed
         
         # indices in order from top to bottom, left to right
         indices = [
@@ -437,7 +437,11 @@ class LetterLayout(AnchorLayout):
     def show_letter(self, td=None):
         """Turn the panel white and reveal the letter."""
         self.white()
-        self.text_label.color = [0, 0, 0, 1]
+        opacity = self.text_label.color[3] + 0.25
+        if opacity <= 1:
+            self.text_label.color = [0, 0, 0, opacity]
+        if opacity < 1:
+            Clock.schedule_once(self.show_letter, 0.001)
     
     def hide(self, td=None):
         """Hide the letter on this panel."""
