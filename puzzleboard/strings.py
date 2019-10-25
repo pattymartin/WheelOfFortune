@@ -1,8 +1,16 @@
+button_bankrupt = 'Bankrupt'
+button_buy_vowel = 'Buy a\nvowel'
 button_close = 'Close'
 button_confirm = 'Confirm'
+button_lose_turn = 'Lose a\nturn'
 button_no = 'No'
 button_save = 'Save'
+button_solve = 'Solve'
 button_yes = 'Yes'
+
+input_adjust_score = 'Adjust score'
+input_custom = 'Enter custom cash value'
+input_name = 'Edit player name'
 
 label_category = 'Category'
 label_clue = 'Clue'

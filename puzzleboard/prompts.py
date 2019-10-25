@@ -122,7 +122,8 @@ def load_puzzle_prompt(callback):
                 # empty widget
                 pass
         selected_puzzles = [puzzles[name] for name in names]
-        callback(selected_puzzles[0])
+        if selected_puzzles:
+            callback(selected_puzzles[0])
         
         popup.dismiss()
     
