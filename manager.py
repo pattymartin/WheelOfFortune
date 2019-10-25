@@ -329,7 +329,7 @@ class ManagerLayout(BoxLayout):
         """
         Prompt the user to select a puzzle.
         """
-        prompts.load_puzzle_prompt(self.load_puzzle).open()
+        prompts.LoadPuzzlePrompt(self.load_puzzle).open()
     
     def load_puzzle(self, puzzle):
         """

@@ -1,7 +1,7 @@
 import json
 import os
 
-import strings
+import prompts, strings
 
 def update_variables(new_values):
     """
@@ -43,6 +43,24 @@ def read_puzzles():
             return json.load(f)
     except FileNotFoundError:
         return {}
+
+def add_puzzle(name, puzzle_dict):
+    """
+    Add a puzzle to the puzzles file.
+    Creates a confirmation prompt if a puzzle
+    with the given name already exists.
+    """
+    
+    puzzles = read_puzzles()
+    if name in puzzles.keys():
+        prompts.YesNoPrompt(
+            strings.label_name_exists.format(
+                name),
+            lambda i: write_puzzle(puzzles, name, puzzle_dict),
+            None
+            ).open()
+    else:
+        write_puzzle(puzzles, name, puzzle_dict)
 
 def check_exists(dir_):
     """
