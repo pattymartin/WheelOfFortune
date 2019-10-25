@@ -1,3 +1,4 @@
+from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.properties import NumericProperty, ObjectProperty, StringProperty
@@ -48,6 +49,8 @@ class ScoreLayout(BoxLayout):
                 self.score = args
             elif command == 'total':
                 self.total = args
+            elif command == 'exit':
+                App.get_running_app().stop()
         except:
             pass
         Clock.schedule_once(self.check_queue, 1)

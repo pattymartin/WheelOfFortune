@@ -259,6 +259,8 @@ class PuzzleLayout(GridLayout):
                 self.load_puzzle(args)
             elif command == 'reveal':
                 self.reveal_all()
+            elif command == 'exit':
+                App.get_running_app().stop()
         except:
             pass
         Clock.schedule_once(self.check_queue, 1)

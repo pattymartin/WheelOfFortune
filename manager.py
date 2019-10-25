@@ -12,6 +12,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
+from kivy.uix.widget import Widget
 
 import puzzleboard
 from puzzleboard import prompts, strings
@@ -89,9 +90,8 @@ class ManagerLayout(BoxLayout):
         self.ylw_q = ylw_q
         self.blu_q = blu_q
         
-        self.puzzle_label = Label()
-        self.add_widget(self.puzzle_label)
-        
+        self.add_widget(self._exit_layout())
+        self.add_widget(self._puzzle_label())
         self.add_widget(self._main_buttons())
         self.add_widget(self._player_bar())
         self.add_widget(self._player_control())
@@ -99,15 +99,42 @@ class ManagerLayout(BoxLayout):
         if self.puzzle_queue:
             Clock.schedule_once(self.check_queue, 5)
     
+    def _exit_layout(self):
+        """
+        Create a layout containing an exit button
+        """
+        layout = BoxLayout(orientation='horizontal')
+        layout.size_hint_y = 0.15
+        layout.add_widget(Widget())
+        
+        btn_exit = SquareButton(text='X')
+        btn_exit.bind(on_release=self.exit_app)
+        layout.add_widget(btn_exit)
+        
+        return layout
+    
+    def _puzzle_label(self):
+        """
+        Create a label to display the current puzzle.
+        """
+        self.puzzle_label = Label()
+        self.puzzle_label.size_hint_y = 0.5
+        return self.puzzle_label
+    
     def _main_buttons(self):
         """
         Create a layout containing the main manager buttons.
         """
         layout = BoxLayout(orientation='horizontal')
+        layout.size_hint_y = 0.5
         
         btn_select = Button(text=strings.title_select_puzzle)
         btn_select.bind(on_release=self.choose_puzzle)
         layout.add_widget(btn_select)
+        
+        btn_tossup = Button(text=strings.mgr_btn_tossup)
+        btn_tossup.bind(on_release=self.tossup)
+        layout.add_widget(btn_tossup)
         
         btn_reveal = Button(text=strings.mgr_btn_reveal)
         btn_reveal.bind(on_release=self.reveal_puzzle)
@@ -186,9 +213,9 @@ class ManagerLayout(BoxLayout):
         def player_buttons():
             button_box = BoxLayout(orientation='horizontal')
             btn_v = Button(text='V')
-            btn_lose_turn = Button(text=strings.button_lose_turn)
-            btn_bankrupt = Button(text=strings.button_bankrupt)
-            btn_solve = Button(text=strings.button_solve)
+            btn_lose_turn = Button(text=strings.mgr_btn_lose_turn)
+            btn_bankrupt = Button(text=strings.mgr_btn_bankrupt)
+            btn_solve = Button(text=strings.mgr_btn_solve)
             btn_v.bind(on_release=self.buy_vowel)
             btn_lose_turn.bind(on_release=self.lose_turn)
             btn_bankrupt.bind(on_release=self.bankrupt)
@@ -282,6 +309,10 @@ class ManagerLayout(BoxLayout):
         """
         self.puzzle_queue.a.put(('load', puzzle))
     
+    def tossup(self, instance):
+        # TODO
+        print("TOSSUP")
+    
     def reveal_puzzle(self, instance):
         """
         Tell the layout to reveal the puzzle.
@@ -315,6 +346,14 @@ class ManagerLayout(BoxLayout):
     def cash_settings(self, instance):
         # TODO
         print("SETTINGS")
+    
+    def exit_app(self, instance):
+        """
+        Tell all apps to stop, then stop this app.
+        """
+        for q in [self.puzzle_queue.a, self.red_q, self.ylw_q, self.blu_q]:
+            q.put(('exit', None))
+        App.get_running_app().stop()
 
 class ManagerApp(App):
     """
