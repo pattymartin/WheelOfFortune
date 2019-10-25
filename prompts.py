@@ -10,7 +10,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
-from . import strings
+import strings
 
 puzzle_file = 'puzzles.json'
 

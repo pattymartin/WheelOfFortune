@@ -15,9 +15,9 @@ from kivy.uix.label import Label
 from kivy.uix.splitter import Splitter
 from kivy.uix.widget import Widget
 
-from .prompts import save_puzzle_prompt, load_puzzle_prompt
+from prompts import save_puzzle_prompt, load_puzzle_prompt
 
-panels_dir = os.path.join(os.path.dirname(__file__), r'panels')
+panels_dir = os.path.join(os.path.dirname(__file__), r'assets')
 panel_file = r'panel.png'
 panel_file_blue = r'panel_blue.png'
 panel_file_white = r'panel_white.png'

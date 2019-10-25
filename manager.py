@@ -14,9 +14,7 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-import puzzleboard
-from puzzleboard import prompts, strings
-import score
+import prompts, puzzleboard, score, strings
 
 assets_dir = os.path.join(os.path.dirname(__file__), r'assets')
 settings_icon_file = 'settings.png'
