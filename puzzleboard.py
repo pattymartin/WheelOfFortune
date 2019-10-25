@@ -305,10 +305,10 @@ class PuzzleLayout(GridLayout):
     
     def check_all(self, letter):
         """Check all Panels for a given letter and reveal matches."""
-        reveal_interval = 1.5 # seconds between panels being revealed
+        reveal_interval = 0.9 # seconds between panels being revealed
         blue_interval = 0.5 # seconds between panels turning blue
         
-        if letter in 'abcdefghijklmnopqrstuvwxyz':
+        if letter.lower() in 'abcdefghijklmnopqrstuvwxyz':
             # indices in order from top to bottom, right to left
             indices = [
                     i + (j*self.cols)
@@ -335,6 +335,8 @@ class PuzzleLayout(GridLayout):
                 except AttributeError:
                     # empty widget
                     pass
+            if self.queue:
+                self.queue.b.put(('matches', matches))
     
     def reveal_all(self):
         """Reveal the entire puzzle."""
@@ -492,7 +494,7 @@ class LetterLayout(AnchorLayout):
         Check whether this panel's letter is the same as the given letter.
         """
         
-        if self.text_label.text.lower() == letter:
+        if self.text_label.text.lower() == letter.lower():
             return True
         else:
             return False

@@ -10,7 +10,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
-import strings
+import strings, used_letters
 
 puzzle_file = 'puzzles.json'
 
@@ -156,21 +156,48 @@ def yes_no_prompt(text, yes_callback, no_callback):
     
     popup = Popup(title=strings.title_name_exists, content=content)
     
-    def wrap_with_dismiss(callback):
-        """
-        Wrap a function so that it calls popup.dismiss at the end.
-        """
-        
-        def do_callback(instance):
-            if callback:
-                callback()
-            popup.dismiss()
-        return do_callback
-    
-    button_no.bind(on_release=wrap_with_dismiss(no_callback))
-    button_yes.bind(on_release=wrap_with_dismiss(yes_callback))
+    button_no.bind(on_release=wrap_with_dismiss(no_callback, popup))
+    button_yes.bind(on_release=wrap_with_dismiss(yes_callback, popup))
     
     return popup
+
+class ChooseLetterPrompt(Popup):
+    """
+    A Popup asking the user to choose a letter.
+    """
+    
+    def __init__(self, callback, unavailable_letters=[], **kwargs):
+        """Create the Popup."""
+        super(ChooseLetterPrompt, self).__init__(
+            title=strings.title_choose_letter, **kwargs)
+        self.callback = wrap_with_dismiss(callback, self)
+        self.unavailable_letters = unavailable_letters
+        letterboard = used_letters.LetterboardLayout(
+            self.callback, unavailable=unavailable_letters)
+        self.content = letterboard
+    
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        """Reveal the puzzle when the Enter key is pressed."""
+        letter = keycode[1]
+        if letter.lower() in self.unavailable_letters:
+            return
+        self.callback(letter)
+    
+    def _keyboard_closed(self):
+        """Remove keyboard binding when the keyboard is closed."""
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+
+def wrap_with_dismiss(callback, popup):
+    """
+    Wrap a function so that it calls popup.dismiss at the end.
+    """
+    
+    def do_callback(*args, **kwargs):
+        if callback:
+            callback(*args, **kwargs)
+        popup.dismiss()
+    return do_callback
 
 def add_puzzle(name, puzzle_dict):
     """
@@ -184,7 +211,7 @@ def add_puzzle(name, puzzle_dict):
         yes_no_prompt(
             strings.label_name_exists.format(
                 name),
-            lambda: write_puzzle(puzzles, name, puzzle_dict),
+            lambda i: write_puzzle(puzzles, name, puzzle_dict),
             None
             ).open()
     else:

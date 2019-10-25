@@ -79,6 +79,7 @@ class ManagerLayout(BoxLayout):
     """
     
     selected_player = 0
+    unavailable_letters = []
     
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, **kwargs):
         """Create the layout."""
@@ -88,7 +89,7 @@ class ManagerLayout(BoxLayout):
         self.ylw_q = ylw_q
         self.blu_q = blu_q
         
-        self.add_widget(self._exit_layout())
+        #self.add_widget(self._exit_layout())
         self.add_widget(self._puzzle_label())
         self.add_widget(self._main_buttons())
         self.add_widget(self._player_bar())
@@ -193,11 +194,11 @@ class ManagerLayout(BoxLayout):
             dropdown_layout = BoxLayout(orientation='horizontal')
             btn_settings = SettingsButton()
             btn_settings.bind(on_release=self.cash_settings)
-            dropdown = Spinner(
-                text='Select cash value',
+            self.dropdown = Spinner(
+                text=strings.mgr_select_value,
                 values=self.get_cash_values()
                 )
-            dropdown_layout.add_widget(dropdown)
+            dropdown_layout.add_widget(self.dropdown)
             dropdown_layout.add_widget(btn_settings)
             select_box.add_widget(self.custom_value)
             select_box.add_widget(dropdown_layout)
@@ -245,6 +246,8 @@ class ManagerLayout(BoxLayout):
                 if args['clue']:
                     self.puzzle_label.text += ('\n' +
                         strings.mgr_label_clue + puzzle_clue)
+            elif command == 'matches':
+                self.correct_letter(args)
         except:
             pass
         Clock.schedule_once(self.check_queue, 1)
@@ -295,6 +298,38 @@ class ManagerLayout(BoxLayout):
             self.btn_blu.name = text
             self.blu_q.put(('name', text))
     
+    def get_score(self):
+        """
+        Get the score of the current player.
+        """
+        if self.selected_player == 1:
+            return self.btn_red.score
+        elif self.selected_player == 2:
+            return self.btn_ylw.score
+        elif self.selected_player == 3:
+            return self.btn_blu.score
+        return 0
+    
+    def set_score(self, score):
+        """
+        Set the score of the current player.
+        """
+        if self.selected_player == 1:
+            self.btn_red.score = score
+            self.red_q.put(('score', score))
+        elif self.selected_player == 2:
+            self.btn_ylw.score = score
+            self.ylw_q.put(('score', score))
+        elif self.selected_player == 3:
+            self.btn_blu.score = score
+            self.blu_q.put(('score', score))
+    
+    def add_score(self, score):
+        """
+        Add `score` to the selected player's score.
+        """
+        self.set_score(self.get_score() + score)
+    
     def choose_puzzle(self, instance):
         """
         Prompt the user to select a puzzle.
@@ -305,6 +340,7 @@ class ManagerLayout(BoxLayout):
         """
         Tell the layout to load `puzzle`.
         """
+        self.unavailable_letters = []
         self.puzzle_queue.a.put(('load', puzzle))
     
     def tossup(self, instance):
@@ -318,8 +354,55 @@ class ManagerLayout(BoxLayout):
         self.puzzle_queue.a.put(('reveal', None))
     
     def guess_consonant(self, instance):
-        # TODO
-        print("GUESS CONSONANT")
+        """
+        Open a prompt to select a letter.
+        """
+        if (
+                self.selected_player == 0
+                or self.get_value() == 0):
+            return
+        popup = prompts.ChooseLetterPrompt(
+            self.guessed_letter, self.unavailable_letters)
+        popup.open()
+        bind_keyboard(popup)
+    
+    def guessed_letter(self, letter):
+        """
+        Pass the `letter` to the PuzzleLayout to check for matches.
+        """
+        self.unavailable_letters.append(letter.lower())
+        self.puzzle_queue.a.put(('letter', letter))
+    
+    def get_value(self):
+        """
+        Get the value indicated by the custom cash value input box.
+        If the box is empty, get the value
+        indicated by the cash value spinner.
+        """
+        def str_to_int(s):
+            """
+            Convert a string to an int,
+            ignoring non-numeric characters.
+            """
+            try:
+                return int(''.join(
+                    [c for c in str(s) if c.isnumeric()]))
+            except ValueError:
+                return 0
+        
+        custom_value = self.custom_value.text
+        if custom_value:
+            return str_to_int(custom_value)
+        else:
+            return str_to_int(self.dropdown.text)
+    
+    def correct_letter(self, matches):
+        """
+        Adjust the selected player's score based on the number of `matches`.
+        `matches` is an int indicating the number of matched letters.
+        """
+        self.add_score(matches * self.get_value())
+        self.custom_value.text = ''
     
     def buy_vowel(self, instance):
         # TODO
@@ -349,9 +432,15 @@ class ManagerLayout(BoxLayout):
         """
         Tell all apps to stop, then stop this app.
         """
+        self.exit_other_apps()
+        App.get_running_app().stop()
+    
+    def exit_other_apps(self):
+        """
+        Tell all other apps to stop.
+        """
         for q in [self.puzzle_queue.a, self.red_q, self.ylw_q, self.blu_q]:
             q.put(('exit', None))
-        App.get_running_app().stop()
 
 class ManagerApp(App):
     """
@@ -366,6 +455,9 @@ class ManagerApp(App):
     def build(self):
         """Build the app."""
         return ManagerLayout(*self.args)
+    
+    def on_stop(self):
+        self.root.exit_other_apps()
 
 class ScoreApp(App):
     """
