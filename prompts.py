@@ -10,9 +10,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
-import strings, used_letters
-
-puzzle_file = 'puzzles.json'
+import data_caching, strings, used_letters
 
 def save_puzzle_prompt(puzzle):
     """
@@ -83,7 +81,7 @@ def load_puzzle_prompt(callback):
     
     puzzle_layout = BoxLayout(orientation='vertical', size_hint=(1, None))
     puzzle_layout.bind(minimum_height=puzzle_layout.setter('height'))
-    puzzles = read_puzzles()
+    puzzles = data_caching.read_puzzles()
     for name in puzzles.keys():
         toggle_button = ToggleButton(text=name)
         toggle_button.size_hint_y = toggle_button.size_hint_min_y
@@ -156,8 +154,8 @@ def yes_no_prompt(text, yes_callback, no_callback):
     
     popup = Popup(title=strings.title_name_exists, content=content)
     
-    button_no.bind(on_release=wrap_with_dismiss(no_callback, popup))
-    button_yes.bind(on_release=wrap_with_dismiss(yes_callback, popup))
+    button_no.bind(on_release=_wrap_with_dismiss(no_callback, popup))
+    button_yes.bind(on_release=_wrap_with_dismiss(yes_callback, popup))
     
     return popup
 
@@ -170,7 +168,7 @@ class ChooseLetterPrompt(Popup):
         """Create the Popup."""
         super(ChooseLetterPrompt, self).__init__(
             title=strings.title_choose_letter, **kwargs)
-        self.callback = wrap_with_dismiss(callback, self)
+        self.callback = _wrap_with_dismiss(callback, self)
         self.unavailable_letters = unavailable_letters
         letterboard = used_letters.LetterboardLayout(
             self.callback, unavailable=unavailable_letters)
@@ -188,7 +186,71 @@ class ChooseLetterPrompt(Popup):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
 
-def wrap_with_dismiss(callback, popup):
+class ManagerSettingsPrompt(Popup):
+    """
+    A Popup with settings for the manager.
+    """
+    
+    def __init__(self, **kwargs):
+        """
+        Create the Popup.
+        """
+        super(ManagerSettingsPrompt, self).__init__(
+            title=strings.mgr_title_settings, **kwargs)
+        
+        layout = BoxLayout(orientation='vertical')
+        
+        vowel_layout, vowel_label, vowel_input = _input_layout(
+            strings.label_vowel_price, strings.input_vowel_price)
+        min_layout, min_label, min_input = _input_layout(
+            strings.label_min_win, strings.input_min_win)
+        wedges_layout, wedges_label, wedges_input = _input_layout(
+            strings.label_wedges, strings.input_cash_values)
+        
+        wedges_label.size_hint_y = 1
+        wedges_layout.size_hint_y = 1
+        
+        values = data_caching.get_variables()
+        vowel_input.text = str(values.get('vowel_price', ''))
+        min_input.text = str(values.get('min_win', ''))
+        wedges_input.text = '\r\n'.join([str(i)
+            for i in values.get('cash_values', [])])
+        
+        def input_save(instance):
+            """
+            Get the text from the input fields,
+            and save them.
+            """
+            vowel_price = data_caching.str_to_int(vowel_input.text)
+            min_win = data_caching.str_to_int(min_input.text)
+            values = [data_caching.str_to_int(line)
+                for line in wedges_input.text.split()]
+            
+            data_caching.update_variables({
+                'vowel_price': vowel_price if vowel_price else '',
+                'min_win': min_win if min_win else '',
+                'cash_values': sorted([v for v in values if v])})
+            
+            self.dismiss()
+        
+        button_layout = BoxLayout(orientation='horizontal')
+        button_close = Button(text=strings.button_close)
+        button_confirm = Button(text=strings.button_confirm)
+        button_close.bind(on_release=self.dismiss)
+        button_confirm.bind(on_release=input_save)
+        button_layout.add_widget(button_close)
+        button_layout.add_widget(button_confirm)
+        button_layout.size_hint_y = button_layout.size_hint_min_y
+        
+        layout.add_widget(vowel_layout)
+        layout.add_widget(min_layout)
+        layout.add_widget(wedges_layout)
+        layout.add_widget(Widget(size_hint=(1, 0.02)))
+        layout.add_widget(button_layout)
+        
+        self.content = layout
+
+def _wrap_with_dismiss(callback, popup):
     """
     Wrap a function so that it calls popup.dismiss at the end.
     """
@@ -201,45 +263,23 @@ def wrap_with_dismiss(callback, popup):
 
 def add_puzzle(name, puzzle_dict):
     """
-    Add a puzzle to `puzzle_file`.
+    Add a puzzle to the puzzles file.
     Creates a confirmation prompt if a puzzle
     with the given name already exists.
     """
     
-    puzzles = read_puzzles()
+    puzzles = data_caching.read_puzzles()
     if name in puzzles.keys():
         yes_no_prompt(
             strings.label_name_exists.format(
                 name),
-            lambda i: write_puzzle(puzzles, name, puzzle_dict),
+            lambda i: data_caching.write_puzzle(puzzles, name, puzzle_dict),
             None
             ).open()
     else:
-        write_puzzle(puzzles, name, puzzle_dict)
+        data_caching.write_puzzle(puzzles, name, puzzle_dict)
 
-def write_puzzle(puzzles, new_name, new_dict):
-    """Write `puzzles` to `puzzle_file`."""
-    puzzles[new_name] = new_dict
-    
-    cwd = os.path.dirname(__file__)
-    filename = os.path.join(cwd, puzzle_file)
-    with open(filename, 'w') as f:
-        json.dump(puzzles, f)
-
-def read_puzzles():
-    """
-    Load from `puzzle_file` with JSON.
-    Returns an empty dict if the file does not exist.
-    """
-    cwd = os.path.dirname(__file__)
-    filename = os.path.join(cwd, puzzle_file)
-    try:
-        with open(filename) as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
-
-def _input_layout(title):
+def _input_layout(title, hint_text=''):
     """
     Create a horizontal BoxLayout with text and an input box.
     Returns the BoxLayout, the text Label, and the TextInput
@@ -249,8 +289,11 @@ def _input_layout(title):
     
     layout_label = Label(text=title)
     layout_label.size_hint = layout_label.size_hint_min
+    layout_label.valign = 'center'
+    layout_label.halign = 'center'
     
     input = TextInput()
+    input.hint_text = hint_text
     
     layout.add_widget(layout_label)
     layout.add_widget(input)

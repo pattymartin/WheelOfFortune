@@ -1,6 +1,3 @@
-import json
-import os
-
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
@@ -15,14 +12,7 @@ from kivy.uix.label import Label
 from kivy.uix.splitter import Splitter
 from kivy.uix.widget import Widget
 
-from prompts import save_puzzle_prompt, load_puzzle_prompt
-
-panels_dir = os.path.join(os.path.dirname(__file__), r'assets')
-panel_file = r'panel.png'
-panel_file_blue = r'panel_blue.png'
-panel_file_white = r'panel_white.png'
-panel_file_corner = r'panel_corner.png'
-category_background_file = r'category_background.png'
+import data_caching, prompts, strings
 
 Builder.load_string(r"""
 <Panel>:
@@ -66,30 +56,8 @@ Builder.load_string(r"""
             size: self.size
             source: r'{}'
 """.format(
-    os.path.join(panels_dir, panel_file),
-    os.path.join(panels_dir, category_background_file)))
-
-def save_variable(key, value):
-    """
-    Save key-value pair in a JSON dict,
-    stored in the file `vars.json`
-    """
-    vars = get_variables()
-    vars[key] = value
-    with open('vars.json', 'w') as f:
-        json.dump(vars, f)
-
-def get_variables():
-    """
-    Get the JSON dict stored in the file `vars.json`.
-    Returns an empty dict if the file does not exist.
-    """
-    
-    try:
-        with open('vars.json') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+    strings.file_panel,
+    strings.file_category_background))
 
 def bind_keyboard(widget):
     """Provide keyboard focus to a widget"""
@@ -162,7 +130,7 @@ class SavableSplitter(Splitter):
         """
         Create the Splitter.
         `name` is the string that will be used as a key
-        by `save_variable()`.
+        by `data_caching.update_variables()`.
         `widget` is the widget that will be assigned
         to this Splitter.
         """
@@ -174,16 +142,16 @@ class SavableSplitter(Splitter):
         
         # get saved location
         if self.sizable_from in ['top', 'bottom']:
-            self.size_hint_y = get_variables().get(name)
+            self.size_hint_y = data_caching.get_variables().get(name)
             axis = 1
         else:
-            self.size_hint_x = get_variables().get(name)
+            self.size_hint_x = data_caching.get_variables().get(name)
             axis = 0
         
         # when the splitter is released, save its location
         self.bind(
-            on_release=lambda i: save_variable(name,
-                self.size[axis] / self.parent.size[axis]))
+            on_release=lambda i: data_caching.update_variables({name:
+                self.size[axis] / self.parent.size[axis]}))
         
         self.add_widget(widget)
 
@@ -213,7 +181,7 @@ class PuzzleLayout(GridLayout):
                            bottom_left, bottom_right]
                 
                 if (i, j) in corners:
-                    source_image = os.path.join(panels_dir, panel_file_corner)
+                    source_image = strings.file_panel_corner
                     if (i, j) == top_left:
                         # rotate image 180 degrees
                         widget = RotatedImage(0, 0, 1, source=source_image)
@@ -372,7 +340,7 @@ class PuzzleLayout(GridLayout):
             except AttributeError:
                 # empty widget
                 pass
-        prompt = save_puzzle_prompt(puzzle)
+        prompt = prompts.save_puzzle_prompt(puzzle)
         prompt.bind(on_dismiss=lambda instance: bind_keyboard(self))
         prompt.open()
     
@@ -381,7 +349,7 @@ class PuzzleLayout(GridLayout):
         Prompt the user to select a puzzle,
         then load that puzzle.
         """
-        load_puzzle_prompt(self.load_puzzle).open()
+        prompts.load_puzzle_prompt(self.load_puzzle).open()
     
     def load_puzzle(self, puzzle):
         """
@@ -456,15 +424,15 @@ class LetterLayout(AnchorLayout):
     
     def blue(self, td=None):
         """Turn this panel blue."""
-        self.source_image.source = os.path.join(panels_dir, panel_file_blue)
+        self.source_image.source = strings.file_panel_blue
     
     def white(self):
         """Turn this panel white."""
-        self.source_image.source = os.path.join(panels_dir, panel_file_white)
+        self.source_image.source = strings.file_panel_white
     
     def green(self):
         """Turn this panel to show the WOF logo."""
-        self.source_image.source = os.path.join(panels_dir, panel_file)
+        self.source_image.source = strings.file_panel
     
     def show_letter(self, td=None):
         """Turn the panel white and reveal the letter."""

@@ -1,5 +1,4 @@
 import multiprocessing
-import os
 
 from kivy.app import App
 from kivy.clock import Clock
@@ -14,12 +13,11 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-import prompts, puzzleboard, score, strings
-
-assets_dir = os.path.join(os.path.dirname(__file__), r'assets')
-settings_icon_file = 'settings.png'
+import data_caching, prompts, puzzleboard, score, strings
 
 Builder.load_string("""
+<Button>:
+    halign: 'center'
 <SquareButton>:
     size_hint_x: None
     width:self.height
@@ -32,7 +30,7 @@ Builder.load_string("""
             size: self.size
             source: r'{}'
 """.format(
-    os.path.join(assets_dir, settings_icon_file)))
+    strings.file_settings_icon))
 
 def bind_keyboard(widget):
     """Provide keyboard focus to a widget"""
@@ -95,6 +93,8 @@ class ManagerLayout(BoxLayout):
         self.add_widget(self._player_bar())
         self.add_widget(self._player_control())
         
+        self.load_settings()
+        
         if self.puzzle_queue:
             Clock.schedule_once(self.check_queue, 5)
     
@@ -130,6 +130,10 @@ class ManagerLayout(BoxLayout):
         btn_select = Button(text=strings.title_select_puzzle)
         btn_select.bind(on_release=self.choose_puzzle)
         layout.add_widget(btn_select)
+        
+        btn_clear = Button(text=strings.mgr_btn_clear)
+        btn_clear.bind(on_release=self.clear_puzzle)
+        layout.add_widget(btn_clear)
         
         btn_tossup = Button(text=strings.mgr_btn_tossup)
         btn_tossup.bind(on_release=self.tossup)
@@ -195,8 +199,7 @@ class ManagerLayout(BoxLayout):
             btn_settings = SettingsButton()
             btn_settings.bind(on_release=self.cash_settings)
             self.dropdown = Spinner(
-                text=strings.mgr_select_value,
-                values=self.get_cash_values()
+                text=strings.mgr_select_value
                 )
             dropdown_layout.add_widget(self.dropdown)
             dropdown_layout.add_widget(btn_settings)
@@ -214,15 +217,15 @@ class ManagerLayout(BoxLayout):
             btn_v = Button(text='V')
             btn_lose_turn = Button(text=strings.mgr_btn_lose_turn)
             btn_bankrupt = Button(text=strings.mgr_btn_bankrupt)
-            btn_solve = Button(text=strings.mgr_btn_solve)
+            btn_bank = Button(text=strings.mgr_btn_bank)
             btn_v.bind(on_release=self.buy_vowel)
             btn_lose_turn.bind(on_release=self.lose_turn)
             btn_bankrupt.bind(on_release=self.bankrupt)
-            btn_solve.bind(on_release=self.solve)
+            btn_bank.bind(on_release=self.bank_score)
             button_box.add_widget(btn_v)
             button_box.add_widget(btn_lose_turn)
             button_box.add_widget(btn_bankrupt)
-            button_box.add_widget(btn_solve)
+            button_box.add_widget(btn_bank)
             return button_box
             
         player_ctrl = GridLayout(rows=2, cols=2)
@@ -343,6 +346,15 @@ class ManagerLayout(BoxLayout):
         self.unavailable_letters = []
         self.puzzle_queue.a.put(('load', puzzle))
     
+    def clear_puzzle(self, instance):
+        """
+        Clear the puzzleboard.
+        """
+        self.load_puzzle({
+            'category': '',
+            'clue': '',
+            'puzzle': ' ' * 52})
+    
     def tossup(self, instance):
         # TODO
         print("TOSSUP")
@@ -379,22 +391,12 @@ class ManagerLayout(BoxLayout):
         If the box is empty, get the value
         indicated by the cash value spinner.
         """
-        def str_to_int(s):
-            """
-            Convert a string to an int,
-            ignoring non-numeric characters.
-            """
-            try:
-                return int(''.join(
-                    [c for c in str(s) if c.isnumeric()]))
-            except ValueError:
-                return 0
         
         custom_value = self.custom_value.text
         if custom_value:
-            return str_to_int(custom_value)
+            return data_caching.str_to_int(custom_value)
         else:
-            return str_to_int(self.dropdown.text)
+            return data_caching.str_to_int(self.dropdown.text)
     
     def correct_letter(self, matches):
         """
@@ -416,17 +418,32 @@ class ManagerLayout(BoxLayout):
         # TODO
         print("BANKRUPT")
     
-    def solve(self, instance):
+    def bank_score(self, instance):
         # TODO
-        print("SOLVE")
+        print("BANK SCORE")
     
     def get_cash_values(self):
         # TODO
         return ('$200', '$300', '$400')
     
     def cash_settings(self, instance):
-        # TODO
-        print("SETTINGS")
+        """
+        Open a Popup prompting the user
+        to fill in some game settings.
+        """
+        popup = prompts.ManagerSettingsPrompt()
+        popup.bind(on_dismiss=self.load_settings)
+        popup.open()
+    
+    def load_settings(self, instance=None):
+        """
+        Load settings from file.
+        """
+        settings = data_caching.get_variables()
+        self.vowel_price = settings.get('vowel_price', 250)
+        self.min_win = settings.get('min_win', 1000)
+        self.dropdown.values = ['${:,}'.format(value)
+            for value in settings.get('cash_values', [])]
     
     def exit_app(self, instance):
         """
