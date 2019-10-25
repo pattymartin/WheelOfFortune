@@ -10,7 +10,6 @@ def update_variables(new_values):
     """
     vars = get_variables()
     vars.update(new_values)
-    check_exists(strings.dir_data)
     with open(strings.file_settings, 'w') as f:
         json.dump(vars, f)
 
@@ -26,50 +25,47 @@ def get_variables():
     except FileNotFoundError:
         return {}
 
-def write_puzzle(puzzles, new_name, new_dict):
-    """Write `puzzles` to the puzzles file."""
-    puzzles[new_name] = new_dict
-    check_exists(strings.dir_data)
-    with open(strings.file_puzzles, 'w') as f:
-        json.dump(puzzles, f)
-
 def read_puzzles():
     """
-    Load from the puzzles file with JSON.
+    Load the puzzles from the settings file.
     Returns an empty dict if the file does not exist.
     """
-    try:
-        with open(strings.file_puzzles) as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {}
+    return get_variables().get('puzzles', {})
 
 def add_puzzle(name, puzzle_dict):
     """
-    Add a puzzle to the puzzles file.
+    Add a puzzle to the settings file.
     Creates a confirmation prompt if a puzzle
     with the given name already exists.
     """
     
     puzzles = read_puzzles()
+    
+    def write_puzzle():
+        """
+        Add `puzzle_dict` to `puzzles`
+        and write `puzzles` to the settings file.
+        """
+        puzzles[name] = puzzle_dict
+        update_variables({'puzzles': puzzles})
+        
     if name in puzzles.keys():
         prompts.YesNoPrompt(
-            strings.label_name_exists.format(
-                name),
-            lambda i: write_puzzle(puzzles, name, puzzle_dict),
-            None
+                strings.label_name_exists.format(
+                    name),
+                write_puzzle,
+                None
             ).open()
     else:
-        write_puzzle(puzzles, name, puzzle_dict)
+        write_puzzle()
 
-def check_exists(dir_):
+def delete_puzzle(name):
     """
-    Check if a directory exists,
-    and create it if it does not.
+    Delete the puzzle with the name `name`.
     """
-    
-    if not os.path.isdir(dir_):
-        os.mkdir(dir_)
+    puzzles = read_puzzles()
+    puzzles.pop(name, None)
+    update_variables({'puzzles': puzzles})
 
 def str_to_int(s):
     """

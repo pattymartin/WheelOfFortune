@@ -15,6 +15,7 @@ input_vowel_price = 'Enter a number (default $250)'
 
 label_category = 'Category'
 label_clue = 'Clue'
+label_delete_puzzle = 'Delete puzzle "{}"?'
 label_min_win = 'Round\nPrize\nMinimum'
 label_name = 'Name'
 label_name_exists = 'A puzzle with the name "{}" already exists.\nOverwrite?'
@@ -52,9 +53,4 @@ file_category_background = os.path.join(dir_assets,
 file_settings_icon = os.path.join(dir_assets,
     r'settings.png')
 
-dir_data = os.path.join(os.path.dirname(__file__),
-    r'data')
-file_puzzles = os.path.join(dir_data,
-    r'puzzles.json')
-file_settings = os.path.join(dir_data,
-    r'settings.json')
+file_settings = r'settings.json'

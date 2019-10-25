@@ -79,8 +79,13 @@ class LoadPuzzlePrompt(Popup):
         """Create the Popup."""
         super(LoadPuzzlePrompt, self).__init__(
             title=strings.title_select_puzzle, **kwargs)
-            
+        
+        self.callback = callback
+        self.create_layout()
+    
+    def create_layout(self):
         content = BoxLayout(orientation='vertical')
+        self.toggle_buttons = []
         
         puzzle_layout = BoxLayout(orientation='vertical', size_hint=(1, None))
         puzzle_layout.bind(minimum_height=puzzle_layout.setter('height'))
@@ -111,7 +116,7 @@ class LoadPuzzlePrompt(Popup):
             """
             
             names = []
-            for button in puzzle_layout.children[::-1]:
+            for button in self.toggle_buttons:
                 try:
                     if button.state == 'down':
                         names.append(button.text)
@@ -120,7 +125,7 @@ class LoadPuzzlePrompt(Popup):
                     pass
             selected_puzzles = [puzzles[name] for name in names]
             if selected_puzzles:
-                callback(selected_puzzles[0])
+                self.callback(selected_puzzles[0])
             
             self.dismiss()
         
@@ -134,9 +139,41 @@ class LoadPuzzlePrompt(Popup):
         Create a ToggleButton with text `name`,
         and a button to delete the puzzle.
         """
+        
+        def prompt_delete_puzzle(instance):
+            """
+            Prompt the user to delete the puzzle
+            with the name `name`.
+            """
+            YesNoPrompt(
+                strings.label_delete_puzzle.format(
+                    name),
+                confirm_delete,
+                None).open()
+        
+        def confirm_delete(instance):
+            """
+            Delete the puzzle with the name `name`.
+            """
+            data_caching.delete_puzzle(name)
+            # reload layout to reflect deletion
+            self.create_layout()
+        
+        layout = BoxLayout(orientation='horizontal')
+        
         toggle_button = ToggleButton(text=name)
-        toggle_button.size_hint_y = toggle_button.size_hint_min_y
-        return toggle_button
+        self.toggle_buttons.append(toggle_button)
+        layout.add_widget(toggle_button)
+        
+        delete_button = Button(text='X')
+        delete_button.size_hint_x = 0.1
+        delete_button.bind(
+            on_release=prompt_delete_puzzle)
+        layout.add_widget(delete_button)
+        
+        layout.size_hint_y = layout.size_hint_min_y
+        
+        return layout
 
 class YesNoPrompt(Popup):
     """
