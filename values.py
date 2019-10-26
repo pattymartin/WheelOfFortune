@@ -1,6 +1,7 @@
 queue_start = 5
 queue_interval = 0
 tossup_interval = 0.924
+time_show_matches = 5
 
 color_red = (1, 0, 0, 1)
 color_yellow = (1, 1, 0, 1)

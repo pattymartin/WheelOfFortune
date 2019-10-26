@@ -306,8 +306,8 @@ class PuzzleLayout(GridLayout):
                 except AttributeError:
                     # empty widget
                     pass
-            if self.queue and not letter.lower() in 'aeiou':
-                self.queue.b.put(('matches', matches))
+            if self.queue:
+                self.queue.b.put(('matches', (letter, matches)))
     
     def reveal_all(self):
         """Reveal the entire puzzle."""

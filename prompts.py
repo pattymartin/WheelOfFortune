@@ -38,6 +38,7 @@ class SavePuzzlePrompt(Popup):
         button_save = Button(text=strings.button_save)
         button_layout.add_widget(button_close)
         button_layout.add_widget(button_save)
+        button_layout.size_hint_y = 0.25
         content.add_widget(button_layout)
         
         def input_save(instance):

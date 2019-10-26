@@ -41,7 +41,7 @@ def add_puzzle(name, puzzle_dict):
     
     puzzles = read_puzzles()
     
-    def write_puzzle():
+    def write_puzzle(instance=None):
         """
         Add `puzzle_dict` to `puzzles`
         and write `puzzles` to the settings file.

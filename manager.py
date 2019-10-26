@@ -82,6 +82,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     selected_player = 0
     unavailable_letters = []
     tossup_in_progress = False
+    puzzle_string = ''
+    puzzle_clue = ''
     
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
@@ -234,21 +236,28 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         try:
             command, args = self.puzzle_queue.b.get(block=False)
             if command == 'puzzle_loaded':
-                puzzle_string = ' '.join(args['puzzle'].split())
-                puzzle_clue = args['clue']
-                if puzzle_string:
-                    self.puzzle_label.text = (
-                        strings.mgr_label_puzzle + puzzle_string)
-                    if args['clue']:
-                        self.puzzle_label.text += ('\n'
-                            + strings.mgr_label_clue + puzzle_clue)
-                else:
-                    self.puzzle_label.text = ''
+                self.puzzle_string = ' '.join(args['puzzle'].split())
+                self.puzzle_clue = args['clue']
+                self.show_puzzle()
             elif command == 'matches':
                 self.correct_letter(args)
         except:
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
+    
+    def show_puzzle(self, instance=None):
+        """
+        Show the current puzzle
+        (and clue, if any)
+        in the `puzzle_label`.
+        """
+        if self.puzzle_string:
+            self.puzzle_label.text = self.puzzle_string
+            if self.puzzle_clue:
+                self.puzzle_label.text += ('\n'
+                    + strings.mgr_label_clue + self.puzzle_clue)
+        else:
+            self.puzzle_label.text = ''
     
     def select_red(self, instance):
         """
@@ -413,13 +422,22 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         else:
             return data_caching.str_to_int(self.dropdown.text)
     
-    def correct_letter(self, matches):
+    def correct_letter(self, match):
         """
-        Adjust the selected player's score based on the number of `matches`.
-        `matches` is an int indicating the number of matched letters.
+        Adjust the selected player's score based on the number of matches.
+        `match` is an tuple of the form (letter, number)
+        indicating the letter and the number of matches.
         """
-        self.add_score(matches * self.get_value())
+        letter, matches = match
+        if letter.lower() not in 'aeiou':
+            self.add_score(matches * self.get_value())
         self.custom_value.text = ''
+        
+        # show number of matches in puzzle_label
+        self.puzzle_label.text = strings.label_matches.format(
+            letter=letter.upper(), matches=matches)
+        # schedule to show the puzzle again
+        Clock.schedule_once(self.show_puzzle, values.time_show_matches)
     
     def lose_turn(self, instance):
         # TODO
