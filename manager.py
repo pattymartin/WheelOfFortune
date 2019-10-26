@@ -202,22 +202,19 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             select_box.add_widget(dropdown_layout)
             value_box.add_widget(select_box)
             
-            button_c = SquareButton(text='C')
-            button_c.bind(on_release=self.guess_consonant)
+            button_c = SquareButton(text=strings.button_guess_letter)
+            button_c.bind(on_release=self.guess_letter)
             value_box.add_widget(button_c)
             return value_box
         
         def player_buttons():
             button_box = BoxLayout(orientation='horizontal')
-            btn_v = Button(text='V')
             btn_lose_turn = Button(text=strings.mgr_btn_lose_turn)
             btn_bankrupt = Button(text=strings.mgr_btn_bankrupt)
             btn_bank = Button(text=strings.mgr_btn_bank)
-            btn_v.bind(on_release=self.buy_vowel)
             btn_lose_turn.bind(on_release=self.lose_turn)
             btn_bankrupt.bind(on_release=self.bankrupt)
             btn_bank.bind(on_release=self.bank_score)
-            button_box.add_widget(btn_v)
             button_box.add_widget(btn_lose_turn)
             button_box.add_widget(btn_bankrupt)
             button_box.add_widget(btn_bank)
@@ -374,7 +371,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         self.puzzle_queue.a.put(('reveal', None))
     
-    def guess_consonant(self, instance):
+    def guess_letter(self, instance):
         """
         Open a prompt to select a letter.
         """
@@ -390,7 +387,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     def guessed_letter(self, letter):
         """
         Pass the `letter` to the PuzzleLayout to check for matches.
+        This runs after `guess_letter()` is called
+        and a letter is chosen.
         """
+        if letter.lower() in 'aeiou':
+            # do nothing if not enough money for a vowel
+            if self.get_score() < self.vowel_price:
+                return
+            # subtract vowel price from score
+            self.add_score(-self.vowel_price)
         self.unavailable_letters.append(letter.lower())
         self.puzzle_queue.a.put(('letter', letter))
         self.letters_q.put(('remove_letter', letter))
@@ -415,10 +420,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         self.add_score(matches * self.get_value())
         self.custom_value.text = ''
-    
-    def buy_vowel(self, instance):
-        # TODO
-        print("BUY VOWEL")
     
     def lose_turn(self, instance):
         # TODO
@@ -446,8 +447,10 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         Load settings from file.
         """
         settings = data_caching.get_variables()
-        self.vowel_price = settings.get('vowel_price',
-            values.default_vowel_price)
+        try:
+            self.vowel_price = int(settings.get('vowel_price', ''))
+        except ValueError:
+            self.vowel_price = values.default_vowel_price
         self.min_win = settings.get('min_win', values.default_min_win)
         self.dropdown.values = ['${:,}'.format(value)
             for value in settings.get('cash_values', [])]

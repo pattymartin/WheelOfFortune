@@ -2,6 +2,7 @@ import os
 
 button_close = 'Close'
 button_confirm = 'Confirm'
+button_guess_letter = 'Guess\nLetter'
 button_delete_all = 'Delete All'
 button_fullscreen = 'Toggle\nFullscreen'
 button_load = 'Load'

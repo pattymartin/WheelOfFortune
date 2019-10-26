@@ -301,12 +301,12 @@ class PuzzleLayout(GridLayout):
                         # schedule panel to be revealed
                         Clock.schedule_once(
                             layout.show_letter,
-                            values.reveal_interval * matches)
+                            values.reveal_interval * (matches + 1))
                         matches += 1
                 except AttributeError:
                     # empty widget
                     pass
-            if self.queue:
+            if self.queue and not letter.lower() in 'aeiou':
                 self.queue.b.put(('matches', matches))
     
     def reveal_all(self):
