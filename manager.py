@@ -127,9 +127,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         btn_clear.bind(on_release=self.clear_puzzle)
         layout.add_widget(btn_clear)
         
-        self.btn_tossup = Button(text=strings.mgr_btn_tossup)
-        self.btn_tossup.bind(on_release=self.tossup)
-        layout.add_widget(self.btn_tossup)
+        self.tossup_layout = BoxLayout(orientation='horizontal')
+        self.tossup_button()
+        layout.add_widget(self.tossup_layout)
         
         btn_reveal = Button(text=strings.mgr_btn_reveal)
         btn_reveal.bind(on_release=self.reveal_puzzle)
@@ -229,6 +229,32 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         player_ctrl.add_widget(player_buttons())
         return player_ctrl
     
+    def tossup_button(self, single_button_mode=True):
+        """
+        If `single_button_mode` is True,
+        set `tossup_layout` to contain one button
+        which starts a tossup.
+        If `single_button_mode` is False,
+        set `tossup_layout` to contain three buttons:
+        one to ring in each player.
+        """
+        self.tossup_layout.clear_widgets()
+        
+        if single_button_mode:
+            btn_tossup = Button(text=strings.mgr_btn_tossup)
+            btn_tossup.bind(on_release=self.tossup)
+            self.tossup_layout.add_widget(btn_tossup)
+        else:
+            btn_tossup_red = Button(text='1')
+            btn_tossup_ylw = Button(text='2')
+            btn_tossup_blu = Button(text='3')
+            btn_tossup_red.bind(on_release=lambda i: self.tossup(player=1))
+            btn_tossup_ylw.bind(on_release=lambda i: self.tossup(player=2))
+            btn_tossup_blu.bind(on_release=lambda i: self.tossup(player=3))
+            self.tossup_layout.add_widget(btn_tossup_red)
+            self.tossup_layout.add_widget(btn_tossup_ylw)
+            self.tossup_layout.add_widget(btn_tossup_blu)
+    
     def check_queue(self, instance):
         """
         Check the queue for incoming commands.
@@ -241,6 +267,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.show_puzzle()
             elif command == 'matches':
                 self.correct_letter(args)
+            elif command == 'tossup_timeout':
+                self.tossup()
         except:
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
@@ -268,6 +296,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.selection_color(values.color_light_red)
         if self.btn_red.name:
             self.name_input.text = self.btn_red.name
+        self.stop_all_flashing()
+        self.red_q.put(('flash', None))
     
     def select_yellow(self, instance=None):
         """
@@ -278,6 +308,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.selection_color(values.color_light_yellow)
         if self.btn_ylw.name:
             self.name_input.text = self.btn_ylw.name
+        self.stop_all_flashing()
+        self.ylw_q.put(('flash', None))
     
     def select_blue(self, instance=None):
         """
@@ -288,6 +320,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.selection_color(values.color_light_blue)
         if self.btn_blu.name:
             self.name_input.text = self.btn_blu.name
+        self.stop_all_flashing()
+        self.blu_q.put(('flash', None))
     
     def select_next_player(self):
         """
@@ -412,25 +446,44 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             'clue': '',
             'puzzle': ' ' * 52})
     
-    def tossup(self, instance):
+    def tossup(self, instance=None, player=None):
         """
         If there is no tossup in progress, start one.
         If there is a tossup in progress, pause it.
+        If `player` is 1, 2, or 3,
+        select that player.
         """
         if self.tossup_in_progress:
             self.puzzle_queue.a.put(('pause_tossup', None))
-            self.btn_tossup.text = strings.mgr_btn_tossup
+            self.tossup_button()
+            
+            if player == 1:
+                self.select_red()
+            elif player == 2:
+                self.select_yellow()
+            elif player == 3:
+                self.select_blue()
         else:
             self.puzzle_queue.a.put(('tossup', None))
-            self.btn_tossup.text = strings.mgr_btn_tossup_stop
+            self.tossup_button(single_button_mode=False)
+            self.stop_all_flashing()
         
         self.tossup_in_progress = not self.tossup_in_progress
+    
+    def stop_all_flashing(self):
+        """
+        Tell all ScoreApps to stop flashing.
+        """
+        self.red_q.put(('stop_flash', None))
+        self.ylw_q.put(('stop_flash', None))
+        self.blu_q.put(('stop_flash', None))
     
     def reveal_puzzle(self, instance):
         """
         Tell the layout to reveal the puzzle.
         """
         self.puzzle_queue.a.put(('reveal', None))
+        self.stop_all_flashing()
     
     def guess_letter(self, instance):
         """
@@ -539,7 +592,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         except ValueError:
             self.vowel_price = values.default_vowel_price
         self.min_win = settings.get('min_win', values.default_min_win)
-        self.dropdown.values = ['${:,}'.format(value)
+        self.dropdown.values = [strings.currency_format.format(value)
             for value in settings.get('cash_values', [])]
     
     def exit_app(self, instance):

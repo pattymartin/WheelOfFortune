@@ -428,6 +428,10 @@ class PuzzleLayout(GridLayout):
             except AttributeError:
                 # empty widget
                 pass
+        
+        # no letters on board, end tossup
+        self.queue.b.put(('tossup_timeout', None))
+        self.tossup_running = False
     
     def tossup_random_letter(self, instance=None):
         if not self.tossup_running:
@@ -447,6 +451,10 @@ class PuzzleLayout(GridLayout):
             except AttributeError:
                 # empty widget
                 pass
+        
+        # no more letters, end tossup
+        self.queue.b.put(('tossup_timeout', None))
+        self.tossup_running = False
     
     def pause_tossup(self):
         """

@@ -10,6 +10,8 @@ button_no = 'No'
 button_save = 'Save'
 button_yes = 'Yes'
 
+currency_format = '${:,}'
+
 input_adjust_score = 'Adjust score'
 input_cash_values = 'Enter numbers separated by any whitespace'
 input_custom = 'Enter custom cash value'
