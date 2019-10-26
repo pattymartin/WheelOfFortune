@@ -67,6 +67,12 @@ def delete_puzzle(name):
     puzzles.pop(name, None)
     update_variables({'puzzles': puzzles})
 
+def delete_all_puzzles():
+    """
+    Delete all puzzles.
+    """
+    update_variables({'puzzles': {}})
+
 def str_to_int(s):
     """
     Convert a string to an int,

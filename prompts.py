@@ -136,6 +136,23 @@ class LoadPuzzlePrompt(Popup):
         for puzzle management.
         """
         
+        def prompt_delete_all(instance):
+            """
+            Prompt the user to delete all puzzles.
+            """
+            YesNoPrompt(
+                strings.label_delete_all_puzzles,
+                confirm_delete,
+                None).open()
+        
+        def confirm_delete(instance):
+            """
+            Delete all puzzles.
+            """
+            data_caching.delete_all_puzzles()
+            #reload layout to reflect deletion
+            self.create_layout()
+        
         layout = BoxLayout(orientation='horizontal')
         
         btn_load = Button(text=strings.button_load)
@@ -149,8 +166,7 @@ class LoadPuzzlePrompt(Popup):
         layout.add_widget(btn_save)
         
         btn_delete_all = Button(text=strings.button_delete_all)
-        # TODO
-        btn_delete_all.bind(on_release=lambda i: print("DELETE ALL"))
+        btn_delete_all.bind(on_release=prompt_delete_all)
         layout.add_widget(btn_delete_all)
         
         layout.size_hint_y = 0.25

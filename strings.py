@@ -19,6 +19,7 @@ input_vowel_price = 'Enter a number (default $250)'
 
 label_category = 'Category'
 label_clue = 'Clue'
+label_delete_all_puzzles = 'Delete all puzzles?'
 label_delete_puzzle = 'Delete puzzle "{}"?'
 label_matches = '{matches} "{letter}"s'
 label_min_win = 'Round Prize\nMinimum'
