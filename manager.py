@@ -266,6 +266,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         self.selected_player = 1
         self.selection_color(values.color_light_red)
+        if self.btn_red.name:
+            self.name_input.text = self.btn_red.name
     
     def select_yellow(self, instance):
         """
@@ -274,6 +276,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         self.selected_player = 2
         self.selection_color(values.color_light_yellow)
+        if self.btn_ylw.name:
+            self.name_input.text = self.btn_ylw.name
     
     def select_blue(self, instance):
         """
@@ -282,6 +286,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         self.selected_player = 3
         self.selection_color(values.color_light_blue)
+        if self.btn_blu.name:
+            self.name_input.text = self.btn_blu.name
     
     def selection_color(self, color):
         """
