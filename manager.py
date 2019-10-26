@@ -259,7 +259,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         else:
             self.puzzle_label.text = ''
     
-    def select_red(self, instance):
+    def select_red(self, instance=None):
         """
         Change the colors of TextInput boxes
         to indicate that the red player has been selected.
@@ -269,7 +269,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if self.btn_red.name:
             self.name_input.text = self.btn_red.name
     
-    def select_yellow(self, instance):
+    def select_yellow(self, instance=None):
         """
         Change the colors of TextInput boxes
         to indicate that the yellow player has been selected.
@@ -279,7 +279,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if self.btn_ylw.name:
             self.name_input.text = self.btn_ylw.name
     
-    def select_blue(self, instance):
+    def select_blue(self, instance=None):
         """
         Change the colors of TextInput boxes
         to indicate that the blue player has been selected.
@@ -288,6 +288,20 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.selection_color(values.color_light_blue)
         if self.btn_blu.name:
             self.name_input.text = self.btn_blu.name
+    
+    def select_next_player(self):
+        """
+        Select the next player.
+        """
+        if self.selected_player == 1:
+            # red selected, select yellow
+            self.select_yellow()
+        elif self.selected_player == 2:
+            # yellow selected, select blue
+            self.select_blue()
+        else:
+            # blue or no player selected, select red
+            self.select_red()
     
     def selection_color(self, color):
         """
@@ -478,13 +492,24 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         Clock.schedule_once(self.show_puzzle, values.time_show_matches)
     
     def lose_turn(self, instance):
-        # TODO
-        print("LOSE A TURN")
+        """
+        Player has lost a turn;
+        move to next player.
+        """
+        self.select_next_player()
     
     def bankrupt(self, instance):
+        """
+        Bankrupt the selected player.
+        """
         self.set_score(0)
     
     def bank_score(self, instance):
+        """
+        Add the selected player's score
+        to their game total,
+        then set each player's score to 0.
+        """
         self.add_total(self.get_score())
         
         # set score = 0 for each player
