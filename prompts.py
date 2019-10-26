@@ -87,7 +87,11 @@ class LoadPuzzlePrompt(Popup):
         content = BoxLayout(orientation='vertical')
         self.toggle_buttons = []
         
-        puzzle_layout = BoxLayout(orientation='vertical', size_hint=(1, None))
+        content.add_widget(self._options_box())
+        
+        content.add_widget(Widget(size_hint_y=0.02))
+        
+        puzzle_layout = BoxLayout(orientation='vertical', size_hint_y=None)
         puzzle_layout.bind(minimum_height=puzzle_layout.setter('height'))
         puzzles = data_caching.read_puzzles()
         for name in puzzles.keys():
@@ -97,14 +101,12 @@ class LoadPuzzlePrompt(Popup):
         puzzle_scroll.add_widget(puzzle_layout)
         content.add_widget(puzzle_scroll)
         
-        content.add_widget(Widget(size_hint=(1, 0.02)))
+        content.add_widget(Widget(size_hint_y=0.02))
         
         button_layout = BoxLayout(orientation='horizontal')
-        button_layout.size_hint_y = button_layout.size_hint_min_y
+        button_layout.size_hint_y = 0.25
         button_close = Button(text=strings.button_close)
-        button_close.size_hint_y = button_close.size_hint_min_y
         button_confirm = Button(text=strings.button_confirm)
-        button_confirm.size_hint_y = button_confirm.size_hint_min_y
         button_layout.add_widget(button_close)
         button_layout.add_widget(button_confirm)
         content.add_widget(button_layout)
@@ -133,6 +135,33 @@ class LoadPuzzlePrompt(Popup):
         button_confirm.bind(on_release=input_save)
         
         self.content = content
+    
+    def _options_box(self):
+        """
+        Create a layout containing buttons
+        for puzzle management.
+        """
+        
+        layout = BoxLayout(orientation='horizontal')
+        
+        btn_load = Button(text=strings.button_load)
+        # TODO
+        btn_load.bind(on_release=lambda i: print("LOAD"))
+        layout.add_widget(btn_load)
+        
+        btn_save = Button(text=strings.button_save)
+        # todO
+        btn_save.bind(on_release=lambda i: print("SAVE"))
+        layout.add_widget(btn_save)
+        
+        btn_delete_all = Button(text=strings.button_delete_all)
+        # TODO
+        btn_delete_all.bind(on_release=lambda i: print("DELETE ALL"))
+        layout.add_widget(btn_delete_all)
+        
+        layout.size_hint_y = 0.25
+        
+        return layout
     
     def _puzzle_button(self, name):  
         """
@@ -171,7 +200,8 @@ class LoadPuzzlePrompt(Popup):
             on_release=prompt_delete_puzzle)
         layout.add_widget(delete_button)
         
-        layout.size_hint_y = layout.size_hint_min_y
+        layout.size_hint_y = None
+        layout.height = 50
         
         return layout
 
@@ -192,11 +222,9 @@ class YesNoPrompt(Popup):
         content.add_widget(Label(text=text))
         
         button_layout = BoxLayout(orientation='horizontal')
-        button_layout.size_hint_y = button_layout.size_hint_min_y
+        button_layout.size_hint_y = 0.25
         button_no = Button(text=strings.button_no)
-        button_no.size_hint_y = button_no.size_hint_min_y
         button_yes = Button(text=strings.button_yes)
-        button_yes.size_hint_y = button_yes.size_hint_min_y
         button_layout.add_widget(button_no)
         button_layout.add_widget(button_yes)
         content.add_widget(button_layout)
@@ -287,7 +315,7 @@ class ManagerSettingsPrompt(Popup):
         button_confirm.bind(on_release=input_save)
         button_layout.add_widget(button_close)
         button_layout.add_widget(button_confirm)
-        button_layout.size_hint_y = button_layout.size_hint_min_y
+        button_layout.size_hint_y = 0.25
         
         layout.add_widget(vowel_layout)
         layout.add_widget(min_layout)
@@ -317,7 +345,7 @@ def _input_layout(title, hint_text=''):
     layout = BoxLayout(orientation='horizontal')
     
     layout_label = Label(text=title)
-    layout_label.size_hint = layout_label.size_hint_min
+    layout_label.size_hint_x = None
     layout_label.valign = 'center'
     layout_label.halign = 'center'
     
@@ -327,5 +355,5 @@ def _input_layout(title, hint_text=''):
     layout.add_widget(layout_label)
     layout.add_widget(input)
     
-    layout.size_hint_y = layout.size_hint_min_y
+    layout.size_hint_y = 0.25
     return layout, layout_label, input

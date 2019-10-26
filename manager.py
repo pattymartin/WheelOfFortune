@@ -236,11 +236,14 @@ class ManagerLayout(BoxLayout):
             if command == 'puzzle_loaded':
                 puzzle_string = ' '.join(args['puzzle'].split())
                 puzzle_clue = args['clue']
-                self.puzzle_label.text = (
-                    strings.mgr_label_puzzle + puzzle_string)
-                if args['clue']:
-                    self.puzzle_label.text += ('\n' +
-                        strings.mgr_label_clue + puzzle_clue)
+                if puzzle_string:
+                    self.puzzle_label.text = (
+                        strings.mgr_label_puzzle + puzzle_string)
+                    if args['clue']:
+                        self.puzzle_label.text += ('\n'
+                            + strings.mgr_label_clue + puzzle_clue)
+                else:
+                    self.puzzle_label.text = ''
             elif command == 'matches':
                 self.correct_letter(args)
         except:
