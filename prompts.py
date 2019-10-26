@@ -86,6 +86,7 @@ class LoadPuzzlePrompt(Popup):
     def create_layout(self):
         content = BoxLayout(orientation='vertical')
         self.toggle_buttons = []
+        self.selected_names = []
         
         content.add_widget(self._options_box())
         
@@ -117,15 +118,7 @@ class LoadPuzzlePrompt(Popup):
             then run `callback` on the first puzzle selected.
             """
             
-            names = []
-            for button in self.toggle_buttons:
-                try:
-                    if button.state == 'down':
-                        names.append(button.text)
-                except AttributeError:
-                    # empty widget
-                    pass
-            selected_puzzles = [puzzles[name] for name in names]
+            selected_puzzles = [puzzles[name] for name in self.selected_names]
             if selected_puzzles:
                 self.callback(selected_puzzles[0])
             
@@ -150,7 +143,7 @@ class LoadPuzzlePrompt(Popup):
         layout.add_widget(btn_load)
         
         btn_save = Button(text=strings.button_save)
-        # todO
+        # TODO
         btn_save.bind(on_release=lambda i: print("SAVE"))
         layout.add_widget(btn_save)
         
@@ -188,10 +181,21 @@ class LoadPuzzlePrompt(Popup):
             # reload layout to reflect deletion
             self.create_layout()
         
+        def select_name(instance):
+            """
+            Add `name` to `self.selected_names`,
+            or remove if it is already there.
+            """
+            if name in self.selected_names:
+                self.selected_names.remove(name)
+            else:
+                self.selected_names.append(name)
+        
         layout = BoxLayout(orientation='horizontal')
         
         toggle_button = ToggleButton(text=name)
         self.toggle_buttons.append(toggle_button)
+        toggle_button.bind(on_release=select_name)
         layout.add_widget(toggle_button)
         
         delete_button = Button(text='X')

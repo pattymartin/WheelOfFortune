@@ -14,7 +14,7 @@ from kivy.uix.spinner import Spinner
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-import data_caching, prompts, puzzleboard, score, strings, values
+import data_caching, prompts, puzzleboard, score, strings, used_letters, values
 
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Builder.load_string("""
@@ -81,13 +81,14 @@ class ManagerLayout(BoxLayout):
     selected_player = 0
     unavailable_letters = []
     
-    def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, **kwargs):
+    def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
         super(ManagerLayout, self).__init__(orientation='vertical', **kwargs)
         self.puzzle_queue = puzzle_queue
         self.red_q = red_q
         self.ylw_q = ylw_q
         self.blu_q = blu_q
+        self.letters_q = letters_q
         
         self.add_widget(self._puzzle_label())
         self.add_widget(self._main_buttons())
@@ -340,6 +341,7 @@ class ManagerLayout(BoxLayout):
         """
         self.unavailable_letters = []
         self.puzzle_queue.a.put(('load', puzzle))
+        self.letters_q.put(('reload', None))
     
     def clear_puzzle(self, instance):
         """
@@ -379,6 +381,7 @@ class ManagerLayout(BoxLayout):
         """
         self.unavailable_letters.append(letter.lower())
         self.puzzle_queue.a.put(('letter', letter))
+        self.letters_q.put(('remove_letter', letter))
     
     def get_value(self):
         """
@@ -448,7 +451,8 @@ class ManagerLayout(BoxLayout):
         """
         Tell all other apps to stop.
         """
-        for q in [self.puzzle_queue.a, self.red_q, self.ylw_q, self.blu_q]:
+        for q in [self.puzzle_queue.a, self.red_q, self.ylw_q,
+                  self.blu_q, self.letters_q]:
             q.put(('exit', None))
 
 class ManagerApp(App):
@@ -483,27 +487,48 @@ class ScoreApp(App):
         """Build the app."""
         return score.ScoreLayout(self.bg_color, queue=self.queue)
 
+class LetterboardApp(App):
+    """
+    An app showing the available letters.
+    """
+    
+    def __init__(self, queue, **kwargs):
+        """Create the app."""
+        super(LetterboardApp, self).__init__(**kwargs)
+        self.queue = queue
+    
+    def build(self):
+        """Build the app."""
+        return used_letters.LetterboardLayout(queue=self.queue)
+
 def launchManager(*args):
     """
     Launch a ManagerApp.
     """
     ManagerApp(*args).run()
 
-def launchScore(color, q):
+def launchScore(*args):
     """
     Launch a ScoreApp.
     """
-    ScoreApp(color, queue=q).run()
+    ScoreApp(*args).run()
+
+def launchLetterboard(*args):
+    """
+    Launch a LetterboardApp.
+    """
+    LetterboardApp(*args).run()
 
 if __name__ == '__main__':
     puzzle_q = CommQueue()
     red_q = multiprocessing.Queue()
     ylw_q = multiprocessing.Queue()
     blu_q = multiprocessing.Queue()
+    letters_q = multiprocessing.Queue()
     
     manager_process = multiprocessing.Process(
         target=launchManager,
-        args=(puzzle_q, red_q, ylw_q, blu_q))
+        args=(puzzle_q, red_q, ylw_q, blu_q, letters_q))
     red = multiprocessing.Process(
         target=launchScore,
         args=(values.color_red, red_q))
@@ -513,10 +538,14 @@ if __name__ == '__main__':
     blu = multiprocessing.Process(
         target=launchScore,
         args=((values.color_blue, blu_q)))
+    letters = multiprocessing.Process(
+        target=launchLetterboard,
+        args=(letters_q,))
     
     manager_process.start()
     red.start()
     ylw.start()
     blu.start()
-
+    letters.start()
+    
     puzzleboard.PuzzleboardApp(puzzle_q).run()

@@ -31,12 +31,14 @@ Builder.load_string("""
 """)
 
 class ScoreLayout(BoxLayout):
+    """A layout displaying a player's score."""
     bg_color = ObjectProperty(values.color_red)
     name = StringProperty('')
     score = NumericProperty(0)
     total = NumericProperty(0)
     
     def __init__(self, bg_color=values.color_red, queue=None, **kwargs):
+        """Create the layout."""
         super(ScoreLayout, self).__init__(orientation='vertical', **kwargs)
         self.bg_color = bg_color
         self.queue = queue
@@ -44,6 +46,9 @@ class ScoreLayout(BoxLayout):
             Clock.schedule_once(self.check_queue, values.queue_start)
     
     def check_queue(self, instance):
+        """
+        Check the queue for incoming commands to execute.
+        """
         try:
             command, args = self.queue.get(block=False)
             if command == 'name':
