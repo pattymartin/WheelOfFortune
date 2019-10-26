@@ -313,7 +313,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     
     def get_score(self):
         """
-        Get the score of the current player.
+        Get the score of the selected player.
         """
         if self.selected_player == 1:
             return self.btn_red.score
@@ -325,7 +325,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     
     def set_score(self, score):
         """
-        Set the score of the current player.
+        Set the score of the selected player.
         """
         if self.selected_player == 1:
             self.btn_red.score = score
@@ -342,6 +342,38 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         Add `score` to the selected player's score.
         """
         self.set_score(self.get_score() + score)
+    
+    def get_total(self):
+        """
+        Get the game total of the selected player.
+        """
+        if self.selected_player == 1:
+            return self.btn_red.total
+        elif self.selected_player == 2:
+            return self.btn_ylw.total
+        elif self.selected_player == 3:
+            return self.btn_blu.total
+        return 0
+    
+    def set_total(self, total):
+        """
+        Set the game total of the selected player.
+        """
+        if self.selected_player == 1:
+            self.btn_red.total = total
+            self.red_q.put(('total', total))
+        elif self.selected_player == 2:
+            self.btn_ylw.total = total
+            self.ylw_q.put(('total', total))
+        elif self.selected_player == 3:
+            self.btn_blu.total = total
+            self.blu_q.put(('total', total))
+    
+    def add_total(self, total):
+        """
+        Add `total` to the selected player's game total.
+        """
+        self.set_total(self.get_total() + total)
     
     def choose_puzzle(self, instance):
         """
@@ -450,12 +482,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         print("LOSE A TURN")
     
     def bankrupt(self, instance):
-        # TODO
-        print("BANKRUPT")
+        self.set_score(0)
     
     def bank_score(self, instance):
-        # TODO
-        print("BANK SCORE")
+        self.add_total(self.get_score())
+        
+        # set score = 0 for each player
+        tmp = self.selected_player
+        for i in range(1, 4):
+            self.selected_player = i
+            self.set_score(0)
+        
+        self.selected_player = tmp
     
     def cash_settings(self, instance):
         """
