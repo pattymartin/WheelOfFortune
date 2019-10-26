@@ -1,3 +1,5 @@
+import random
+
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
@@ -163,6 +165,7 @@ class PuzzleLayout(GridLayout):
     panel_size = ListProperty([]) # [width, height] from an Image object
     category_label = ObjectProperty(None)
     queue = ObjectProperty(None)
+    tossup_running = False
     
     def __init__(self, category_label, rows=6, cols=16, queue=None, **kwargs):
         """Create the layout and bind the keyboard."""
@@ -224,6 +227,10 @@ class PuzzleLayout(GridLayout):
             elif command == 'load':
                 # args is a puzzle to be loaded
                 self.load_puzzle(args)
+            elif command == 'tossup':
+                self.start_tossup()
+            elif command == 'pause_tossup':
+                self.pause_tossup()
             elif command == 'reveal':
                 self.reveal_all()
             elif command == 'exit':
@@ -391,6 +398,61 @@ class PuzzleLayout(GridLayout):
                 # empty widget
                 pass
         bind_keyboard(self)
+    
+    def start_tossup(self):
+        """
+        Start a tossup by revealing the
+        bottom-rightmost letter,
+        then revealing random letters.
+        """
+        self.tossup_running = True
+        
+        # indices in order from bottom to top, right to left
+        indices = [
+                i + (j*self.cols)
+                for i in range(self.cols-1, -1, -1)
+                    for j in range(self.rows-1, -1, -1)
+            ][::-1]
+        
+        # look for the bottom-rightmost letter
+        for i in indices:
+            try:
+                layout = self.children[i].layout
+                if layout.text_label.text:
+                    # letter found, reveal
+                    layout.show_letter()
+                    # schedule to start randomly revealing letters
+                    Clock.schedule_once(
+                        self.tossup_random_letter, values.tossup_interval)
+                    return
+            except AttributeError:
+                # empty widget
+                pass
+    
+    def tossup_random_letter(self, instance=None):
+        if not self.tossup_running:
+            return
+        
+        shuffled_children = random.sample(self.children, len(self.children))
+        for child in shuffled_children:
+            try:
+                if child.layout.hidden() and child.layout.text_label.text:
+                    child.layout.show_letter()
+                    
+                    # schedule next letter reveal
+                    Clock.schedule_once(
+                        self.tossup_random_letter, values.tossup_interval)
+                    
+                    return
+            except AttributeError:
+                # empty widget
+                pass
+    
+    def pause_tossup(self):
+        """
+        Pause a tossup.
+        """
+        self.tossup_running = False
     
     def _keyboard_closed(self):
         """Remove keyboard binding when the keyboard is closed."""

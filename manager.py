@@ -81,6 +81,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     
     selected_player = 0
     unavailable_letters = []
+    tossup_in_progress = False
     
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
@@ -124,9 +125,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         btn_clear.bind(on_release=self.clear_puzzle)
         layout.add_widget(btn_clear)
         
-        btn_tossup = Button(text=strings.mgr_btn_tossup)
-        btn_tossup.bind(on_release=self.tossup)
-        layout.add_widget(btn_tossup)
+        self.btn_tossup = Button(text=strings.mgr_btn_tossup)
+        self.btn_tossup.bind(on_release=self.tossup)
+        layout.add_widget(self.btn_tossup)
         
         btn_reveal = Button(text=strings.mgr_btn_reveal)
         btn_reveal.bind(on_release=self.reveal_puzzle)
@@ -354,8 +355,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             'puzzle': ' ' * 52})
     
     def tossup(self, instance):
-        # TODO
-        print("TOSSUP")
+        """
+        If there is no tossup in progress, start one.
+        If there is a tossup in progress, pause it.
+        """
+        if self.tossup_in_progress:
+            self.puzzle_queue.a.put(('pause_tossup', None))
+            self.btn_tossup.text = strings.mgr_btn_tossup
+        else:
+            self.puzzle_queue.a.put(('tossup', None))
+            self.btn_tossup.text = strings.mgr_btn_tossup_stop
+        
+        self.tossup_in_progress = not self.tossup_in_progress
     
     def reveal_puzzle(self, instance):
         """
