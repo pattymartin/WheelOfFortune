@@ -15,6 +15,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
 import data_caching, prompts, puzzleboard, score, strings, used_letters, values
+from fullscreen import Fullscreenable
 
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Builder.load_string("""
@@ -73,7 +74,7 @@ class PlayerButton(ButtonBehavior, score.ScoreLayout):
         self.bg_color = bg_color
         self.queue = queue
 
-class ManagerLayout(BoxLayout):
+class ManagerLayout(BoxLayout, Fullscreenable):
     """
     A BoxLayout for the ManagerApp.
     """

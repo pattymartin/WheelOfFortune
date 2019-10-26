@@ -13,6 +13,7 @@ from kivy.uix.splitter import Splitter
 from kivy.uix.widget import Widget
 
 import data_caching, prompts, strings, values
+from fullscreen import Fullscreenable
 
 Builder.load_string(r"""
 #:import strings strings
@@ -63,12 +64,11 @@ def bind_keyboard(widget):
     # function must be overridden
     pass
     
-class PuzzleWithCategory(BoxLayout):
+class PuzzleWithCategory(BoxLayout, Fullscreenable):
     """BoxLayout containing the puzzleboard and category strip."""
     
     def __init__(self, queue=None, **kwargs):
         """Create the layout."""
-        
         super(PuzzleWithCategory, self).__init__(
             orientation='vertical', **kwargs)
         

@@ -6,8 +6,9 @@ from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 
 import values
+from fullscreen import Fullscreenable
 
-class LetterboardLayout(GridLayout):
+class LetterboardLayout(GridLayout, Fullscreenable):
     """
     A layout showing available letters.
     """

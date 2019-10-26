@@ -5,6 +5,7 @@ from kivy.properties import NumericProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 
 import values
+from fullscreen import Fullscreenable
 
 Builder.load_string("""
 #:import values values
@@ -30,7 +31,7 @@ Builder.load_string("""
         font_size: self.size[1] * values.font_score_total_size
 """)
 
-class ScoreLayout(BoxLayout):
+class ScoreLayout(BoxLayout, Fullscreenable):
     """A layout displaying a player's score."""
     bg_color = ObjectProperty(values.color_red)
     name = StringProperty('')

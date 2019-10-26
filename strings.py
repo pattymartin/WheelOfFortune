@@ -3,6 +3,7 @@ import os
 button_close = 'Close'
 button_confirm = 'Confirm'
 button_delete_all = 'Delete All'
+button_fullscreen = 'Toggle\nFullscreen'
 button_load = 'Load'
 button_no = 'No'
 button_save = 'Save'
