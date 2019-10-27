@@ -59,6 +59,42 @@ def add_puzzle(name, puzzle_dict):
     else:
         write_puzzle()
 
+def import_puzzles(file_list):
+    """
+    Import puzzles from the files in `file_list`.
+    Each file must be a dict parsable by JSON,
+    resembling the following:
+    {
+        '(puzzle name)': {
+            'puzzle': '(puzzle)',
+            'category': '(category)',
+            'clue (optional)': '(clue)'
+        }
+        '(second puzzle name)': {
+            ...
+        }
+    }
+    """
+    unable_to_import = []
+    for puzzle_file in file_list:
+        try:
+            with open(puzzle_file) as f:
+                file_read = json.load(f)
+                for k, v in file_read.items():
+                    add_puzzle(k, {
+                            'puzzle': v['puzzle'].ljust(52)[:52],
+                            'category': v['category'],
+                            'clue': v.get('clue', '')
+                        })
+        except PermissionError:
+            pass
+        except (json.decoder.JSONDecodeError, TypeError, KeyError,
+                AttributeError): # TODO consider other possible errors
+            unable_to_import.append(puzzle_file)
+    if unable_to_import:
+        # TODO warning prompt
+        pass
+
 def delete_puzzle(name):
     """
     Delete the puzzle with the name `name`.

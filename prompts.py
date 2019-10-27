@@ -3,6 +3,7 @@ import os
 
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.filechooser import FileChooserIconView
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
@@ -84,7 +85,7 @@ class LoadPuzzlePrompt(Popup):
         self.callback = callback
         self.create_layout()
     
-    def create_layout(self):
+    def create_layout(self, instance=None):
         content = BoxLayout(orientation='vertical')
         self.toggle_buttons = []
         self.selected_names = []
@@ -153,11 +154,17 @@ class LoadPuzzlePrompt(Popup):
             #reload layout to reflect deletion
             self.create_layout()
         
+        def load_button_click(instance):
+            """
+            """
+            prompt = FileChooserPrompt(data_caching.import_puzzles)
+            prompt.bind(on_dismiss=self.create_layout)
+            prompt.open()
+        
         layout = BoxLayout(orientation='horizontal')
         
         btn_load = Button(text=strings.button_load)
-        # TODO
-        btn_load.bind(on_release=lambda i: print("LOAD"))
+        btn_load.bind(on_release=load_button_click)
         layout.add_widget(btn_load)
         
         btn_save = Button(text=strings.button_save)
@@ -345,6 +352,43 @@ class ManagerSettingsPrompt(Popup):
         layout.add_widget(button_layout)
         
         self.content = layout
+
+class FileChooserPrompt(Popup):
+    """
+    A Popup allowing the user to select files.
+    """
+    
+    def __init__(self, callback, **kwargs):
+        """
+        Create the Popup.
+        Files selected will be passed to `callback`
+        as a list.
+        """
+        super(FileChooserPrompt, self).__init__(**kwargs)
+        
+        layout = BoxLayout(orientation='vertical')
+        chooser = FileChooserIconView(path=os.getcwd(), multiselect=True)
+        layout.add_widget(chooser)
+        
+        def callback_selection(instance):
+            """
+            Pass the FileChooser's selection to `callback`.
+            """
+            callback(chooser.selection)
+        
+        button_layout = BoxLayout(orientation='horizontal')
+        button_cancel = Button(text=strings.button_close)
+        button_confirm = Button(text=strings.button_confirm)
+        button_cancel.bind(on_release=self.dismiss)
+        button_confirm.bind(
+            on_release=_wrap_with_dismiss(callback_selection, self))
+        button_layout.add_widget(button_cancel)
+        button_layout.add_widget(button_confirm)
+        button_layout.size_hint_y = 0.25
+        layout.add_widget(button_layout)
+        
+        self.content = layout
+        
 
 def _wrap_with_dismiss(callback, popup):
     """
