@@ -356,6 +356,7 @@ class PuzzleLayout(GridLayout):
         """
         Load a puzzle into the puzzleboard.
         """
+        self.tossup_running = False
         puzzle_string = list(puzzle['puzzle'])
         
         self.category_label.text = puzzle['category'].upper()
@@ -421,40 +422,59 @@ class PuzzleLayout(GridLayout):
                 if layout.text_label.text:
                     # letter found, reveal
                     layout.show_letter()
-                    # schedule to start randomly revealing letters
-                    Clock.schedule_once(
-                        self.tossup_random_letter, values.tossup_interval)
-                    return
+                    break
             except AttributeError:
                 # empty widget
                 pass
         
-        # no letters on board, end tossup
-        self.queue.b.put(('tossup_timeout', None))
-        self.tossup_running = False
+        next_letter = self.get_random_letter()
+        if next_letter:
+            # schedule to start revealing letters
+            Clock.schedule_once(
+                lambda i: self.tossup_random_letter(next_letter),
+                values.tossup_interval)
+        else:
+            # no more letters on board, end tossup
+            self.queue.b.put(('tossup_timeout', None))
+            self.tossup_running = False
     
-    def tossup_random_letter(self, instance=None):
+    def get_random_letter(self):
+            """
+            Randomly select a LetterLayout
+            containing hidden text.
+            If none are found, return None.
+            """
+            shuffled_children = random.sample(
+                self.children, len(self.children))
+            for child in shuffled_children:
+                try:
+                    if child.layout.hidden() and child.layout.text_label.text:
+                        return child.layout
+                except AttributeError:
+                    # empty widget
+                    pass
+            return None
+    
+    def tossup_random_letter(self, letter):
+        """
+        Reveal a random letter,
+        then schedule this method to run again.
+        """
         if not self.tossup_running:
             return
         
-        shuffled_children = random.sample(self.children, len(self.children))
-        for child in shuffled_children:
-            try:
-                if child.layout.hidden() and child.layout.text_label.text:
-                    child.layout.show_letter()
-                    
-                    # schedule next letter reveal
-                    Clock.schedule_once(
-                        self.tossup_random_letter, values.tossup_interval)
-                    
-                    return
-            except AttributeError:
-                # empty widget
-                pass
+        # show the letter, choose another
+        letter.show_letter()
+        letter = self.get_random_letter()
         
-        # no more letters, end tossup
-        self.queue.b.put(('tossup_timeout', None))
-        self.tossup_running = False
+        if letter:
+            Clock.schedule_once(
+                lambda i: self.tossup_random_letter(letter),
+                values.tossup_interval)
+        else:
+            # no more letters, end tossup
+            self.queue.b.put(('tossup_timeout', None))
+            self.tossup_running = False
     
     def pause_tossup(self):
         """

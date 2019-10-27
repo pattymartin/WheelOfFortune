@@ -81,7 +81,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     
     selected_player = 0
     unavailable_letters = []
-    tossup_in_progress = False
+    tossup_running = False
+    tossup_players_done = []
     puzzle_string = ''
     puzzle_clue = ''
     
@@ -433,9 +434,12 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Tell the layout to load `puzzle`.
         """
+        if self.tossup_running:
+            self.tossup()
         self.unavailable_letters = []
         self.puzzle_queue.a.put(('load', puzzle))
         self.letters_q.put(('reload', None))
+        self.tossup_players_done = []
     
     def clear_puzzle(self, instance):
         """
@@ -453,7 +457,12 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         If `player` is 1, 2, or 3,
         select that player.
         """
-        if self.tossup_in_progress:
+        if player:
+            if player in self.tossup_players_done:
+                return  
+            self.tossup_players_done.append(player)
+        
+        if self.tossup_running:
             self.puzzle_queue.a.put(('pause_tossup', None))
             self.tossup_button()
             
@@ -464,11 +473,13 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             elif player == 3:
                 self.select_blue()
         else:
+            if set(self.tossup_players_done) == set([1, 2, 3]):
+                return
             self.puzzle_queue.a.put(('tossup', None))
             self.tossup_button(single_button_mode=False)
             self.stop_all_flashing()
         
-        self.tossup_in_progress = not self.tossup_in_progress
+        self.tossup_running = not self.tossup_running
     
     def stop_all_flashing(self):
         """
