@@ -24,11 +24,9 @@ class SavePuzzlePrompt(Popup):
             title=strings.title_save_puzzle, **kwargs)
         content = BoxLayout(orientation='vertical')
         
-        name_layout, name_label, name_input = _input_layout(strings.label_name)
         cat_layout, cat_label, cat_input = _input_layout(strings.label_category)
         clue_layout, clue_label, clue_input = _input_layout(strings.label_clue)
         
-        content.add_widget(name_layout)
         content.add_widget(cat_layout)
         content.add_widget(clue_layout)
         # create blank space with an empty widget
@@ -48,22 +46,18 @@ class SavePuzzlePrompt(Popup):
             and save the puzzle.
             """
             
-            name = name_input.text
             category = cat_input.text
             clue = clue_input.text
             
-            if name and category:
+            if category:
                 puzzle_dict = {
                     'category': category,
                     'clue': clue,
                     'puzzle': puzzle}
-                data_caching.add_puzzle(name, puzzle_dict)
+                data_caching.add_puzzle(' '.join(puzzle.split()), puzzle_dict)
                 self.dismiss()
             else:
-                if not name:
-                    name_label.color = values.color_red
-                if not category:
-                    cat_label.color = values.color_red
+                cat_label.color = values.color_red
         
         button_close.bind(on_release=self.dismiss)
         button_save.bind(on_release=input_save)

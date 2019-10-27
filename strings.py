@@ -24,10 +24,12 @@ label_category = 'Category'
 label_clue = 'Clue'
 label_delete_all_puzzles = 'Delete all puzzles?'
 label_delete_puzzle = 'Delete puzzle "{}"?'
+label_import_success = 'The following puzzles were imported:\n{}'
 label_matches = '{matches} "{letter}"s'
 label_min_win = 'Round Prize\nMinimum'
 label_name = 'Name'
 label_name_exists = 'A puzzle with the name "{}" already exists.\nOverwrite?'
+label_names_exist = 'The following puzzles already exist:\n{}\n\nOverwrite?'
 label_vowel_price = 'Vowel Price'
 label_wedges = 'Cash Values'
 
@@ -43,16 +45,23 @@ mgr_select_value = 'Select cash value'
 mgr_title_settings = 'Settings'
 
 title_choose_letter = 'Choose a letter'
+title_duplicates = 'Duplicate puzzles found'
 title_import_error = 'Unable to import'
 title_name_exists = 'Name exists'
 title_save_puzzle = 'Save puzzle'
 title_select_puzzle = 'Select puzzle'
 
+label_import_duplicates = (
+    'The following puzzles were encountered more than once:\n'
+    '{}\n\n'
+    'Only the first instance of each puzzle is recorded\n'
+    '(puzzles with the same text, but different spacing,\n'
+    'are considered to be duplicates).')
 label_import_error = (
     'The following file(s) could not be imported:\n'
     '{}\n\n'
-    'Files must be readable by JSON,\n'
-    'and must consist of a dictionary of puzzles.')
+    'Files must consist of tab-separated values, with the form:\n'
+    '{{puzzle}} {{category}} ({{clue}})')
 
 dir_assets = os.path.join(os.path.dirname(__file__),
     r'assets')
