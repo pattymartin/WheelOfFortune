@@ -299,6 +299,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.name_input.text = self.btn_red.name
         self.stop_all_flashing()
         self.red_q.put(('flash', None))
+        self.letters_q.put(('flash', 'red', None))
     
     def select_yellow(self, instance=None):
         """
@@ -311,6 +312,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.name_input.text = self.btn_ylw.name
         self.stop_all_flashing()
         self.ylw_q.put(('flash', None))
+        self.letters_q.put(('flash', 'yellow', None))
     
     def select_blue(self, instance=None):
         """
@@ -323,6 +325,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.name_input.text = self.btn_blu.name
         self.stop_all_flashing()
         self.blu_q.put(('flash', None))
+        self.letters_q.put(('flash', 'blue', None))
     
     def select_next_player(self):
         """
@@ -353,12 +356,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if self.selected_player == 1:
             self.btn_red.name = text
             self.red_q.put(('name', text))
+            self.letters_q.put(('name', 'red', text))
         elif self.selected_player == 2:
             self.btn_ylw.name = text
             self.ylw_q.put(('name', text))
+            self.letters_q.put(('name', 'yellow', text))
         elif self.selected_player == 3:
             self.btn_blu.name = text
             self.blu_q.put(('name', text))
+            self.letters_q.put(('name', 'blue', text))
     
     def get_score(self):
         """
@@ -379,12 +385,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if self.selected_player == 1:
             self.btn_red.score = score
             self.red_q.put(('score', score))
+            self.letters_q.put(('score', 'red', score))
         elif self.selected_player == 2:
             self.btn_ylw.score = score
             self.ylw_q.put(('score', score))
+            self.letters_q.put(('score', 'yellow', score))
         elif self.selected_player == 3:
             self.btn_blu.score = score
             self.blu_q.put(('score', score))
+            self.letters_q.put(('score', 'blue', score))
     
     def add_score(self, score):
         """
@@ -411,12 +420,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if self.selected_player == 1:
             self.btn_red.total = total
             self.red_q.put(('total', total))
+            self.letters_q.put(('total', 'red', total))
         elif self.selected_player == 2:
             self.btn_ylw.total = total
             self.ylw_q.put(('total', total))
+            self.letters_q.put(('total', 'yellow', total))
         elif self.selected_player == 3:
             self.btn_blu.total = total
             self.blu_q.put(('total', total))
+            self.letters_q.put(('total', 'blue', total))
     
     def add_total(self, total):
         """
@@ -438,7 +450,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.tossup()
         self.unavailable_letters = []
         self.puzzle_queue.a.put(('load', puzzle))
-        self.letters_q.put(('reload', None))
+        self.letters_q.put(('reload', None, None))
         self.tossup_players_done = []
     
     def clear_puzzle(self, instance):
@@ -488,6 +500,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.red_q.put(('stop_flash', None))
         self.ylw_q.put(('stop_flash', None))
         self.blu_q.put(('stop_flash', None))
+        self.letters_q.put(('stop_flash', 'red', None))
+        self.letters_q.put(('stop_flash', 'yellow', None))
+        self.letters_q.put(('stop_flash', 'blue', None))
     
     def reveal_puzzle(self, instance):
         """
@@ -523,7 +538,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.add_score(-self.vowel_price)
         self.unavailable_letters.append(letter.lower())
         self.puzzle_queue.a.put(('letter', letter))
-        self.letters_q.put(('remove_letter', letter))
+        self.letters_q.put(('remove_letter', letter, None))
     
     def get_value(self):
         """
@@ -617,9 +632,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Tell all other apps to stop.
         """
-        for q in [self.puzzle_queue.a, self.red_q, self.ylw_q,
-                  self.blu_q, self.letters_q]:
+        for q in [self.puzzle_queue.a, self.red_q, self.ylw_q, self.blu_q]:
             q.put(('exit', None))
+        self.letters_q.put(('exit', None, None))
 
 class ManagerApp(App):
     """
@@ -655,7 +670,8 @@ class ScoreApp(App):
 
 class LetterboardApp(App):
     """
-    An app showing the available letters.
+    An app showing the available letters
+    and players' scores.
     """
     
     def __init__(self, queue, **kwargs):
@@ -665,7 +681,7 @@ class LetterboardApp(App):
     
     def build(self):
         """Build the app."""
-        return used_letters.LetterboardLayout(queue=self.queue)
+        return used_letters.LettersWithScore(queue=self.queue)
 
 def launchManager(*args):
     """

@@ -1,12 +1,109 @@
 from kivy.app import App
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.clock import Clock
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 
-import values
+import score, values
 from fullscreen import Fullscreenable
+
+class LettersWithScore(BoxLayout):
+    """
+    A layout containing three ScoreLayouts
+    and a LetterboardLayout.
+    """
+    
+    def __init__(self, queue=None, **kwargs):
+        """
+        Create the layout.
+        `queue` is a Queue from multiprocessing,
+        used to accept commands sent to this layout.
+        Commands should be a tuple of the form:
+        (command, color, args)
+        Available commands are:
+        (remove_letter, reload, name, score,
+        total, flash, stop_flash, exit)
+        
+        remove_letter:
+            remove the letter `args` from the LetterboardLayout.
+            `color` and `args` are ignored.
+        reload:
+            refill the LetterboardLayout with all letters.
+            `color` and `args` are ignored.
+        name:
+            change the name of the player
+            specified by `color` to `name`.
+        score:
+            change the score of the player
+            specified by `color` to `score`.
+        total:
+            change the total of the player
+            specified by `color` to `total`.
+        flash:
+            start the flashing effect
+            for the player specified by `color`.
+            `args` is ignored.
+        stop_flash:
+            stop the flashing effect
+            for the player specified by `color`.
+            `args` is ignored.
+        exit:
+            close the current App.
+        """
+        super(LettersWithScore, self).__init__(
+            orientation='vertical', **kwargs)
+        
+        score_box = BoxLayout(orientation='horizontal')
+        red_score = score.ScoreLayout(bg_color=values.color_red)
+        ylw_score = score.ScoreLayout(bg_color=values.color_yellow)
+        blu_score = score.ScoreLayout(bg_color=values.color_blue)
+        score_box.add_widget(red_score)
+        score_box.add_widget(ylw_score)
+        score_box.add_widget(blu_score)
+        score_box.size_hint_y = 0.25
+        self.add_widget(score_box)
+        
+        self.scores = {
+            'red': red_score,
+            'blue': blu_score,
+            'yellow': ylw_score}
+        
+        self.letterboard = LetterboardLayout()
+        self.add_widget(self.letterboard)
+        
+        self.queue = queue
+        if self.queue:
+            Clock.schedule_once(self.check_queue, values.queue_start)
+    
+    def check_queue(self, instance):
+        """
+        Check the queue for incoming commands to execute.
+        """
+        try:
+            command, color, args = self.queue.get(block=False)
+            if command == 'remove_letter':
+                self.letterboard.unavailable.append(args.lower())
+                self.letterboard.fill_layout()
+            elif command == 'reload':
+                self.letterboard.unavailable = []
+                self.letterboard.fill_layout()
+            elif command == 'name':
+                self.scores[color].name = args
+            elif command == 'score':
+                self.scores[color].score = args
+            elif command == 'total':
+                self.scores[color].total = args
+            elif command == 'flash':
+                self.scores[color].flash()
+            elif command == 'stop_flash':
+                self.scores[color].flashing = False
+            elif command == 'exit':
+                App.get_running_app().stop()
+        except:
+            pass
+        Clock.schedule_once(self.check_queue, values.queue_interval)
 
 class LetterboardLayout(GridLayout, Fullscreenable):
     """
@@ -19,10 +116,7 @@ class LetterboardLayout(GridLayout, Fullscreenable):
         super(LetterboardLayout, self).__init__(rows=rows, cols=cols, **kwargs)
         self.callback = callback
         self.unavailable = unavailable
-        self.queue = queue
         self.fill_layout()
-        if self.queue:
-            Clock.schedule_once(self.check_queue, values.queue_start)
     
     def fill_layout(self):
         """Fill in the layout."""
@@ -51,24 +145,6 @@ class LetterboardLayout(GridLayout, Fullscreenable):
             add_letter(v)
         
         self.add_widget(Widget())
-    
-    def check_queue(self, instance):
-        """
-        Check the queue for incoming commands to execute.
-        """
-        try:
-            command, args = self.queue.get(block=False)
-            if command == 'remove_letter':
-                self.unavailable.append(args.lower())
-                self.fill_layout()
-            elif command == 'reload':
-                self.unavailable = []
-                self.fill_layout()
-            elif command == 'exit':
-                App.get_running_app().stop()
-        except:
-            pass
-        Clock.schedule_once(self.check_queue, values.queue_interval)
 
 class LetterboardLetter(ButtonBehavior, Label):
     """
