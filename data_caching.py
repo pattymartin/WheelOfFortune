@@ -89,11 +89,14 @@ def import_puzzles(file_list):
         except PermissionError:
             pass
         except (json.decoder.JSONDecodeError, TypeError, KeyError,
-                AttributeError): # TODO consider other possible errors
+                AttributeError):
             unable_to_import.append(puzzle_file)
     if unable_to_import:
-        # TODO warning prompt
-        pass
+        prompts.InfoPrompt(
+                title=strings.title_import_error,
+                text=strings.label_import_error.format(
+                    '\r\n'.join(unable_to_import))
+            ).open()
 
 def delete_puzzle(name):
     """

@@ -7,6 +7,7 @@ button_delete_all = 'Delete All'
 button_fullscreen = 'Toggle\nFullscreen'
 button_load = 'Import'
 button_no = 'No'
+button_ok = 'OK'
 button_save = 'Export'
 button_yes = 'Yes'
 
@@ -42,9 +43,16 @@ mgr_select_value = 'Select cash value'
 mgr_title_settings = 'Settings'
 
 title_choose_letter = 'Choose a letter'
+title_import_error = 'Unable to import'
 title_name_exists = 'Name exists'
 title_save_puzzle = 'Save puzzle'
 title_select_puzzle = 'Select puzzle'
+
+label_import_error = (
+    'The following file(s) could not be imported:\n'
+    '{}\n\n'
+    'Files must be readable by JSON,\n'
+    'and must consist of a dictionary of puzzles.')
 
 dir_assets = os.path.join(os.path.dirname(__file__),
     r'assets')

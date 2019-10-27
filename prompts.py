@@ -388,7 +388,25 @@ class FileChooserPrompt(Popup):
         layout.add_widget(button_layout)
         
         self.content = layout
+
+class InfoPrompt(Popup):
+    """
+    A simple Popup with text and one button to dismiss.
+    """
+    
+    def __init__(self, text, **kwargs):
+        """Create the popup."""
+        super(InfoPrompt, self).__init__(**kwargs)
         
+        layout = BoxLayout(orientation='vertical')
+        layout.add_widget(Label(text=text))
+        
+        btn = Button(text=strings.button_ok)
+        btn.bind(on_release=self.dismiss)
+        btn.size_hint_y = 0.25
+        layout.add_widget(btn)
+        
+        self.content = layout
 
 def _wrap_with_dismiss(callback, popup):
     """
