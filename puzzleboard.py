@@ -15,7 +15,7 @@ from kivy.uix.splitter import Splitter
 from kivy.uix.widget import Widget
 
 import data_caching, prompts, strings, values
-from fullscreen import Fullscreenable
+from my_widgets import Fullscreenable
 
 Builder.load_string(r"""
 #:import strings strings

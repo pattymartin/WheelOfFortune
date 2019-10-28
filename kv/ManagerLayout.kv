@@ -49,11 +49,13 @@
         cols: 2
         BoxLayout:
             orientation: 'horizontal'
-            TextInput:
+            TabCyclable:
                 id: name_input
                 hint_text: strings.input_name
 				multiline: False
 				on_text_validate: root.update_name(self.text)
+				prev_widget: custom_value
+				next_widget: score_edit
             SquareButton:
                 text: strings.button_ok
                 on_release: root.update_name(name_input.text)
@@ -64,10 +66,12 @@
                 size_hint_x: 0.5
 				on_release:
 					root.add_score(-data_caching.str_to_int(score_edit.text))
-            TextInput:
+            TabCyclable:
                 id: score_edit
                 hint_text: strings.input_adjust_score
 				multiline: False
+				prev_widget: name_input
+				next_widget: custom_value
             Button:
                 text: '+'
                 size_hint_x: 0.5
@@ -77,10 +81,12 @@
             orientation: 'horizontal'
             BoxLayout:
                 orientation: 'vertical'
-                TextInput:
+                TabCyclable:
                     id: custom_value
                     hint_text: strings.input_custom
 					multiline: False
+					prev_widget: score_edit
+					next_widget: name_input
                 BoxLayout:
                     orientation: 'horizontal'
                     Spinner:

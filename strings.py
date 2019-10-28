@@ -88,9 +88,11 @@ file_settings_icon = os.path.join(dir_assets,
 
 dir_kv = os.path.join(os.path.dirname(__file__),
     r'kv')
-file_kv_fullscreen = os.path.join(dir_kv,
-    r'FullscreenButton.kv')
 file_kv_manager = os.path.join(dir_kv,
     r'ManagerLayout.kv')
+file_kv_my_widgets = os.path.join(dir_kv,
+    r'MyWidgets.kv')
+file_kv_prompts = os.path.join(dir_kv,
+    r'Prompts.kv')
 
 file_settings = r'settings.json'

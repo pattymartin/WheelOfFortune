@@ -15,61 +15,7 @@ from kivy.uix.widget import Widget
 
 import data_caching, strings, used_letters, values
 
-Builder.load_string("""
-#:import strings strings
-<FileChooserIconView>
-    # awkward workaround; on_selection doesn't seem to work otherwise
-    select_callback: None
-    on_selection: self.select_callback() if self.select_callback else None
-<YesNoPrompt>
-    id: yes_no_prompt
-    text_label: scroll_label.text_label
-    button_no: button_no
-    button_yes: button_yes
-    BoxLayout:
-        orientation: 'vertical'
-        ScrollableLabel:
-            id: scroll_label
-        BoxLayout:
-            orientation: 'horizontal'
-            size_hint_y: 0.25
-            Button:
-                id: button_no
-                text: strings.button_no
-            Button:
-                id: button_yes
-                text: strings.button_yes
-<InfoPrompt>:
-    id: info_prompt
-    text_label: scroll_label.text_label
-    BoxLayout:
-        orientation: 'vertical'
-        ScrollableLabel:
-            id: scroll_label
-        Button:
-            text: strings.button_ok
-            size_hint_y: 0.25
-            on_release: info_prompt.dismiss()
-<ScrollableLabel>:
-    text_label: text_label
-    BoxLayout:
-        orientation: 'vertical'
-        Widget:
-            size_hint_y: 0.1
-        ScrollView:
-            size_hint_max_y: text_layout.height
-            BoxLayout:
-                id: text_layout
-                orientation: 'vertical'
-                size_hint_y: None
-                height: self.minimum_height
-                Label:
-                    id: text_label
-                    size_hint_y: None
-                    size: self.texture_size
-        Widget:
-            size_hint_y: 0.1
-""")
+Builder.load_file(strings.file_kv_prompts)
 
 class SavePuzzlePrompt(Popup):
     """
@@ -78,49 +24,27 @@ class SavePuzzlePrompt(Popup):
     
     def __init__(self, puzzle, **kwargs):
         """Create the Popup."""
-        super(SavePuzzlePrompt, self).__init__(
-            title=strings.title_save_puzzle, **kwargs)
-        content = BoxLayout(orientation='vertical')
+        super(SavePuzzlePrompt, self).__init__(**kwargs)
+        self.puzzle = puzzle
         
-        cat_layout, cat_label, cat_input = _input_layout(strings.label_category)
-        clue_layout, clue_label, clue_input = _input_layout(strings.label_clue)
+    def input_save(self):
+        """
+        Get text from the input fields,
+        and save the puzzle.
+        """
         
-        content.add_widget(cat_layout)
-        content.add_widget(clue_layout)
-        # create blank space with an empty widget
-        content.add_widget(Widget())
+        category = self.cat_input.text
+        clue = self.clue_input.text
         
-        button_layout = BoxLayout(orientation='horizontal')
-        button_close = Button(text=strings.button_close)
-        button_save = Button(text=strings.button_save)
-        button_layout.add_widget(button_close)
-        button_layout.add_widget(button_save)
-        button_layout.size_hint_y = 0.25
-        content.add_widget(button_layout)
-        
-        def input_save(instance):
-            """
-            Get text from the input fields,
-            and save the puzzle.
-            """
-            
-            category = cat_input.text
-            clue = clue_input.text
-            
-            if category:
-                puzzle_dict = {
-                    'category': category,
-                    'clue': clue,
-                    'puzzle': puzzle}
-                data_caching.add_puzzle(' '.join(puzzle.split()), puzzle_dict)
-                self.dismiss()
-            else:
-                cat_label.color = values.color_red
-        
-        button_close.bind(on_release=self.dismiss)
-        button_save.bind(on_release=input_save)
-        
-        self.content = content
+        if category:
+            puzzle_dict = {
+                'category': category,
+                'clue': clue,
+                'puzzle': self.puzzle}
+            data_caching.add_puzzle(' '.join(self.puzzle.split()), puzzle_dict)
+            self.dismiss()
+        else:
+            cat_label.color = values.color_red
 
 class LoadPuzzlePrompt(Popup):
     """
@@ -335,64 +259,22 @@ class ManagerSettingsPrompt(Popup):
     A Popup with settings for the manager.
     """
     
-    def __init__(self, **kwargs):
+    def input_save(self):
         """
-        Create the Popup.
+        Get the text from the input fields,
+        and save them.
         """
-        super(ManagerSettingsPrompt, self).__init__(
-            title=strings.mgr_title_settings, **kwargs)
+        vowel_price = data_caching.str_to_int(self.vowel_input.text)
+        min_win = data_caching.str_to_int(self.min_input.text)
+        cash_values = [data_caching.str_to_int(line)
+            for line in self.wedges_input.text.split()]
         
-        layout = BoxLayout(orientation='vertical')
+        data_caching.update_variables({
+            'vowel_price': vowel_price if vowel_price else '',
+            'min_win': min_win if min_win else '',
+            'cash_values': sorted([v for v in cash_values if v])})
         
-        vowel_layout, vowel_label, vowel_input = _input_layout(
-            strings.label_vowel_price, strings.input_vowel_price)
-        min_layout, min_label, min_input = _input_layout(
-            strings.label_min_win, strings.input_min_win)
-        wedges_layout, wedges_label, wedges_input = _input_layout(
-            strings.label_wedges, strings.input_cash_values)
-        
-        wedges_label.size_hint_y = 1
-        wedges_layout.size_hint_y = 1
-        
-        cash_values = data_caching.get_variables()
-        vowel_input.text = str(cash_values.get('vowel_price', ''))
-        min_input.text = str(cash_values.get('min_win', ''))
-        wedges_input.text = '\r\n'.join([str(i)
-            for i in cash_values.get('cash_values', [])])
-        
-        def input_save(instance):
-            """
-            Get the text from the input fields,
-            and save them.
-            """
-            vowel_price = data_caching.str_to_int(vowel_input.text)
-            min_win = data_caching.str_to_int(min_input.text)
-            cash_values = [data_caching.str_to_int(line)
-                for line in wedges_input.text.split()]
-            
-            data_caching.update_variables({
-                'vowel_price': vowel_price if vowel_price else '',
-                'min_win': min_win if min_win else '',
-                'cash_values': sorted([v for v in cash_values if v])})
-            
-            self.dismiss()
-        
-        button_layout = BoxLayout(orientation='horizontal')
-        button_close = Button(text=strings.button_close)
-        button_confirm = Button(text=strings.button_confirm)
-        button_close.bind(on_release=self.dismiss)
-        button_confirm.bind(on_release=input_save)
-        button_layout.add_widget(button_close)
-        button_layout.add_widget(button_confirm)
-        button_layout.size_hint_y = 0.25
-        
-        layout.add_widget(vowel_layout)
-        layout.add_widget(min_layout)
-        layout.add_widget(wedges_layout)
-        layout.add_widget(Widget(size_hint=(1, 0.02)))
-        layout.add_widget(button_layout)
-        
-        self.content = layout
+        self.dismiss()
 
 class FileChooserPrompt(Popup):
     """

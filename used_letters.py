@@ -7,7 +7,7 @@ from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 
 import score, values
-from fullscreen import Fullscreenable
+from my_widgets import Fullscreenable
 
 class LettersWithScore(BoxLayout, Fullscreenable):
     """

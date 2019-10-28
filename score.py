@@ -5,7 +5,7 @@ from kivy.properties import NumericProperty, ObjectProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 
 import values
-from fullscreen import Fullscreenable
+from my_widgets import Fullscreenable
 
 Builder.load_string("""
 #:import strings strings

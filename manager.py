@@ -13,7 +13,7 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 
 import data_caching, prompts, puzzleboard, score, strings, used_letters, values
-from fullscreen import Fullscreenable
+from my_widgets import Fullscreenable
 
 Builder.load_file(strings.file_kv_manager)
 
@@ -387,6 +387,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.guessed_letter, self.unavailable_letters)
         popup.open()
         bind_keyboard(popup)
+        popup.bind(on_dismiss=lambda i: popup._keyboard_closed())
     
     def guessed_letter(self, letter):
         """

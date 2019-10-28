@@ -1,11 +1,12 @@
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
+from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
 import strings
 
-Builder.load_file(strings.file_kv_fullscreen)
+Builder.load_file(strings.file_kv_my_widgets)
 
 class FullscreenButton(ModalView):
     """
@@ -46,3 +47,27 @@ class Fullscreenable(Widget):
                 ).open()
         else:
             super(Fullscreenable, self).on_touch_down(touch)
+
+class TabCyclable(TextInput):
+    """
+    A TextInput with references to
+    `prev_widget` and `next_widget`
+    to enable tab cycling.
+    """
+    
+    def __init__(self, prev_widget=None, next_widget=None, **kwargs):
+        super(TabCyclable, self).__init__(**kwargs)
+        self.prev_widget = prev_widget
+        self.next_widget = next_widget
+    
+    def keyboard_on_key_down(self, window, keycode, text, modifiers):
+        if 'tab' in keycode:
+            if 'shift' in modifiers:
+                self.prev_widget.focus = True
+            else:
+                self.next_widget.focus = True
+            return True
+        else:
+            super(TabCyclable, self).keyboard_on_key_down(
+                window, keycode, text, modifiers)
+            return False
