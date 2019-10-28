@@ -1,5 +1,6 @@
 import json
 import os
+from collections import OrderedDict
 
 import prompts, strings
 
@@ -51,6 +52,7 @@ def add_puzzle(name, puzzle_dict):
         
     if name in puzzles.keys():
         prompts.YesNoPrompt(
+                strings.title_name_exists,
                 strings.label_name_exists.format(name),
                 write_puzzle,
                 None
@@ -92,6 +94,7 @@ def add_puzzles(puzzles):
     
     if duplicates:
         prompts.YesNoPrompt(
+                strings.title_names_exist,
                 strings.label_names_exist.format('\n'.join(duplicates)),
                 overwrite,
                 no_overwrite
@@ -155,6 +158,55 @@ def import_puzzles(file_list):
                 text=strings.label_import_duplicates.format(
                     '\r\n'.join(all_duplicate_names))
             ).open()
+
+def export_puzzles_by_name(puzzle_names, filename):
+    """
+    Export puzzles with names in `puzzle_names`
+    to the file `filename`.
+    """
+    
+    if not puzzle_names:
+        prompts.YesNoPrompt(
+                strings.title_no_export_selected,
+                strings.label_no_export_selected,
+                lambda i: export_puzzles(read_puzzles(), filename),
+                None
+            ).open()
+    else:
+        puzzles = read_puzzles()
+        export_puzzles(
+            OrderedDict((name, puzzles[name]) for name in puzzle_names),
+            filename)
+
+def export_puzzles(puzzles, filename):
+    """
+    Export `puzzles` to the file `filename`.
+    `puzzles` should be a puzzles dict.
+    """
+    
+    if not '.' in filename:
+        filename += '.txt'
+    
+    def write(instance=None):
+        """
+        Write the puzzles to the file `filename`.
+        """
+        with open(filename, 'w') as f:
+            for puzzle in puzzles.values():
+                f.write('{}\t{}\t{}\n'.format(
+                    puzzle['puzzle'],
+                    puzzle['category'],
+                    puzzle['clue']))
+    
+    if os.path.exists(filename):
+        prompts.YesNoPrompt(
+                strings.title_file_exists,
+                strings.label_file_exists.format(filename),
+                write,
+                None
+            ).open()
+    else:
+        write()
 
 def delete_puzzle(name):
     """

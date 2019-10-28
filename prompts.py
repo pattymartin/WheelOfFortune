@@ -136,6 +136,7 @@ class LoadPuzzlePrompt(Popup):
             Prompt the user to delete all puzzles.
             """
             YesNoPrompt(
+                strings.title_delete_all_puzzles,
                 strings.label_delete_all_puzzles,
                 confirm_delete,
                 None).open()
@@ -162,8 +163,7 @@ class LoadPuzzlePrompt(Popup):
         layout.add_widget(btn_load)
         
         btn_save = Button(text=strings.button_save)
-        # TODO
-        btn_save.bind(on_release=lambda i: print("SAVE"))
+        btn_save.bind(on_release=FileSaverPrompt(self.selected_names).open)
         layout.add_widget(btn_save)
         
         btn_delete_all = Button(text=strings.button_delete_all)
@@ -186,6 +186,7 @@ class LoadPuzzlePrompt(Popup):
             with the name `name`.
             """
             YesNoPrompt(
+                strings.title_delete_puzzle,
                 strings.label_delete_puzzle.format(
                     name),
                 confirm_delete,
@@ -235,10 +236,10 @@ class YesNoPrompt(Popup):
     respectively.
     """
     
-    def __init__(self, text, yes_callback, no_callback, **kwargs):
+    def __init__(self, title, text, yes_callback, no_callback, **kwargs):
         """Create the Popup."""
         super(YesNoPrompt, self).__init__(
-            title=strings.title_name_exists, **kwargs)
+            title=title, **kwargs)
         
         content = BoxLayout(orientation='vertical')
         content.add_widget(Label(text=text))
@@ -380,6 +381,57 @@ class FileChooserPrompt(Popup):
         button_layout.add_widget(button_confirm)
         button_layout.size_hint_y = 0.25
         layout.add_widget(button_layout)
+        
+        self.content = layout
+
+class FileSaverPrompt(Popup):
+    """
+    A Popup allowing the user to save puzzles to a file.
+    """
+    
+    def __init__(self, puzzle_names, **kwargs):
+        super(FileSaverPrompt, self).__init__(**kwargs)
+        
+        layout = BoxLayout(orientation='vertical')
+        chooser = FileChooserIconView(path=os.getcwd())
+        layout.add_widget(chooser)
+        
+        layout.add_widget(Widget(size_hint_y=0.02))
+        
+        filename_layout, filename_label, filename_input = _input_layout(
+            strings.label_filename)
+        filename_layout.size_hint_y = None
+        filename_layout.height = 26
+        layout.add_widget(filename_layout)
+        
+        filename_input.focus = True
+        
+        layout.add_widget(Widget(size_hint_y=0.02))
+        
+        button_layout = BoxLayout(orientation='horizontal')
+        button_cancel = Button(text=strings.button_close)
+        button_confirm = Button(text=strings.button_confirm)
+        button_layout.add_widget(button_cancel)
+        button_layout.add_widget(button_confirm)
+        button_layout.size_hint_y = 0.25
+        layout.add_widget(button_layout)
+        
+        def input_save(instance):
+            """
+            Get text from the input box,
+            and save puzzles to the filename specified.
+            """
+            
+            filename = filename_input.text
+            
+            if filename:
+                data_caching.export_puzzles_by_name(puzzle_names, filename)
+                self.dismiss()
+            else:
+                filename_label.color = values.color_red
+        
+        button_cancel.bind(on_release=self.dismiss)
+        button_confirm.bind(on_release=input_save)
         
         self.content = layout
 
