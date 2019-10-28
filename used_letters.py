@@ -9,7 +9,7 @@ from kivy.uix.widget import Widget
 import score, values
 from fullscreen import Fullscreenable
 
-class LettersWithScore(BoxLayout):
+class LettersWithScore(BoxLayout, Fullscreenable):
     """
     A layout containing three ScoreLayouts
     and a LetterboardLayout.
@@ -105,7 +105,7 @@ class LettersWithScore(BoxLayout):
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
 
-class LetterboardLayout(GridLayout, Fullscreenable):
+class LetterboardLayout(GridLayout):
     """
     A layout showing available letters.
     """
