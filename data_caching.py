@@ -52,10 +52,10 @@ def add_puzzle(name, puzzle_dict):
         
     if name in puzzles.keys():
         prompts.YesNoPrompt(
-                strings.title_name_exists,
                 strings.label_name_exists.format(name),
                 write_puzzle,
-                None
+                None,
+                title=strings.title_name_exists
             ).open()
     else:
         write_puzzle()
@@ -94,10 +94,10 @@ def add_puzzles(puzzles):
     
     if duplicates:
         prompts.YesNoPrompt(
-                strings.title_names_exist,
                 strings.label_names_exist.format('\n'.join(duplicates)),
                 overwrite,
-                no_overwrite
+                no_overwrite,
+                title=strings.title_names_exist
             ).open()
     else:
         no_overwrite()
@@ -167,10 +167,10 @@ def export_puzzles_by_name(puzzle_names, filename):
     
     if not puzzle_names:
         prompts.YesNoPrompt(
-                strings.title_no_export_selected,
                 strings.label_no_export_selected,
                 lambda i: export_puzzles(read_puzzles(), filename),
-                None
+                None,
+                title=strings.title_no_export_selected
             ).open()
     else:
         puzzles = read_puzzles()
@@ -200,10 +200,10 @@ def export_puzzles(puzzles, filename):
     
     if os.path.exists(filename):
         prompts.YesNoPrompt(
-                strings.title_file_exists,
                 strings.label_file_exists.format(filename),
                 write,
-                None
+                None,
+                title=strings.title_file_exists
             ).open()
     else:
         write()

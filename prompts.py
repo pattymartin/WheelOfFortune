@@ -15,10 +15,38 @@ from kivy.uix.widget import Widget
 import data_caching, strings, used_letters, values
 
 Builder.load_string("""
+#:import strings strings
 <FileChooserIconView>
     # awkward workaround; on_selection doesn't seem to work otherwise
     select_callback: None
     on_selection: self.select_callback() if self.select_callback else None
+<InfoPrompt>:
+    id: info_prompt
+    text_label: text_label
+    BoxLayout:
+        orientation: 'vertical'
+        AnchorLayout:
+            BoxLayout:
+                orientation: 'vertical'
+                Widget:
+                    size_hint_y: 0.1
+                ScrollView:
+                    size_hint_max_y: text_layout.height
+                    BoxLayout:
+                        id: text_layout
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: self.minimum_height
+                        Label:
+                            id: text_label
+                            size_hint_y: None
+                            size: self.texture_size
+                Widget:
+                    size_hint_y: 0.1
+        Button:
+            text: strings.button_ok
+            size_hint_y: 0.25
+            on_release: info_prompt.dismiss()
 """)
 
 class SavePuzzlePrompt(Popup):
@@ -144,10 +172,11 @@ class LoadPuzzlePrompt(Popup):
             Prompt the user to delete all puzzles.
             """
             YesNoPrompt(
-                strings.title_delete_all_puzzles,
-                strings.label_delete_all_puzzles,
-                confirm_delete,
-                None).open()
+                    strings.label_delete_all_puzzles,
+                    confirm_delete,
+                    None,
+                    title=strings.title_delete_all_puzzles
+                ).open()
         
         def confirm_delete(instance):
             """
@@ -194,11 +223,12 @@ class LoadPuzzlePrompt(Popup):
             with the name `name`.
             """
             YesNoPrompt(
-                strings.title_delete_puzzle,
-                strings.label_delete_puzzle.format(
-                    name),
-                confirm_delete,
-                None).open()
+                    strings.label_delete_puzzle.format(
+                        name),
+                    confirm_delete,
+                    None,
+                    title=strings.title_delete_puzzle
+                ).open()
         
         def confirm_delete(instance):
             """
@@ -244,10 +274,9 @@ class YesNoPrompt(Popup):
     respectively.
     """
     
-    def __init__(self, title, text, yes_callback, no_callback, **kwargs):
+    def __init__(self, text, yes_callback, no_callback, **kwargs):
         """Create the Popup."""
-        super(YesNoPrompt, self).__init__(
-            title=title, **kwargs)
+        super(YesNoPrompt, self).__init__(**kwargs)
         
         content = BoxLayout(orientation='vertical')
         content.add_widget(Label(text=text))
@@ -472,16 +501,7 @@ class InfoPrompt(Popup):
     def __init__(self, text, **kwargs):
         """Create the popup."""
         super(InfoPrompt, self).__init__(**kwargs)
-        
-        layout = BoxLayout(orientation='vertical')
-        layout.add_widget(Label(text=text))
-        
-        btn = Button(text=strings.button_ok)
-        btn.bind(on_release=self.dismiss)
-        btn.size_hint_y = 0.25
-        layout.add_widget(btn)
-        
-        self.content = layout
+        self.text_label.text = text
 
 def _wrap_with_dismiss(callback, popup):
     """
