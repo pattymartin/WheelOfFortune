@@ -2,6 +2,7 @@ import json
 import os
 
 from kivy.lang import Builder
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserIconView
@@ -20,33 +21,54 @@ Builder.load_string("""
     # awkward workaround; on_selection doesn't seem to work otherwise
     select_callback: None
     on_selection: self.select_callback() if self.select_callback else None
-<InfoPrompt>:
-    id: info_prompt
-    text_label: text_label
+<YesNoPrompt>
+    id: yes_no_prompt
+    text_label: scroll_label.text_label
+    button_no: button_no
+    button_yes: button_yes
     BoxLayout:
         orientation: 'vertical'
-        AnchorLayout:
-            BoxLayout:
-                orientation: 'vertical'
-                Widget:
-                    size_hint_y: 0.1
-                ScrollView:
-                    size_hint_max_y: text_layout.height
-                    BoxLayout:
-                        id: text_layout
-                        orientation: 'vertical'
-                        size_hint_y: None
-                        height: self.minimum_height
-                        Label:
-                            id: text_label
-                            size_hint_y: None
-                            size: self.texture_size
-                Widget:
-                    size_hint_y: 0.1
+        ScrollableLabel:
+            id: scroll_label
+        BoxLayout:
+            orientation: 'horizontal'
+            size_hint_y: 0.25
+            Button:
+                id: button_no
+                text: strings.button_no
+            Button:
+                id: button_yes
+                text: strings.button_yes
+<InfoPrompt>:
+    id: info_prompt
+    text_label: scroll_label.text_label
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollableLabel:
+            id: scroll_label
         Button:
             text: strings.button_ok
             size_hint_y: 0.25
             on_release: info_prompt.dismiss()
+<ScrollableLabel>:
+    text_label: text_label
+    BoxLayout:
+        orientation: 'vertical'
+        Widget:
+            size_hint_y: 0.1
+        ScrollView:
+            size_hint_max_y: text_layout.height
+            BoxLayout:
+                id: text_layout
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                Label:
+                    id: text_label
+                    size_hint_y: None
+                    size: self.texture_size
+        Widget:
+            size_hint_y: 0.1
 """)
 
 class SavePuzzlePrompt(Popup):
@@ -277,22 +299,9 @@ class YesNoPrompt(Popup):
     def __init__(self, text, yes_callback, no_callback, **kwargs):
         """Create the Popup."""
         super(YesNoPrompt, self).__init__(**kwargs)
-        
-        content = BoxLayout(orientation='vertical')
-        content.add_widget(Label(text=text))
-        
-        button_layout = BoxLayout(orientation='horizontal')
-        button_layout.size_hint_y = 0.25
-        button_no = Button(text=strings.button_no)
-        button_yes = Button(text=strings.button_yes)
-        button_layout.add_widget(button_no)
-        button_layout.add_widget(button_yes)
-        content.add_widget(button_layout)
-        
-        button_no.bind(on_release=_wrap_with_dismiss(no_callback, self))
-        button_yes.bind(on_release=_wrap_with_dismiss(yes_callback, self))
-        
-        self.content = content
+        self.text_label.text = text
+        self.button_no.bind(on_release=_wrap_with_dismiss(no_callback, self))
+        self.button_yes.bind(on_release=_wrap_with_dismiss(yes_callback, self))
 
 class ChooseLetterPrompt(Popup):
     """
@@ -502,6 +511,15 @@ class InfoPrompt(Popup):
         """Create the popup."""
         super(InfoPrompt, self).__init__(**kwargs)
         self.text_label.text = text
+
+class ScrollableLabel(AnchorLayout):
+    """
+    A layout containing a label
+    which is centered vertically,
+    and can scroll if the text is longer
+    than the widget containing it.
+    """
+    pass
 
 def _wrap_with_dismiss(callback, popup):
     """

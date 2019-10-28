@@ -30,7 +30,7 @@ label_matches = '{matches} "{letter}"s'
 label_min_win = 'Round Prize\nMinimum'
 label_name = 'Name'
 label_name_exists = 'A puzzle with the name "{}" already exists.\nOverwrite?'
-label_names_exist = 'The following puzzles already exist:\n{}\n\nOverwrite?'
+label_names_exist = 'The puzzles below already exist. Overwrite?\n\n{}'
 label_no_export_selected = 'No puzzles were selected. Export all?'
 label_vowel_price = 'Vowel Price'
 label_wedges = 'Cash Values'
@@ -59,11 +59,11 @@ title_save_puzzle = 'Save puzzle'
 title_select_puzzle = 'Select puzzle'
 
 label_import_duplicates = (
-    'The following puzzles were encountered more than once:\n'
-    '{}\n\n'
+    'The puzzles below were encountered more than once.\n'
     'Only the first instance of each puzzle is recorded\n'
     '(puzzles with the same text, but different spacing,\n'
-    'are considered to be duplicates).')
+    'are considered to be duplicates).\n\n'
+    '{}')
 label_import_error = (
     'The following file(s) could not be imported:\n'
     '{}\n\n'
