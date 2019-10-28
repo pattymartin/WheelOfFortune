@@ -1,9 +1,29 @@
 from kivy.core.window import Window
-from kivy.uix.button import Button
+from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
 from kivy.uix.widget import Widget
 
-import strings
+Builder.load_string("""
+#:import strings strings
+<FullscreenButton>:
+    Button:
+        text: strings.button_fullscreen
+        on_release: self.parent.toggle_fullscreen()
+""")
+
+class FullscreenButton(ModalView):
+    """
+    A button that will toggle fullscreen mode
+    when pressed.
+    """
+    
+    def toggle_fullscreen(self):
+        """Toggle fullscreen."""
+        if Window.fullscreen != 'auto':
+            Window.fullscreen = 'auto'
+        else:
+            Window.fullscreen = False
+        self.dismiss()
 
 class Fullscreenable(Widget):
     """
@@ -22,21 +42,11 @@ class Fullscreenable(Widget):
         
         if touch.button == 'right':
             pos_x, pos_y = touch.pos
-            pos_hint = {'x': pos_x / self.width, 'y': pos_y / self.height}
-            view = ModalView(size_hint=(None, 0.1), pos_hint=pos_hint)
-            
-            def toggle_fullscreen(instance):
-                """Toggle fullscreen."""
-                if Window.fullscreen != 'auto':
-                    Window.fullscreen = 'auto'
-                else:
-                    Window.fullscreen = False
-                view.dismiss()
-            
-            button = Button(text=strings.button_fullscreen)
-            button.bind(
-                on_release=toggle_fullscreen)
-            view.add_widget(button)
-            view.open()
+            FullscreenButton(
+                    size_hint=(None, 0.1),
+                    pos_hint={
+                        'x': pos_x / self.width,
+                        'y': pos_y / self.height}
+                ).open()
         else:
             super(Fullscreenable, self).on_touch_down(touch)
