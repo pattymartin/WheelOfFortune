@@ -1,3 +1,4 @@
+#:import data_caching data_caching
 #:import strings strings
 #: import values values
 <ManagerLayout>:
@@ -51,6 +52,8 @@
             TextInput:
                 id: name_input
                 hint_text: strings.input_name
+				multiline: False
+				on_text_validate: root.update_name(self.text)
             SquareButton:
                 text: strings.button_ok
                 on_release: root.update_name(name_input.text)
@@ -59,12 +62,17 @@
             Button:
                 text: '-'
                 size_hint_x: 0.5
+				on_release:
+					root.add_score(-data_caching.str_to_int(score_edit.text))
             TextInput:
                 id: score_edit
                 hint_text: strings.input_adjust_score
+				multiline: False
             Button:
                 text: '+'
                 size_hint_x: 0.5
+				on_release:
+					root.add_score(data_caching.str_to_int(score_edit.text))
         BoxLayout:
             orientation: 'horizontal'
             BoxLayout:
@@ -72,6 +80,7 @@
                 TextInput:
                     id: custom_value
                     hint_text: strings.input_custom
+					multiline: False
                 BoxLayout:
                     orientation: 'horizontal'
                     Spinner:
