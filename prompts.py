@@ -1,6 +1,7 @@
 import json
 import os
 
+from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserIconView
@@ -12,6 +13,13 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
 import data_caching, strings, used_letters, values
+
+Builder.load_string("""
+<FileChooserIconView>
+    # awkward workaround; on_selection doesn't seem to work otherwise
+    select_callback: None
+    on_selection: self.select_callback() if self.select_callback else None
+""")
 
 class SavePuzzlePrompt(Popup):
     """
@@ -359,24 +367,32 @@ class FileChooserPrompt(Popup):
         Files selected will be passed to `callback`
         as a list.
         """
-        super(FileChooserPrompt, self).__init__(**kwargs)
+        super(FileChooserPrompt, self).__init__(
+            title=strings.button_load, **kwargs)
+        
+        chooser_path = data_caching.get_variables().get(
+            'file_chooser_path', '')
+        if not chooser_path or not os.path.exists(chooser_path):
+            chooser_path = os.getcwd()
         
         layout = BoxLayout(orientation='vertical')
-        chooser = FileChooserIconView(path=os.getcwd(), multiselect=True)
+        chooser = FileChooserIconView(path=chooser_path, multiselect=True)
         layout.add_widget(chooser)
         
-        def callback_selection(instance):
+        def confirm(instance):
             """
             Pass the FileChooser's selection to `callback`.
             """
             callback(chooser.selection)
+            data_caching.update_variables({
+                'file_chooser_path': chooser.path})
+            self.dismiss()
         
         button_layout = BoxLayout(orientation='horizontal')
         button_cancel = Button(text=strings.button_close)
         button_confirm = Button(text=strings.button_confirm)
         button_cancel.bind(on_release=self.dismiss)
-        button_confirm.bind(
-            on_release=_wrap_with_dismiss(callback_selection, self))
+        button_confirm.bind(on_release=confirm)
         button_layout.add_widget(button_cancel)
         button_layout.add_widget(button_confirm)
         button_layout.size_hint_y = 0.25
@@ -390,10 +406,16 @@ class FileSaverPrompt(Popup):
     """
     
     def __init__(self, puzzle_names, **kwargs):
-        super(FileSaverPrompt, self).__init__(**kwargs)
+        super(FileSaverPrompt, self).__init__(
+            title=strings.button_save, **kwargs)
+        
+        chooser_path = data_caching.get_variables().get(
+            'file_chooser_path', '')
+        if not chooser_path or not os.path.exists(chooser_path):
+            chooser_path = os.getcwd()
         
         layout = BoxLayout(orientation='vertical')
-        chooser = FileChooserIconView(path=os.getcwd())
+        chooser = FileChooserIconView(path=chooser_path)
         layout.add_widget(chooser)
         
         layout.add_widget(Widget(size_hint_y=0.02))
@@ -401,10 +423,13 @@ class FileSaverPrompt(Popup):
         filename_layout, filename_label, filename_input = _input_layout(
             strings.label_filename)
         filename_layout.size_hint_y = None
-        filename_layout.height = 26
+        filename_layout.height = 30
         layout.add_widget(filename_layout)
         
-        filename_input.focus = True
+        def set_filename_input():
+            if chooser.selection:
+                filename_input.text = os.path.basename(chooser.selection[0])
+        chooser.select_callback = set_filename_input
         
         layout.add_widget(Widget(size_hint_y=0.02))
         
@@ -425,7 +450,11 @@ class FileSaverPrompt(Popup):
             filename = filename_input.text
             
             if filename:
-                data_caching.export_puzzles_by_name(puzzle_names, filename)
+                data_caching.export_puzzles_by_name(
+                    puzzle_names,
+                    os.path.join(chooser.path, filename))
+                data_caching.update_variables({
+                    'file_chooser_path': chooser.path})
                 self.dismiss()
             else:
                 filename_label.color = values.color_red
