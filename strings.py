@@ -2,13 +2,14 @@ import os
 
 button_close = 'Close'
 button_confirm = 'Confirm'
+button_export = 'Export'
 button_guess_letter = 'Guess\nLetter'
 button_delete_all = 'Delete All'
 button_fullscreen = 'Toggle\nFullscreen'
 button_load = 'Import'
 button_no = 'No'
 button_ok = 'OK'
-button_save = 'Export'
+button_save = 'Save'
 button_yes = 'Yes'
 
 currency_format = '${:,}'
@@ -84,5 +85,12 @@ file_category_background = os.path.join(dir_assets,
     r'category_background.png')
 file_settings_icon = os.path.join(dir_assets,
     r'settings.png')
+
+dir_kv = os.path.join(os.path.dirname(__file__),
+    r'kv')
+file_kv_fullscreen = os.path.join(dir_kv,
+    r'FullscreenButton.kv')
+file_kv_manager = os.path.join(dir_kv,
+    r'ManagerLayout.kv')
 
 file_settings = r'settings.json'

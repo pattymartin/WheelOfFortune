@@ -1,8 +1,10 @@
 import multiprocessing
 
+from kivy.config import Config
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
+
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.config import Config
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.behaviors.button import ButtonBehavior
@@ -17,23 +19,7 @@ from kivy.uix.widget import Widget
 import data_caching, prompts, puzzleboard, score, strings, used_letters, values
 from fullscreen import Fullscreenable
 
-Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
-Builder.load_string("""
-#:import strings strings
-<Button>:
-    halign: 'center'
-<SquareButton>:
-    size_hint_x: None
-    width:self.height
-<SettingsButton>:
-    size_hint_x: None
-    width:self.height
-    canvas.before:
-        Rectangle:
-            pos: self.pos
-            size: self.size
-            source: strings.file_settings_icon
-""")
+Builder.load_file(strings.file_kv_manager)
 
 def bind_keyboard(widget):
     """Provide keyboard focus to a widget"""
@@ -55,6 +41,7 @@ class SettingsButton(ButtonBehavior, Label):
     """
     A square button with a settings icon
     """
+    
     pass
 
 class CommQueue:
@@ -69,166 +56,56 @@ class CommQueue:
         self.b = multiprocessing.Queue()
 
 class PlayerButton(ButtonBehavior, score.ScoreLayout):
-    def __init__(self, bg_color=(0, 0, 0, 1), queue=None, **kwargs):
+    def __init__(self, bg_color=(0, 0, 0, 1), **kwargs):
         super(PlayerButton, self).__init__(**kwargs)
         self.bg_color = bg_color
-        self.queue = queue
+
+class TossupOneButton(BoxLayout):
+    """
+    A layout containing one button to start a tossup.
+    """
+    
+    def __init__(self, manager_layout=None, **kwargs):
+        super(TossupOneButton, self).__init__(**kwargs)
+        self.manager_layout = manager_layout
+
+class TossupThreeButtons(BoxLayout):
+    """
+    A layout containing three buttons,
+    one for each player to ring in during a tossup.
+    """
+    
+    def __init__(self, manager_layout=None, **kwargs):
+        super(TossupThreeButtons, self).__init__(**kwargs)
+        self.manager_layout = manager_layout
 
 class ManagerLayout(BoxLayout, Fullscreenable):
     """
     A BoxLayout for the ManagerApp.
     """
     
-    selected_player = 0
-    unavailable_letters = []
-    tossup_running = False
-    tossup_players_done = []
-    puzzle_string = ''
-    puzzle_clue = ''
-    
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
-        super(ManagerLayout, self).__init__(orientation='vertical', **kwargs)
+        super(ManagerLayout, self).__init__(**kwargs)
+        
         self.puzzle_queue = puzzle_queue
         self.red_q = red_q
         self.ylw_q = ylw_q
         self.blu_q = blu_q
         self.letters_q = letters_q
         
-        self.add_widget(self._puzzle_label())
-        self.add_widget(self._main_buttons())
-        self.add_widget(self._player_bar())
-        self.add_widget(self._player_control())
-        
+        self.selected_player = 0
+        self.unavailable_letters = []
+        self.tossup_running = False
+        self.tossup_players_done = []
+        self.puzzle_string = ''
+        self.puzzle_clue = ''
+    
         self.load_settings()
+        self.tossup_button(True)
         
         if self.puzzle_queue:
             Clock.schedule_once(self.check_queue, values.queue_start)
-    
-    def _puzzle_label(self):
-        """
-        Create a label to display the current puzzle.
-        """
-        self.puzzle_label = Label()
-        self.puzzle_label.size_hint_y = 0.5
-        return self.puzzle_label
-    
-    def _main_buttons(self):
-        """
-        Create a layout containing the main manager buttons.
-        """
-        layout = BoxLayout(orientation='horizontal')
-        layout.size_hint_y = 0.5
-        
-        btn_select = Button(text=strings.title_select_puzzle)
-        btn_select.bind(on_release=self.choose_puzzle)
-        layout.add_widget(btn_select)
-        
-        btn_clear = Button(text=strings.mgr_btn_clear)
-        btn_clear.bind(on_release=self.clear_puzzle)
-        layout.add_widget(btn_clear)
-        
-        self.tossup_layout = BoxLayout(orientation='horizontal')
-        self.tossup_button()
-        layout.add_widget(self.tossup_layout)
-        
-        btn_reveal = Button(text=strings.mgr_btn_reveal)
-        btn_reveal.bind(on_release=self.reveal_puzzle)
-        layout.add_widget(btn_reveal)
-        
-        return layout
-    
-    def _player_bar(self):
-        """
-        Create a layout with a button to select each player.
-        """
-        
-        player_bar = BoxLayout(orientation='horizontal')
-        self.btn_red = self._player_button(
-            values.color_red, self.select_red)
-        self.btn_ylw = self._player_button(
-            values.color_yellow, self.select_yellow)
-        self.btn_blu = self._player_button(
-            values.color_blue, self.select_blue)
-        player_bar.add_widget(self.btn_red)
-        player_bar.add_widget(self.btn_ylw)
-        player_bar.add_widget(self.btn_blu)
-        return player_bar
-    
-    def _player_button(self, color, callback):
-        """
-        Create a button to select a character.
-        """
-        btn = PlayerButton(color)
-        btn.bind(on_release=callback)
-        return btn
-    
-    def _player_control(self):
-        def name_edit():
-            name_edit_box = BoxLayout(orientation='horizontal')
-            self.name_input = TextInput(hint_text=strings.input_name)
-            confirm = SquareButton(text='OK')
-            self.name_input.bind(
-                on_enter=lambda i: self.update_name(self.name_input.text))
-            confirm.bind(
-                on_release=lambda i: self.update_name(self.name_input.text))
-            name_edit_box.add_widget(self.name_input)
-            name_edit_box.add_widget(confirm)
-            return name_edit_box
-        
-        def score_control():
-            score_ctrl_box = BoxLayout(orientation='horizontal')
-            btn_minus = Button(text='-')
-            btn_plus = Button(text='+')
-            btn_minus.size_hint_x = 0.5
-            btn_plus.size_hint_x = 0.5
-            self.score_edit = TextInput(hint_text=strings.input_adjust_score)
-            score_ctrl_box.add_widget(btn_minus)
-            score_ctrl_box.add_widget(self.score_edit)
-            score_ctrl_box.add_widget(btn_plus)
-            return score_ctrl_box
-        
-        def value_select():
-            value_box = BoxLayout(orientation='horizontal')
-            select_box = BoxLayout(orientation='vertical')
-            
-            self.custom_value = TextInput(hint_text=strings.input_custom)
-            dropdown_layout = BoxLayout(orientation='horizontal')
-            btn_settings = SettingsButton()
-            btn_settings.bind(on_release=self.cash_settings)
-            self.dropdown = Spinner(
-                text=strings.mgr_select_value
-                )
-            dropdown_layout.add_widget(self.dropdown)
-            dropdown_layout.add_widget(btn_settings)
-            select_box.add_widget(self.custom_value)
-            select_box.add_widget(dropdown_layout)
-            value_box.add_widget(select_box)
-            
-            button_c = SquareButton(text=strings.button_guess_letter)
-            button_c.bind(on_release=self.guess_letter)
-            value_box.add_widget(button_c)
-            return value_box
-        
-        def player_buttons():
-            button_box = BoxLayout(orientation='horizontal')
-            btn_lose_turn = Button(text=strings.mgr_btn_lose_turn)
-            btn_bankrupt = Button(text=strings.mgr_btn_bankrupt)
-            btn_bank = Button(text=strings.mgr_btn_bank)
-            btn_lose_turn.bind(on_release=self.lose_turn)
-            btn_bankrupt.bind(on_release=self.bankrupt)
-            btn_bank.bind(on_release=self.bank_score)
-            button_box.add_widget(btn_lose_turn)
-            button_box.add_widget(btn_bankrupt)
-            button_box.add_widget(btn_bank)
-            return button_box
-            
-        player_ctrl = GridLayout(rows=2, cols=2)
-        player_ctrl.add_widget(name_edit())
-        player_ctrl.add_widget(score_control())
-        player_ctrl.add_widget(value_select())
-        player_ctrl.add_widget(player_buttons())
-        return player_ctrl
     
     def tossup_button(self, single_button_mode=True):
         """
@@ -239,22 +116,13 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         set `tossup_layout` to contain three buttons:
         one to ring in each player.
         """
+        
         self.tossup_layout.clear_widgets()
         
         if single_button_mode:
-            btn_tossup = Button(text=strings.mgr_btn_tossup)
-            btn_tossup.bind(on_release=self.tossup)
-            self.tossup_layout.add_widget(btn_tossup)
+            self.tossup_layout.add_widget(TossupOneButton(self))
         else:
-            btn_tossup_red = Button(text='1')
-            btn_tossup_ylw = Button(text='2')
-            btn_tossup_blu = Button(text='3')
-            btn_tossup_red.bind(on_release=lambda i: self.tossup(player=1))
-            btn_tossup_ylw.bind(on_release=lambda i: self.tossup(player=2))
-            btn_tossup_blu.bind(on_release=lambda i: self.tossup(player=3))
-            self.tossup_layout.add_widget(btn_tossup_red)
-            self.tossup_layout.add_widget(btn_tossup_ylw)
-            self.tossup_layout.add_widget(btn_tossup_blu)
+            self.tossup_layout.add_widget(TossupThreeButtons(self))
     
     def check_queue(self, instance):
         """
@@ -288,7 +156,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         else:
             self.puzzle_label.text = ''
     
-    def select_red(self, instance=None):
+    def select_red(self):
         """
         Change the colors of TextInput boxes
         to indicate that the red player has been selected.
@@ -301,7 +169,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.red_q.put(('flash', None))
         self.letters_q.put(('flash', 'red', None))
     
-    def select_yellow(self, instance=None):
+    def select_yellow(self):
         """
         Change the colors of TextInput boxes
         to indicate that the yellow player has been selected.
@@ -314,7 +182,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.ylw_q.put(('flash', None))
         self.letters_q.put(('flash', 'yellow', None))
     
-    def select_blue(self, instance=None):
+    def select_blue(self):
         """
         Change the colors of TextInput boxes
         to indicate that the blue player has been selected.
@@ -436,7 +304,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         self.set_total(self.get_total() + total)
     
-    def choose_puzzle(self, instance):
+    def choose_puzzle(self):
         """
         Prompt the user to select a puzzle.
         """
@@ -453,7 +321,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.letters_q.put(('reload', None, None))
         self.tossup_players_done = []
     
-    def clear_puzzle(self, instance):
+    def clear_puzzle(self):
         """
         Clear the puzzleboard.
         """
@@ -462,7 +330,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             'clue': '',
             'puzzle': ' ' * 52})
     
-    def tossup(self, instance=None, player=None):
+    def tossup(self, player=None):
         """
         If there is no tossup in progress, start one.
         If there is a tossup in progress, pause it.
@@ -504,14 +372,14 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.letters_q.put(('stop_flash', 'yellow', None))
         self.letters_q.put(('stop_flash', 'blue', None))
     
-    def reveal_puzzle(self, instance):
+    def reveal_puzzle(self):
         """
         Tell the layout to reveal the puzzle.
         """
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
     
-    def guess_letter(self, instance):
+    def guess_letter(self):
         """
         Open a prompt to select a letter.
         """
@@ -570,20 +438,20 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         # schedule to show the puzzle again
         Clock.schedule_once(self.show_puzzle, values.time_show_matches)
     
-    def lose_turn(self, instance):
+    def lose_turn(self):
         """
         Player has lost a turn;
         move to next player.
         """
         self.select_next_player()
     
-    def bankrupt(self, instance):
+    def bankrupt(self):
         """
         Bankrupt the selected player.
         """
         self.set_score(0)
     
-    def bank_score(self, instance):
+    def bank_score(self):
         """
         Add the selected player's score
         to their game total,
@@ -599,7 +467,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         self.selected_player = tmp
     
-    def cash_settings(self, instance):
+    def cash_settings(self):
         """
         Open a Popup prompting the user
         to fill in some game settings.
@@ -621,7 +489,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.dropdown.values = [strings.currency_format.format(value)
             for value in settings.get('cash_values', [])]
     
-    def exit_app(self, instance):
+    def exit_app(self):
         """
         Tell all apps to stop, then stop this app.
         """

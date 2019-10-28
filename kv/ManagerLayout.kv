@@ -1,0 +1,126 @@
+#:import strings strings
+#: import values values
+<ManagerLayout>:
+    puzzle_label: puzzle_label
+    tossup_layout: tossup_layout
+    name_input: name_input
+    score_edit: score_edit
+    custom_value: custom_value
+    dropdown: dropdown
+    btn_red: btn_red
+    btn_ylw: btn_ylw
+    btn_blu: btn_blu
+    
+    orientation: 'vertical'
+    Label:
+        id: puzzle_label
+        size_hint_y: 0.5
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: 0.5
+        Button:
+            text: strings.title_select_puzzle
+            on_release: root.choose_puzzle()
+        Button:
+            text: strings.mgr_btn_clear
+            on_release: root.clear_puzzle()
+        BoxLayout:
+            id: tossup_layout
+        Button:
+            text: strings.mgr_btn_reveal
+            on_release: root.reveal_puzzle()
+    BoxLayout:
+        orientation: 'horizontal'
+        PlayerButton:
+            id: btn_red
+            bg_color: values.color_red
+            on_release: root.select_red()
+        PlayerButton:
+            id: btn_ylw
+            bg_color: values.color_yellow
+            on_release: root.select_yellow()
+        PlayerButton:
+            id: btn_blu
+            bg_color: values.color_blue
+            on_release: root.select_blue()
+    GridLayout:
+        rows: 2
+        cols: 2
+        BoxLayout:
+            orientation: 'horizontal'
+            TextInput:
+                id: name_input
+                hint_text: strings.input_name
+            SquareButton:
+                text: strings.button_ok
+                on_release: root.update_name(name_input.text)
+        BoxLayout:
+            orientation: 'horizontal'
+            Button:
+                text: '-'
+                size_hint_x: 0.5
+            TextInput:
+                id: score_edit
+                hint_text: strings.input_adjust_score
+            Button:
+                text: '+'
+                size_hint_x: 0.5
+        BoxLayout:
+            orientation: 'horizontal'
+            BoxLayout:
+                orientation: 'vertical'
+                TextInput:
+                    id: custom_value
+                    hint_text: strings.input_custom
+                BoxLayout:
+                    orientation: 'horizontal'
+                    Spinner:
+                        id: dropdown
+                        text: strings.mgr_select_value
+                    SettingsButton:
+                        on_release: root.cash_settings()
+            SquareButton:
+                text: strings.button_guess_letter
+                on_release: root.guess_letter()
+        BoxLayout:
+            orientation: 'horizontal'
+            Button:
+                text: strings.mgr_btn_lose_turn
+                on_release: root.lose_turn()
+            Button:
+                text: strings.mgr_btn_bankrupt
+                on_release: root.bankrupt()
+            Button:
+                text: strings.mgr_btn_bank
+                on_release: root.bank_score()
+<TossupOneButton>:
+    manager_layout: None
+    orientation: 'horizontal'
+    Button:
+        text: strings.mgr_btn_tossup
+        on_release: root.manager_layout.tossup()
+<TossupThreeButtons>:
+    manager_layout: None
+    orientation: 'horizontal'
+    Button:
+        text: '1'
+        on_release: root.manager_layout.tossup(player=1)
+    Button:
+        text: '2'
+        on_release: root.manager_layout.tossup(player=2)
+    Button:
+        text: '3'
+        on_release: root.manager_layout.tossup(player=3)
+<Button>:
+    halign: 'center'
+<SquareButton>:
+    size_hint_x: None
+    width:self.height
+<SettingsButton>:
+    size_hint_x: None
+    width:self.height
+    canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: strings.file_settings_icon

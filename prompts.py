@@ -221,7 +221,7 @@ class LoadPuzzlePrompt(Popup):
         btn_load.bind(on_release=load_button_click)
         layout.add_widget(btn_load)
         
-        btn_save = Button(text=strings.button_save)
+        btn_save = Button(text=strings.button_export)
         btn_save.bind(on_release=FileSaverPrompt(self.selected_names).open)
         layout.add_widget(btn_save)
         
@@ -445,7 +445,7 @@ class FileSaverPrompt(Popup):
     
     def __init__(self, puzzle_names, **kwargs):
         super(FileSaverPrompt, self).__init__(
-            title=strings.button_save, **kwargs)
+            title=strings.button_export, **kwargs)
         
         chooser_path = data_caching.get_variables().get(
             'file_chooser_path', '')

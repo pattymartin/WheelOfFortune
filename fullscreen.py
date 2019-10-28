@@ -3,13 +3,9 @@ from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
 from kivy.uix.widget import Widget
 
-Builder.load_string("""
-#:import strings strings
-<FullscreenButton>:
-    Button:
-        text: strings.button_fullscreen
-        on_release: self.parent.toggle_fullscreen()
-""")
+import strings
+
+Builder.load_file(strings.file_kv_fullscreen)
 
 class FullscreenButton(ModalView):
     """
