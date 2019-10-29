@@ -10,6 +10,7 @@ from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.textinput import TextInput
 
 import data_caching, prompts, puzzleboard, score, strings, used_letters, values
 from my_widgets import bind_keyboard, Fullscreenable
@@ -76,6 +77,32 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if self.puzzle_queue:
             Clock.schedule_once(self.check_queue, values.queue_start)
     
+    def on_touch_down(self, touch):
+        """
+        Detect a click/touch.
+        If a TextInput is clicked, focus the TextInput.
+        Otherwise, bind the keyboard to self.
+        """
+        
+        self.text_input_clicked = False
+        
+        def filter(widget):
+            for child in widget.children:
+                if self.text_input_clicked:
+                    break
+                filter(child)
+            if (
+                    isinstance(widget, TextInput)
+                    and widget.collide_point(*touch.pos)):
+                self.text_input_clicked = True
+        
+        filter(self)
+        
+        if not self.text_input_clicked:
+            self.bind_keyboard_self()
+        
+        return super(ManagerLayout, self).on_touch_down(touch)
+    
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         """
         Check the keys pressed.
@@ -124,6 +151,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.bankrupt()
         elif combination == self.hotkeys.get('bank_score'):
             self.bank_score()
+        return True
     
     def _keyboard_closed(self):
         """Remove keyboard binding when the keyboard is closed."""
