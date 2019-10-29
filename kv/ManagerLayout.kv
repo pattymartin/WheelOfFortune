@@ -27,6 +27,9 @@
             on_release: root.clear_puzzle()
         BoxLayout:
             id: tossup_layout
+		Button:
+			text: strings.button_bonus_round
+			on_release: root.bonus_round()
         Button:
             text: strings.mgr_btn_reveal
             on_release: root.reveal_puzzle()

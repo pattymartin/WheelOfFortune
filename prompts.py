@@ -256,6 +256,23 @@ class ChooseLetterPrompt(Popup):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
 
+class BonusRoundPrompt(Popup):
+    """
+    A Popup asking the user to enter the contestant's
+    letters for the bonus round.
+    """
+    
+    def __init__(self, letters_callback, solve_callback, **kwargs):
+        """
+        Create the Popup.
+        Selected letters will be passed to `callback`
+        as a string.
+        """
+        
+        super(BonusRoundPrompt, self).__init__(**kwargs)
+        self.letters_callback = letters_callback
+        self.solve_callback = solve_callback
+
 class ManagerSettingsPrompt(Popup):
     """
     A Popup with settings for the manager.
@@ -313,7 +330,7 @@ class EditHotkeysPrompt(Popup):
                 self.hotkey_layouts,
                 values.hotkey_defaults):
             layout.hotkey_text_label.text = existing_hotkeys.get(
-                name, default.title())
+                name, default).title()
     
     def confirm(self):
         """
@@ -369,7 +386,7 @@ class RecordHotkeyLabel(ButtonBehavior, Label):
     
     def default(self):
         """Set this hotkey to its default."""
-        self.text = self.defaults_dict.get(self.name, '')
+        self.text = self.defaults_dict.get(self.name, '').title()
     
     def start_listening(self, instance):
         """

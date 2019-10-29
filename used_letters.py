@@ -86,6 +86,9 @@ class LettersWithScore(BoxLayout, Fullscreenable):
             if command == 'remove_letter':
                 self.letterboard.unavailable.append(args.lower())
                 self.letterboard.fill_layout()
+            elif command == 'remove_letters':
+                self.letterboard.unavailable.extend([c.lower() for c in args])
+                self.letterboard.fill_layout()
             elif command == 'reload':
                 self.letterboard.unavailable = []
                 self.letterboard.fill_layout()

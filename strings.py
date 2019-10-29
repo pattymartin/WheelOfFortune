@@ -1,6 +1,10 @@
 import os
 
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
+
+bonus_round_letters = 'RSTLNE'
+
+button_bonus_round = 'Bonus\nRound'
 button_close = 'Close'
 button_confirm = 'Confirm'
 button_default = 'Default'
@@ -12,6 +16,7 @@ button_fullscreen = 'Toggle\nFullscreen'
 button_load = 'Import'
 button_no = 'No'
 button_ok = 'OK'
+button_reveal = 'Reveal'
 button_save = 'Save'
 button_yes = 'Yes'
 
@@ -67,6 +72,7 @@ mgr_label_clue = 'Clue: '
 mgr_select_value = 'Select cash value'
 mgr_title_settings = 'Settings'
 
+title_bonus_round = 'Bonus Round'
 title_choose_letter = 'Choose a letter'
 title_delete_puzzle = 'Delete puzzle'
 title_delete_all_puzzles = 'Delete all puzzles'

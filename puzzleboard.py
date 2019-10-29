@@ -218,6 +218,9 @@ class PuzzleLayout(GridLayout):
             if command == 'letter':
                 # args is a guessed letter
                 self.check_all(args)
+            elif command == 'bonus_round_letters':
+                # args is multiple letters
+                self.check_all_by_list(args, bonus_round=True)
             elif command == 'load':
                 # args is a puzzle to be loaded
                 self.load_puzzle(args)
@@ -271,37 +274,59 @@ class PuzzleLayout(GridLayout):
                 else:
                     x.size_hint_y = 1
     
-    def check_all(self, letter):
-        """Check all Panels for a given letter and reveal matches."""
-        if letter.lower() in strings.alphabet:
+    def check_all_by_list(self, letters, bonus_round=False):
+        """
+        Check all Panels for a list of letters
+        and reveal matches.
+        """
+        
+        letters = [letter for letter in letters
+            if letter.lower() in strings.alphabet]
+        
+        if bonus_round:
+            # indices in order from top to bottom, left to right
+            indices = [
+                    i + (j*self.cols)
+                    for i in range(self.cols)
+                        for j in range(self.rows)
+                ][::-1]
+        else:
             # indices in order from top to bottom, right to left
             indices = [
                     i + (j*self.cols)
                     for i in range(self.cols-1, -1, -1)
                         for j in range(self.rows)
                 ][::-1]
-            # the number of matches found so far,
-            # used to offset the scheduled time to change the panel
-            matches = 0
-            for i in indices:
-                try:
-                    layout = self.children[i].layout
-                    if layout.hidden() and layout.check_letter(letter):
-                        # match found
-                        # schedule panel to turn blue
-                        Clock.schedule_once(
-                            layout.blue,
-                            values.blue_interval * matches)
-                        # schedule panel to be revealed
-                        Clock.schedule_once(
-                            layout.show_letter,
-                            values.reveal_interval * (matches + 1))
-                        matches += 1
-                except AttributeError:
-                    # empty widget
-                    pass
-            if self.queue:
-                self.queue.b.put(('matches', (letter, matches)))
+        
+        # the number of matches found so far,
+        # used to offset the scheduled time to change the panel
+        matches = 0
+        
+        for i in indices:
+            try:
+                layout = self.children[i].layout
+                if layout.hidden() and any(
+                        layout.check_letter(letter) for letter in letters):
+                    # match found
+                    # schedule panel to turn blue
+                    Clock.schedule_once(
+                        layout.blue,
+                        values.blue_interval * matches)
+                    # schedule panel to be revealed
+                    Clock.schedule_once(
+                        layout.show_letter,
+                        values.reveal_interval * (matches + 1))
+                    matches += 1
+            except AttributeError:
+                # empty widget
+                pass
+        if self.queue and len(letters) == 1:
+            self.queue.b.put(('matches', (letters[0], matches)))
+    
+    def check_all(self, letter):
+        """Check all Panels for a given letter and reveal matches."""
+        
+        self.check_all_by_list([letter])
     
     def reveal_all(self):
         """Reveal the entire puzzle."""

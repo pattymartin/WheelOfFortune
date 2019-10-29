@@ -42,6 +42,49 @@
 			Button:
 				text: strings.button_save
 				on_release: root.input_save()
+<BonusRoundPrompt>:
+	title: strings.title_bonus_round
+	size_hint_y: None
+	height: 180
+	size_hint_max_x: 600
+	GridLayout:
+		rows: 4
+		cols: 2
+		Label:
+			id: given_letters
+			text: strings.bonus_round_letters
+			size_hint_y: None
+			height: 30
+		Button:
+			text: strings.button_reveal
+			on_release: root.letters_callback(given_letters.text)
+			size_hint_y: None
+			height: 30
+		TextInput:
+			id: contestant_letters
+			size_hint_y: None
+			height: 30
+		Button:
+			text: strings.button_reveal
+			on_release: root.letters_callback(contestant_letters.text)
+			size_hint_y: None
+			height: 30
+		Widget:
+			size_hint_y: None
+			height: 30
+		Widget:
+			size_hint_y: None
+			height: 30
+		Button:
+			text: strings.button_close
+			on_release: root.dismiss()
+			size_hint_y: None
+			height: 30
+		Button:
+			text: strings.mgr_btn_reveal
+			on_release: root.solve_callback()
+			size_hint_y: None
+			height: 30
 <ManagerSettingsPrompt>:
 	vowel_input: vowel_input
 	min_input: min_input
@@ -190,10 +233,15 @@
 			Widget:
 				size_hint_y: None
 				height: 5
-		Button:
-			text: strings.button_confirm
+		BoxLayout:
+			orientation: 'horizontal'
 			size_hint_y: 0.25
-			on_release: root.confirm()
+			Button:
+				text: strings.button_close
+				on_release: root.dismiss()
+			Button:
+				text: strings.button_confirm
+				on_release: root.confirm()
 <HotkeyLayout@BoxLayout>
 	description: ''
 	name: ''

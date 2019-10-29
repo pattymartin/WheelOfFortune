@@ -464,6 +464,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.puzzle_queue.a.put(('letter', letter))
         self.letters_q.put(('remove_letter', None, letter))
     
+    def bonus_round_letters(self, letters):
+        """
+        Pass the list of selected letters to the puzzleboard,
+        and remove them from the used letter board.
+        """
+        
+        self.unavailable_letters.extend(letters)
+        self.puzzle_queue.a.put(('bonus_round_letters', letters))
+        self.letters_q.put(('remove_letters', None, letters))
+        print(letters)
+        # TODO
+    
     def get_value(self):
         """
         Get the value indicated by the custom cash value input box.
@@ -493,6 +505,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             letter=letter.upper(), matches=matches)
         # schedule to show the puzzle again
         Clock.schedule_once(self.show_puzzle, values.time_show_matches)
+    
+    def bonus_round(self):
+        """
+        Prompts the user to enter the contestant's
+        letters for the bonus round.
+        """
+        
+        prompts.BonusRoundPrompt(
+                letters_callback=self.bonus_round_letters,
+                solve_callback=self.reveal_puzzle,
+                on_dismiss=self.bind_keyboard_self
+            ).open()
     
     def lose_turn(self):
         """
