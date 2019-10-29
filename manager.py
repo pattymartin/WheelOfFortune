@@ -46,25 +46,6 @@ class PlayerButton(ButtonBehavior, score.ScoreLayout):
         super(PlayerButton, self).__init__(**kwargs)
         self.bg_color = bg_color
 
-class TossupOneButton(BoxLayout):
-    """
-    A layout containing one button to start a tossup.
-    """
-    
-    def __init__(self, manager_layout=None, **kwargs):
-        super(TossupOneButton, self).__init__(**kwargs)
-        self.manager_layout = manager_layout
-
-class TossupThreeButtons(BoxLayout):
-    """
-    A layout containing three buttons,
-    one for each player to ring in during a tossup.
-    """
-    
-    def __init__(self, manager_layout=None, **kwargs):
-        super(TossupThreeButtons, self).__init__(**kwargs)
-        self.manager_layout = manager_layout
-
 class ManagerLayout(BoxLayout, Fullscreenable):
     """
     A BoxLayout for the ManagerApp.
@@ -88,7 +69,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.puzzle_clue = ''
     
         self.load_settings()
-        self.tossup_button(True)
+        self.tossup_button.disabled = False
         
         self.bind_keyboard_self()
         
@@ -152,23 +133,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     def bind_keyboard_self(self, instance=None):
         """Bind the keyboard to self."""
         bind_keyboard(self)
-    
-    def tossup_button(self, single_button_mode=True):
-        """
-        If `single_button_mode` is True,
-        set `tossup_layout` to contain one button
-        which starts a tossup.
-        If `single_button_mode` is False,
-        set `tossup_layout` to contain three buttons:
-        one to ring in each player.
-        """
-        
-        self.tossup_layout.clear_widgets()
-        
-        if single_button_mode:
-            self.tossup_layout.add_widget(TossupOneButton(self))
-        else:
-            self.tossup_layout.add_widget(TossupThreeButtons(self))
     
     def check_queue(self, instance):
         """
@@ -399,7 +363,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         if self.tossup_running:
             self.puzzle_queue.a.put(('pause_tossup', None))
-            self.tossup_button()
+            self.tossup_button.disabled = False
             
             if player == 1:
                 self.select_red()
@@ -411,7 +375,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             if set(self.tossup_players_done) == set([1, 2, 3]):
                 return
             self.puzzle_queue.a.put(('tossup', None))
-            self.tossup_button(single_button_mode=False)
+            self.tossup_button.disabled = True
             self.stop_all_flashing()
         
         self.tossup_running = not self.tossup_running

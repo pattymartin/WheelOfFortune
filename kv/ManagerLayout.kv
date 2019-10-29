@@ -3,7 +3,7 @@
 #: import values values
 <ManagerLayout>:
     puzzle_label: puzzle_label
-    tossup_layout: tossup_layout
+	tossup_button: tossup_button
     name_input: name_input
     score_edit: score_edit
     custom_value: custom_value
@@ -25,8 +25,10 @@
         Button:
             text: strings.mgr_btn_clear
             on_release: root.clear_puzzle()
-        BoxLayout:
-            id: tossup_layout
+		Button:
+			id: tossup_button
+			text: strings.mgr_btn_tossup
+			on_release: root.tossup()
 		Button:
 			text: strings.button_bonus_round
 			on_release: root.bonus_round()
@@ -117,22 +119,6 @@
             Button:
                 text: strings.mgr_btn_bank
                 on_release: root.bank_score()
-<TossupOneButton>:
-    orientation: 'horizontal'
-    Button:
-        text: strings.mgr_btn_tossup
-        on_release: root.manager_layout.tossup()
-<TossupThreeButtons>:
-    orientation: 'horizontal'
-    Button:
-        text: '1'
-        on_release: root.manager_layout.tossup(player=1)
-    Button:
-        text: '2'
-        on_release: root.manager_layout.tossup(player=2)
-    Button:
-        text: '3'
-        on_release: root.manager_layout.tossup(player=3)
 <Button>:
     halign: 'center'
 <SquareButton>:
