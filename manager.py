@@ -133,6 +133,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.clear_puzzle()
         elif combination == self.hotkeys.get('start_tossup'):
             self.tossup()
+        elif combination == self.hotkeys.get('bonus_round'):
+            self.bonus_round()
         elif combination == self.hotkeys.get('solve'):
             self.reveal_puzzle()
         elif combination == self.hotkeys.get('lose_turn'):

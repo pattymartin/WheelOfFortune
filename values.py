@@ -32,13 +32,14 @@ hotkey_default_select_next = 'spacebar'
 hotkey_default_select_puzzle = 'ctrl+o'
 hotkey_default_clear_puzzle = 'backspace'
 hotkey_default_start_tossup = '4'
+hotkey_default_bonus_round = '5'
 hotkey_default_solve = 'enter'
 hotkey_default_lose_turn = 'ctrl+w'
 hotkey_default_bankrupt = '0'
 hotkey_default_bank_score = '='
 hotkey_names = [
     'select_1', 'select_2', 'select_3', 'select_next',
-    'select_puzzle', 'clear_puzzle', 'start_tossup', 'solve',
+    'select_puzzle', 'clear_puzzle', 'start_tossup', 'bonus_round', 'solve',
     'lose_turn', 'bankrupt', 'bank_score']
 hotkey_defaults = [
     hotkey_default_select_1,
@@ -48,6 +49,7 @@ hotkey_defaults = [
     hotkey_default_select_puzzle,
     hotkey_default_clear_puzzle,
     hotkey_default_start_tossup,
+    hotkey_default_bonus_round,
     hotkey_default_solve,
     hotkey_default_lose_turn,
     hotkey_default_bankrupt,
