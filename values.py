@@ -12,6 +12,7 @@ color_light_red = (1, 0.75, 0.75, 1)
 color_light_yellow = (1, 1, 0.75, 1)
 color_light_blue = (0.75, 0.75, 1, 1)
 color_none = (0, 0, 0, 0)
+color_white = (1, 1, 1, 1)
 
 default_vowel_price = 250
 default_min_win = 1000

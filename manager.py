@@ -166,50 +166,84 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         else:
             self.puzzle_label.text = ''
     
+    def check_eligible(self, player):
+        """
+        Before selecting a player,
+        use this method to make sure that this player
+        is eligible to take a turn.
+        A player is ineligible during a toss-up if:
+            the player already took a turn in this toss-up
+            or
+            another player is currently guessing
+        """
+        
+        # True if the player already rang in on this toss-up
+        already_rang = (player in self.tossup_players_done)
+        
+        # True if a tossup has been started but is currently paused.
+        # This means another player has already rung in.
+        not_my_turn = (self.tossup_players_done and not self.tossup_running)
+        
+        if already_rang or not_my_turn:
+            return False
+        return True
+    
     def select_red(self):
         """
         Change the colors of TextInput boxes
         to indicate that the red player has been selected.
         """
-        self.selected_player = 1
-        self.selection_color(values.color_light_red)
-        if self.btn_red.name:
-            self.name_input.text = self.btn_red.name
-        self.stop_all_flashing()
-        self.red_q.put(('flash', None))
-        self.letters_q.put(('flash', 'red', None))
-        if self.tossup_running:
-            self.tossup(player=self.selected_player)
+        
+        player = 1
+        
+        if self.check_eligible(player):
+            self.selected_player = player
+            self.selection_color(values.color_light_red)
+            if self.btn_red.name:
+                self.name_input.text = self.btn_red.name
+            self.stop_all_flashing()
+            self.red_q.put(('flash', None))
+            self.letters_q.put(('flash', 'red', None))
+            if self.tossup_running:
+                self.tossup(player=self.selected_player)
     
     def select_yellow(self):
         """
         Change the colors of TextInput boxes
         to indicate that the yellow player has been selected.
         """
-        self.selected_player = 2
-        self.selection_color(values.color_light_yellow)
-        if self.btn_ylw.name:
-            self.name_input.text = self.btn_ylw.name
-        self.stop_all_flashing()
-        self.ylw_q.put(('flash', None))
-        self.letters_q.put(('flash', 'yellow', None))
-        if self.tossup_running:
-            self.tossup(player=self.selected_player)
+        
+        player = 2
+        
+        if self.check_eligible(player):
+            self.selected_player = player
+            self.selection_color(values.color_light_yellow)
+            if self.btn_ylw.name:
+                self.name_input.text = self.btn_ylw.name
+            self.stop_all_flashing()
+            self.ylw_q.put(('flash', None))
+            self.letters_q.put(('flash', 'yellow', None))
+            if self.tossup_running:
+                self.tossup(player=self.selected_player)
     
     def select_blue(self):
         """
         Change the colors of TextInput boxes
         to indicate that the blue player has been selected.
         """
-        self.selected_player = 3
-        self.selection_color(values.color_light_blue)
-        if self.btn_blu.name:
-            self.name_input.text = self.btn_blu.name
-        self.stop_all_flashing()
-        self.blu_q.put(('flash', None))
-        self.letters_q.put(('flash', 'blue', None))
-        if self.tossup_running:
-            self.tossup(player=self.selected_player)
+        
+        player = 3
+        
+        if self.check_eligible(player):
+            self.selected_player = player
+            self.selection_color(values.color_light_blue)
+            if self.btn_blu.name:
+                self.name_input.text = self.btn_blu.name
+            self.stop_all_flashing()
+            self.blu_q.put(('flash', None))
+            self.letters_q.put(('flash', 'blue', None))
+            if self.tossup_running:
+                self.tossup(player=self.selected_player)
     
     def select_next_player(self):
         """
@@ -224,6 +258,16 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         else:
             # blue or no player selected, select red
             self.select_red()
+    
+    def deselect_player(self):
+        """
+        Deselect the selected player.
+        """
+        
+        self.selected_player = 0
+        self.selection_color(values.color_white)
+        self.name_input.text = ''
+        self.stop_all_flashing()
     
     def selection_color(self, color):
         """
@@ -376,7 +420,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 return
             self.puzzle_queue.a.put(('tossup', None))
             self.tossup_button.disabled = True
-            self.stop_all_flashing()
+            self.deselect_player()
         
         self.tossup_running = not self.tossup_running
     
