@@ -6,7 +6,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 
-import score, values
+import score, strings, values
 from my_widgets import Fullscreenable
 
 class LettersWithScore(BoxLayout, Fullscreenable):
@@ -121,9 +121,8 @@ class LetterboardLayout(GridLayout):
     def fill_layout(self):
         """Fill in the layout."""
         self.clear_widgets()
-        alphabet = 'abcdefghijklmnopqrstuvwxyz'
         vowels = 'aeiou'
-        consonants = [c for c in alphabet if not c in vowels]
+        consonants = [c for c in strings.alphabet if not c in vowels]
         
         def add_letter(letter):
             """

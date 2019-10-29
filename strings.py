@@ -1,7 +1,10 @@
 import os
 
+alphabet = 'abcdefghijklmnopqrstuvwxyz'
 button_close = 'Close'
 button_confirm = 'Confirm'
+button_default = 'Default'
+button_edit_hotkeys = 'Hotkeys'
 button_export = 'Export'
 button_guess_letter = 'Guess\nLetter'
 button_delete_all = 'Delete All'
@@ -25,8 +28,25 @@ label_category = 'Category'
 label_clue = 'Clue'
 label_delete_all_puzzles = 'Delete all puzzles?'
 label_delete_puzzle = 'Delete puzzle "{}"?'
+label_edit_hotkey_info = (
+    'Click on a hotkey to change it.\n'
+    'Letters A-Z (without modifiers) are reserved for guessing letters.\n'
+    'Press Escape to remove a hotkey.')
+label_edit_hotkey_waiting = 'Waiting... {}'
+label_exit_app = 'Exit app?'
 label_file_exists = 'File "{}" already exists. Overwrite?'
 label_filename = 'File name:'
+label_hotkey_bank_score = 'Bank score:'
+label_hotkey_bankrupt = 'Bankrupt:'
+label_hotkey_clear_puzzle = 'Clear puzzle:'
+label_hotkey_lose_turn = 'Lose a turn:'
+label_hotkey_select_1 = 'Select player 1:'
+label_hotkey_select_2 = 'Select player 2:'
+label_hotkey_select_3 = 'Select player 3:'
+label_hotkey_select_next = 'Select next player:'
+label_hotkey_select_puzzle = 'Select puzzle:'
+label_hotkey_solve = 'Solve puzzle:'
+label_hotkey_start_tossup = 'Start tossup:'
 label_matches = '{matches} "{letter}"s'
 label_min_win = 'Round Prize\nMinimum'
 label_name = 'Name'
@@ -51,6 +71,8 @@ title_choose_letter = 'Choose a letter'
 title_delete_puzzle = 'Delete puzzle'
 title_delete_all_puzzles = 'Delete all puzzles'
 title_duplicates = 'Duplicate puzzles found'
+title_edit_hotkeys = 'Edit hotkeys'
+title_exit_app = 'Exit app'
 title_file_exists = 'File exists'
 title_import_error = 'Unable to import'
 title_name_exists = 'Name exists'
@@ -73,6 +95,8 @@ label_import_error = (
 
 dir_assets = os.path.join(os.path.dirname(__file__),
     r'assets')
+file_alert_icon = os.path.join(dir_assets,
+    r'alert.png')
 file_panel = os.path.join(dir_assets,
     r'panel.png')
 file_panel_blue = os.path.join(dir_assets,

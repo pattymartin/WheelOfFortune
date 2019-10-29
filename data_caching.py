@@ -222,6 +222,22 @@ def delete_all_puzzles():
     """
     update_variables({'puzzles': {}})
 
+def get_hotkeys():
+    """
+    Load the hotkeys from the settings file.
+    Returns an empty dict if the file does not exist,
+    or if there are no hotkeys saved.
+    """
+    
+    return get_variables().get('hotkeys', {})
+
+def write_hotkeys(hotkeys):
+    """
+    Save a dict of hotkeys to the settings file.
+    """
+    
+    update_variables({'hotkeys': hotkeys})
+
 def str_to_int(s):
     """
     Convert a string to an int,

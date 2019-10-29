@@ -8,6 +8,13 @@ import strings
 
 Builder.load_file(strings.file_kv_my_widgets)
 
+def bind_keyboard(widget):
+    """Provide keyboard focus to a widget"""
+    
+    widget._keyboard = Window.request_keyboard(
+        widget._keyboard_closed, widget)
+    widget._keyboard.bind(on_key_down=widget._on_keyboard_down)
+
 class FullscreenButton(ModalView):
     """
     A button that will toggle fullscreen mode

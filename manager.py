@@ -5,7 +5,6 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
@@ -13,18 +12,9 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 
 import data_caching, prompts, puzzleboard, score, strings, used_letters, values
-from my_widgets import Fullscreenable
+from my_widgets import bind_keyboard, Fullscreenable
 
 Builder.load_file(strings.file_kv_manager)
-
-def bind_keyboard(widget):
-    """Provide keyboard focus to a widget"""
-    
-    widget._keyboard = Window.request_keyboard(
-        widget._keyboard_closed, widget)
-    widget._keyboard.bind(on_key_down=widget._on_keyboard_down)
-
-puzzleboard.bind_keyboard = bind_keyboard
 
 class SquareButton(Button):
     """
@@ -100,8 +90,66 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.load_settings()
         self.tossup_button(True)
         
+        self.bind_keyboard_self()
+        
         if self.puzzle_queue:
             Clock.schedule_once(self.check_queue, values.queue_start)
+    
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        """
+        Check the keys pressed.
+        If tab is pressed, target the first TextInput.
+        If a letter is pressed with no modifiers,
+        guess a letter.
+        If a registered hotkey is detected,
+        perform the associated action.
+        """
+        
+        valid_hotkey_modifiers = ['ctrl', 'alt', 'shift']
+        relevant_modifiers = [
+            mod for mod in valid_hotkey_modifiers if mod in modifiers]
+        
+        letter = keycode[1]
+        combination = '+'.join(relevant_modifiers + [letter])
+        if letter == 'tab':
+            self.name_input.focus = True
+        elif (
+                not relevant_modifiers
+                and letter in strings.alphabet
+                and self.selected_player != 0
+                and self.get_value() != 0):
+            self.guessed_letter(letter)
+        elif combination == self.hotkeys.get('select_1'):
+            self.select_red()
+        elif combination == self.hotkeys.get('select_2'):
+            self.select_yellow()
+        elif combination == self.hotkeys.get('select_3'):
+            self.select_blue()
+        elif combination == self.hotkeys.get('select_next'):
+            self.select_next_player()
+        elif combination == self.hotkeys.get('select_puzzle'):
+            self.choose_puzzle()
+        elif combination == self.hotkeys.get('clear_puzzle'):
+            self.clear_puzzle()
+        elif combination == self.hotkeys.get('start_tossup'):
+            self.tossup()
+        elif combination == self.hotkeys.get('solve'):
+            self.reveal_puzzle()
+        elif combination == self.hotkeys.get('lose_turn'):
+            self.lose_turn()
+        elif combination == self.hotkeys.get('bankrupt'):
+            self.bankrupt()
+        elif combination == self.hotkeys.get('bank_score'):
+            self.bank_score()
+    
+    def _keyboard_closed(self):
+        """Remove keyboard binding when the keyboard is closed."""
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
+    
+    def bind_keyboard_self(self, instance=None):
+        """Bind the keyboard to self."""
+        bind_keyboard(self)
     
     def tossup_button(self, single_button_mode=True):
         """
@@ -164,6 +212,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.stop_all_flashing()
         self.red_q.put(('flash', None))
         self.letters_q.put(('flash', 'red', None))
+        if self.tossup_running:
+            self.tossup(player=self.selected_player)
     
     def select_yellow(self):
         """
@@ -177,6 +227,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.stop_all_flashing()
         self.ylw_q.put(('flash', None))
         self.letters_q.put(('flash', 'yellow', None))
+        if self.tossup_running:
+            self.tossup(player=self.selected_player)
     
     def select_blue(self):
         """
@@ -190,6 +242,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.stop_all_flashing()
         self.blu_q.put(('flash', None))
         self.letters_q.put(('flash', 'blue', None))
+        if self.tossup_running:
+            self.tossup(player=self.selected_player)
     
     def select_next_player(self):
         """
@@ -304,7 +358,10 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Prompt the user to select a puzzle.
         """
-        prompts.LoadPuzzlePrompt(self.load_puzzle).open()
+        prompts.LoadPuzzlePrompt(
+                self.load_puzzle,
+                on_dismiss=self.bind_keyboard_self
+            ).open()
     
     def load_puzzle(self, puzzle):
         """
@@ -384,10 +441,12 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 or self.get_value() == 0):
             return
         popup = prompts.ChooseLetterPrompt(
-            self.guessed_letter, self.unavailable_letters)
+            self.guessed_letter,
+            self.unavailable_letters,
+            on_dismiss=self.bind_keyboard_self)
         popup.open()
         bind_keyboard(popup)
-        popup.bind(on_dismiss=lambda i: popup._keyboard_closed())
+        popup.bind(on_dismiss=lambda i: popup._keyboard.release())
     
     def guessed_letter(self, letter):
         """
@@ -403,7 +462,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.add_score(-self.vowel_price)
         self.unavailable_letters.append(letter.lower())
         self.puzzle_queue.a.put(('letter', letter))
-        self.letters_q.put(('remove_letter', letter, None))
+        self.letters_q.put(('remove_letter', None, letter))
     
     def get_value(self):
         """
@@ -471,6 +530,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         popup = prompts.ManagerSettingsPrompt()
         popup.bind(on_dismiss=self.load_settings)
+        popup.bind(on_dismiss=self.bind_keyboard_self)
         popup.open()
     
     def load_settings(self, instance=None):
@@ -485,6 +545,11 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.min_win = settings.get('min_win', values.default_min_win)
         self.dropdown.values = [strings.currency_format.format(value)
             for value in settings.get('cash_values', [])]
+        
+        self.hotkeys = {
+            name: settings.get(name, default).lower()
+            for name, default
+            in zip(values.hotkey_names, values.hotkey_defaults)}
     
     def exit_app(self):
         """

@@ -15,7 +15,7 @@ from kivy.uix.splitter import Splitter
 from kivy.uix.widget import Widget
 
 import data_caching, prompts, strings, values
-from my_widgets import Fullscreenable
+from my_widgets import bind_keyboard, Fullscreenable
 
 Builder.load_string(r"""
 #:import strings strings
@@ -60,11 +60,6 @@ Builder.load_string(r"""
             size: self.size
             source: strings.file_category_background
 """)
-
-def bind_keyboard(widget):
-    """Provide keyboard focus to a widget"""
-    # function must be overridden
-    pass
     
 class PuzzleWithCategory(BoxLayout, Fullscreenable):
     """BoxLayout containing the puzzleboard and category strip."""
@@ -122,7 +117,6 @@ class SplitterSurround(BoxLayout):
             name + '_bottom_splitter',
             Widget(),
             sizable_from='top'))
-        
 
 class SavableSplitter(Splitter):
     """A Splitter that remembers its size hint."""
@@ -279,7 +273,7 @@ class PuzzleLayout(GridLayout):
     
     def check_all(self, letter):
         """Check all Panels for a given letter and reveal matches."""
-        if letter.lower() in 'abcdefghijklmnopqrstuvwxyz':
+        if letter.lower() in strings.alphabet:
             # indices in order from top to bottom, right to left
             indices = [
                     i + (j*self.cols)
@@ -530,7 +524,7 @@ class LetterLayout(AnchorLayout):
         """Hide the letter on this panel."""
         text = self.text_label.text.lower()
         if text:
-            if not text in 'abcdefghijklmnopqrstuvwxyz':
+            if not text in strings.alphabet:
                 # don't hide punctuation
                 self.show_letter()
                 return
@@ -613,7 +607,7 @@ class Panel(Button):
             # shift is held, get shift symbol
             self.layout.text_label.text = shifts[letter]
             self.select_next()
-        elif letter in 'abcdefghijklmnopqrstuvwxyz1234567890-=[]\\;\',./':
+        elif letter in strings.alphabet + '1234567890-=[]\\;\',./':
             # set text and move to next panel
             self.layout.text_label.text = letter.upper()
             self.select_next()

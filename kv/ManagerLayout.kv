@@ -53,7 +53,9 @@
                 id: name_input
                 hint_text: strings.input_name
 				multiline: False
-				on_text_validate: root.update_name(self.text)
+				on_text_validate:
+					root.update_name(self.text)
+					root.bind_keyboard_self()
 				prev_widget: custom_value
 				next_widget: score_edit
             SquareButton:
@@ -70,6 +72,8 @@
                 id: score_edit
                 hint_text: strings.input_adjust_score
 				multiline: False
+				on_text_validate:
+					root.bind_keyboard_self()
 				prev_widget: name_input
 				next_widget: custom_value
             Button:
@@ -85,6 +89,8 @@
                     id: custom_value
                     hint_text: strings.input_custom
 					multiline: False
+					on_text_validate:
+						root.bind_keyboard_self()
 					prev_widget: score_edit
 					next_widget: name_input
                 BoxLayout:

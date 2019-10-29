@@ -1,8 +1,9 @@
 import json
 import os
 
+from kivy.clock import Clock
 from kivy.lang import Builder
-from kivy.uix.anchorlayout import AnchorLayout
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserIconView
@@ -14,6 +15,7 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
 import data_caching, strings, used_letters, values
+from my_widgets import bind_keyboard
 
 Builder.load_file(strings.file_kv_prompts)
 
@@ -275,6 +277,165 @@ class ManagerSettingsPrompt(Popup):
             'cash_values': sorted([v for v in cash_values if v])})
         
         self.dismiss()
+    
+    def edit_hotkeys(self):
+        """
+        Prompt the user to edit hotkeys.
+        """
+        
+        EditHotkeysPrompt(title=strings.title_edit_hotkeys).open()
+
+class EditHotkeysPrompt(Popup):
+    """
+    A Popup allowing the user to select hotkeys
+    for several app actions.
+    """
+    
+    def __init__(self, **kwargs):
+        """
+        Create the Popup.
+        """
+        
+        super(EditHotkeysPrompt, self).__init__(**kwargs)
+        
+        self.hotkey_layouts = [
+            self.hotkey_select_1, self.hotkey_select_2,
+            self.hotkey_select_3, self.hotkey_select_next,
+            self.hotkey_select_puzzle, self.hotkey_clear_puzzle,
+            self.hotkey_start_tossup, self.hotkey_solve,
+            self.hotkey_lose_turn, self.hotkey_bankrupt,
+            self.hotkey_bank_score]
+        
+        existing_hotkeys = data_caching.get_hotkeys()
+        
+        for name, layout, default in zip(
+                values.hotkey_names,
+                self.hotkey_layouts,
+                values.hotkey_defaults):
+            layout.hotkey_text_label.text = existing_hotkeys.get(
+                name, default.title())
+    
+    def confirm(self):
+        """
+        Confirm the hotkeys defined by the user.
+        """
+        
+        hotkeys = {
+            name: layout.hotkey_text_label.text.lower()
+            for name, layout in zip(values.hotkey_names, self.hotkey_layouts)}
+        
+        invalid_hotkeys = list(strings.alphabet)
+        problem_hotkeys = []
+        
+        for value in hotkeys.values():
+            if not value:
+                continue
+            elif not value in invalid_hotkeys:
+                invalid_hotkeys.append(value)
+            else:
+                problem_hotkeys.append(value)
+        
+        if problem_hotkeys:
+            for layout in self.hotkey_layouts:
+                h = layout.hotkey_text_label.text.lower()
+                if h and h in problem_hotkeys:
+                    layout.warning_icon.color = (1, 0, 0, 1)
+                else:
+                    layout.warning_icon.color = (1, 1, 1, 0)
+        else:
+            data_caching.write_hotkeys(hotkeys)
+            self.dismiss()
+
+class RecordHotkeyLabel(ButtonBehavior, Label):
+    """
+    A Label which, when clicked, will record
+    a key combination, and set its text to indicate
+    the key combination.
+    
+    After being clicked, the label will wait
+    for a key combination, for a maximum time
+    defined by `values.edit_hotkey_timeout`.
+    """
+    
+    def __init__(self, **kwargs):
+        """Create the label."""
+        super(RecordHotkeyLabel, self).__init__(**kwargs)
+        self.bind(on_release=self.start_listening)
+        
+        self.defaults_dict = {
+            name: default
+            for name, default
+            in zip(values.hotkey_names, values.hotkey_defaults)}
+    
+    def default(self):
+        """Set this hotkey to its default."""
+        self.text = self.defaults_dict.get(self.name, '')
+    
+    def start_listening(self, instance):
+        """
+        Bind keyboard to self, and start the timer.
+        """
+        
+        bind_keyboard(self)
+        
+        # get current text, set back to this if out of time
+        self.initial_text = self.text
+        self.hotkey_entered = False
+        self.seconds_left = values.edit_hotkey_timeout
+        self.text = strings.label_edit_hotkey_waiting.format(self.seconds_left)
+        Clock.schedule_once(self.clock_tick, 1)
+    
+    def clock_tick(self, instance):
+        """
+        Update text to indicate time left.
+        If time is up, revert to original text,
+        and release the keyboard.
+        """
+        
+        
+        if not self.hotkey_entered:
+            self.seconds_left -= 1
+            
+            if self.seconds_left <= 0: # time up
+                self.text = self.initial_text
+                self._keyboard.release()
+            else:
+                self.text = strings.label_edit_hotkey_waiting.format(
+                    self.seconds_left)
+                Clock.schedule_once(self.clock_tick, 1)
+        
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        """
+        Check the keys pressed.
+        Keep listening until a valid key combination
+        is detected.
+        """
+        
+        valid_modifiers = ['ctrl', 'alt', 'shift']
+        
+        # these characters cannot be used for hotkeys
+        # (except as modifiers, in the case of ctrl, alt, and shift):
+        invalid_chars = [
+            'tab', 'rshift', 'shift', 'alt', 'rctrl', 'lctrl', 'super',
+            'alt-gr', 'compose', 'capslock', 'escape', 'insert', 'numlock',
+            'print', 'screenlock', 'ctrl']
+        
+        key = keycode[1]
+        if key == 'escape':
+            self.hotkey_entered = True
+            self.text = ''
+            keyboard.release()
+        elif not key in invalid_chars:
+            self.hotkey_entered = True
+            mods = [mod for mod in valid_modifiers if mod in modifiers]
+            self.text = '+'.join(mods + [key]).title()
+            keyboard.release()
+        return True
+    
+    def _keyboard_closed(self):
+        """Remove keyboard binding when the keyboard is closed."""
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
 
 class FileChooserPrompt(Popup):
     """
@@ -393,15 +554,6 @@ class InfoPrompt(Popup):
         """Create the popup."""
         super(InfoPrompt, self).__init__(**kwargs)
         self.text_label.text = text
-
-class ScrollableLabel(AnchorLayout):
-    """
-    A layout containing a label
-    which is centered vertically,
-    and can scroll if the text is longer
-    than the widget containing it.
-    """
-    pass
 
 def _wrap_with_dismiss(callback, popup):
     """

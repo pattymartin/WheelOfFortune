@@ -82,11 +82,17 @@
 				next_widget: wedges_input
 		BoxLayout:
 			orientation: 'horizontal'
-			Label:
-				text: strings.label_wedges
+			BoxLayout:
+				orientation: 'vertical'
 				size_hint_x: None
-				valign: 'center'
-				halign: 'center'
+				Label:
+					text: strings.label_wedges
+					valign: 'center'
+					halign: 'center'
+				Button:
+					text: strings.button_edit_hotkeys
+					size_hint_y: 0.25
+					on_release: root.edit_hotkeys()
 			TabCyclable:
 				id: wedges_input
 				text:
@@ -105,8 +111,138 @@
 			Button:
 				text: strings.button_confirm
 				on_release: root.input_save()
+<EditHotkeysPrompt>:
+	hotkey_select_1: hotkey_select_1
+	hotkey_select_2: hotkey_select_2
+	hotkey_select_3: hotkey_select_3
+	hotkey_select_next: hotkey_select_next
+	hotkey_select_puzzle: hotkey_select_puzzle
+	hotkey_clear_puzzle: hotkey_clear_puzzle
+	hotkey_start_tossup: hotkey_start_tossup
+	hotkey_solve: hotkey_solve
+	hotkey_lose_turn: hotkey_lose_turn
+	hotkey_bankrupt: hotkey_bankrupt
+	hotkey_bank_score: hotkey_bank_score
+	BoxLayout:
+		orientation: 'vertical'
+		BoxLayout:
+			orientation: 'vertical'
+			Widget:
+				size_hint_y: None
+				height: 20
+			Label:
+				text: strings.label_edit_hotkey_info
+				size_hint_y: None
+				size: self.texture_size
+			Widget:
+				size_hint_y: None
+				height: 20
+			ScrollView:
+				BoxLayout:
+					id: hotkey_layout
+					orientation: 'vertical'
+					size_hint_y: None
+					height: self.minimum_height
+					HotkeyLayout:
+						id: hotkey_select_1
+						description: strings.label_hotkey_select_1
+						name: 'select_1'
+					HotkeyLayout:
+						id: hotkey_select_2
+						description: strings.label_hotkey_select_2
+						name: 'select_2'
+					HotkeyLayout:
+						id: hotkey_select_3
+						description: strings.label_hotkey_select_3
+						name: 'select_3'
+					HotkeyLayout:
+						id: hotkey_select_next
+						description: strings.label_hotkey_select_next
+						name: 'select_next'
+					HotkeyLayout:
+						id: hotkey_select_puzzle
+						description: strings.label_hotkey_select_puzzle
+						name: 'select_puzzle'
+					HotkeyLayout:
+						id: hotkey_clear_puzzle
+						description: strings.label_hotkey_clear_puzzle
+						name: 'clear_puzzle'
+					HotkeyLayout:
+						id: hotkey_start_tossup
+						description: strings.label_hotkey_start_tossup
+						name: 'start_tossup'
+					HotkeyLayout:
+						id: hotkey_solve
+						description: strings.label_hotkey_solve
+						name: 'solve'
+					HotkeyLayout:
+						id: hotkey_lose_turn
+						description: strings.label_hotkey_lose_turn
+						name: 'lose_turn'
+					HotkeyLayout:
+						id: hotkey_bankrupt
+						description: strings.label_hotkey_bankrupt
+						name: 'bankrupt'
+					HotkeyLayout:
+						id: hotkey_bank_score
+						description: strings.label_hotkey_bank_score
+						name: 'bank_score'
+			Widget:
+				size_hint_y: None
+				height: 5
+		Button:
+			text: strings.button_confirm
+			size_hint_y: 0.25
+			on_release: root.confirm()
+<HotkeyLayout@BoxLayout>
+	description: ''
+	name: ''
+	hotkey_text_label: hotkey_text_label
+	warning_icon: warning_icon
+	orientation: 'vertical'
+	size_hint_y: None
+	height: 30
+	BoxLayout:
+		orientation: 'horizontal'
+		Label:
+			text: root.description
+			size_hint_x: 1/3
+			text_size: self.size
+			halign: 'right'
+			valign: 'center'
+			padding_x: 5
+		BoxLayout:
+			orientation: 'horizontal'
+			canvas.before:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					pos: self.pos
+					size: self.size
+			RecordHotkeyLabel:
+				id: hotkey_text_label
+				name: root.name
+			Image:
+				id: warning_icon
+				source: strings.file_alert_icon
+				color: (1, 1, 1, 0)
+				size_hint: (None, 1)
+				width: self.height
+		Button:
+			text: strings.button_default
+			on_release: hotkey_text_label.default()
+			size_hint_x: 0.2
+	Widget:
+		size_hint_y: 0.2
+<RecordHotkeyLabel>:
+	name: ''
+	color: 0, 0, 0, 1
+	text_size: self.size
+	halign: 'left'
+	valign: 'center'
+	padding_x: 5
 <FileChooserIconView>
-    # awkward workaround; on_selection doesn't seem to work otherwise
+    # on_selection doesn't seem to work in python
     select_callback: None
     on_selection: self.select_callback() if self.select_callback else None
 <YesNoPrompt>
@@ -138,7 +274,7 @@
             text: strings.button_ok
             size_hint_y: 0.25
             on_release: info_prompt.dismiss()
-<ScrollableLabel>:
+<ScrollableLabel@AnchorLayout>:
     text_label: text_label
     BoxLayout:
         orientation: 'vertical'
