@@ -176,6 +176,12 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.correct_letter(args)
             elif command == 'tossup_timeout':
                 self.tossup()
+            elif command == 'no_more_consonants':
+                # TODO
+                print("NO MORE CONSONANTS")
+            elif command == 'no_more_vowels':
+                # TODO
+                print("NO MORE VOWELS")
         except:
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
@@ -511,8 +517,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.unavailable_letters.extend(letters)
         self.puzzle_queue.a.put(('bonus_round_letters', letters))
         self.letters_q.put(('remove_letters', None, letters))
-        print(letters)
-        # TODO
     
     def get_value(self):
         """

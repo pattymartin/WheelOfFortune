@@ -301,27 +301,49 @@ class PuzzleLayout(GridLayout):
         # the number of matches found so far,
         # used to offset the scheduled time to change the panel
         matches = 0
+        remaining_letters = []
         
         for i in indices:
             try:
                 layout = self.children[i].layout
-                if layout.hidden() and any(
-                        layout.check_letter(letter) for letter in letters):
-                    # match found
-                    # schedule panel to turn blue
-                    Clock.schedule_once(
-                        layout.blue,
-                        values.blue_interval * matches)
-                    # schedule panel to be revealed
-                    Clock.schedule_once(
-                        layout.show_letter,
-                        values.reveal_interval * (matches + 1))
-                    matches += 1
+                if layout.hidden():
+                    if any(layout.check_letter(letter) for letter in letters):
+                        # match found
+                        # schedule panel to turn blue
+                        Clock.schedule_once(
+                            layout.blue,
+                            values.blue_interval * matches)
+                        # schedule panel to be revealed
+                        Clock.schedule_once(
+                            layout.show_letter,
+                            values.reveal_interval * (matches + 1))
+                        matches += 1
+                    else:
+                        l = layout.text_label.text
+                        if l:
+                            remaining_letters.append(l)
             except AttributeError:
                 # empty widget
                 pass
+        
+        vowels = 'aeiou'
+        consonants = [c for c in strings.alphabet if not c in vowels]
+        no_more_vowels = matches and not any(
+            letter.lower() in vowels for letter in remaining_letters)
+        no_more_consonants = matches and not any(
+            letter.lower() in consonants for letter in remaining_letters)
         if self.queue and len(letters) == 1:
             self.queue.b.put(('matches', (letters[0], matches)))
+            if no_more_vowels:
+                # indicate no more vowels in the middle of letter reveals
+                Clock.schedule_once(
+                    lambda i: self.queue.b.put(('no_more_vowels', None)),
+                    values.reveal_interval * matches / 2)
+            if no_more_consonants:
+                # indicate no more consonants after all letters revealed
+                Clock.schedule_once(
+                    lambda i: self.queue.b.put(('no_more_consonants', None)),
+                    values.reveal_interval * matches)
     
     def check_all(self, letter):
         """Check all Panels for a given letter and reveal matches."""
