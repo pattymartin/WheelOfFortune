@@ -283,12 +283,21 @@ class ManagerSettingsPrompt(Popup):
         Get the text from the input fields,
         and save them.
         """
+        
+        timer_minutes = data_caching.str_to_int(self.timer_input.text[:-2])
+        timer_seconds = data_caching.str_to_int(self.timer_input.text[-2:])
+        if not (timer_minutes or timer_seconds):
+            timer_time = ''
+        else:
+            timer_time = '{}:{:02}'.format(timer_minutes, timer_seconds)
+        
         vowel_price = data_caching.str_to_int(self.vowel_input.text)
         min_win = data_caching.str_to_int(self.min_input.text)
         cash_values = [data_caching.str_to_int(line)
             for line in self.wedges_input.text.split()]
         
         data_caching.update_variables({
+            'timer_time': timer_time,
             'vowel_price': vowel_price if vowel_price else '',
             'min_win': min_win if min_win else '',
             'cash_values': sorted([v for v in cash_values if v])})

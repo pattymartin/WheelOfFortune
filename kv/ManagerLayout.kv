@@ -3,6 +3,8 @@
 #: import values values
 <ManagerLayout>:
     puzzle_label: puzzle_label
+	timer_label: timer_label
+	timer_layout_manager: timer_layout_manager
 	tossup_button: tossup_button
     name_input: name_input
     score_edit: score_edit
@@ -13,18 +15,68 @@
     btn_blu: btn_blu
     
     orientation: 'vertical'
-    Label:
-        id: puzzle_label
-        size_hint_y: 0.5
+	FloatLayout:
+		size_hint_y: 0.5
+		Label:
+			id: puzzle_label
+			halign: 'center'
+			pos_hint: {'x': 0, 'y': 0}
+		Label:
+			id: timer_label
+			text_size: self.size
+			halign: 'right'
+			valign: 'top'
+			padding: (5, 5)
+			pos_hint: {'x': 0, 'y': 0}
     BoxLayout:
         orientation: 'horizontal'
-        size_hint_y: 0.5
+        size_hint_y: 0.25
         Button:
             text: strings.title_select_puzzle
             on_release: root.choose_puzzle()
         Button:
             text: strings.mgr_btn_clear
             on_release: root.clear_puzzle()
+        Button:
+            text: strings.mgr_btn_reveal
+            on_release: root.reveal_puzzle()
+		ScreenManager:
+			id: timer_layout_manager
+			Screen:
+				name: 'start'
+				Button:
+					text: strings.button_timer_start
+					on_release:
+						root.timer()
+						timer_layout_manager.current = 'running'
+			Screen:
+				name: 'running'
+				Button:
+					text: strings.button_timer_pause
+					on_release:
+						root.timer()
+						timer_layout_manager.current = 'paused'
+			Screen:
+				name: 'paused'
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						text: strings.button_timer_reset
+						on_release:
+							root.reset_timer()
+							timer_layout_manager.current = 'start'
+					Button:
+						text: strings.button_timer_resume
+						on_release:
+							root.timer()
+							timer_layout_manager.current = 'running'
+			Screen:
+				name: 'timeout'
+				Button:
+					text: strings.button_timer_reset
+					on_release:
+						root.reset_timer()
+						timer_layout_manager.current = 'start'
 		Button:
 			id: tossup_button
 			text: strings.mgr_btn_tossup
@@ -32,9 +84,6 @@
 		Button:
 			text: strings.button_bonus_round
 			on_release: root.bonus_round()
-        Button:
-            text: strings.mgr_btn_reveal
-            on_release: root.reveal_puzzle()
     BoxLayout:
         orientation: 'horizontal'
         PlayerButton:

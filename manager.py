@@ -6,6 +6,7 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
+from kivy.properties import NumericProperty
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -52,6 +53,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     A BoxLayout for the ManagerApp.
     """
     
+    seconds_left = NumericProperty(0)
+    
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
         super(ManagerLayout, self).__init__(**kwargs)
@@ -64,6 +67,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         self.selected_player = 0
         self.unavailable_letters = []
+        self.timer_running = False
         self.tossup_running = False
         self.tossup_players_done = []
         self.puzzle_string = ''
@@ -151,7 +155,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.bankrupt()
         elif combination == self.hotkeys.get('bank_score'):
             self.bank_score()
-        return True
     
     def _keyboard_closed(self):
         """Remove keyboard binding when the keyboard is closed."""
@@ -452,8 +455,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         else:
             if set(self.tossup_players_done) == set([1, 2, 3]):
                 return
-            self.puzzle_queue.a.put(('tossup', None))
             self.tossup_button.disabled = True
+            self.puzzle_queue.a.put(('tossup', None))
             self.deselect_player()
         
         self.tossup_running = not self.tossup_running
@@ -560,6 +563,57 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 on_dismiss=self.bind_keyboard_self
             ).open()
     
+    def timer(self):
+        """
+        Start the final spin timer.
+        If the timer is already running,
+        stop the timer.
+        """
+        
+        if not self.seconds_left:
+            self.seconds_left = self.timer_seconds
+        
+        if not self.timer_running:
+            Clock.schedule_once(self.decrement_timer, values.timer_accuracy)
+        
+        self.timer_running = not self.timer_running
+    
+    def decrement_timer(self, instance):
+        """
+        Reduce `seconds_left` by
+        `values.timer_accuracy` seconds.
+        Then schedule this function in another
+        `values.timer_accuracy` seconds.
+        """
+        
+        if self.timer_running:
+            self.seconds_left -= values.timer_accuracy
+            Clock.schedule_once(self.decrement_timer, values.timer_accuracy)
+    
+    def reset_timer(self):
+        """
+        Reset the final spin timer.
+        """
+        
+        self.timer_running = False
+        self.seconds_left = self.timer_seconds
+    
+    def on_seconds_left(self, instance, value):
+        """
+        Keep the `timer_label` updated with the current
+        time remaining.
+        """
+        
+        if self.seconds_left == self.timer_seconds:
+            self.timer_label.text = ''
+        elif self.seconds_left <= 0:
+            self.timer_label.text = strings.label_time_out
+            self.timer_running = False
+            self.timer_layout_manager.current = 'timeout'
+        else:
+            self.timer_label.text = strings.label_timer.format(
+                int(self.seconds_left / 60), int(self.seconds_left % 60))
+    
     def lose_turn(self):
         """
         Player has lost a turn;
@@ -611,6 +665,16 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.min_win = settings.get('min_win', values.default_min_win)
         self.dropdown.values = [strings.currency_format.format(value)
             for value in settings.get('cash_values', [])]
+        
+        try:
+            minutes, seconds = settings.get('timer_time', ':').split(':')
+        except ValueError:
+            minutes, seconds = (0, 0)
+        minutes = data_caching.str_to_int(minutes)
+        seconds = data_caching.str_to_int(seconds)
+        self.timer_seconds = (minutes * 60) + seconds
+        self.seconds_left = self.timer_seconds
+        self.timer_layout_manager.disabled = not bool(self.timer_seconds)
         
         self.hotkeys = {
             name: settings.get(name, default).lower()

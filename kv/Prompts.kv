@@ -86,6 +86,7 @@
 			size_hint_y: None
 			height: 30
 <ManagerSettingsPrompt>:
+	timer_input: timer_input
 	vowel_input: vowel_input
 	min_input: min_input
 	wedges_input: wedges_input
@@ -93,6 +94,20 @@
 	title: strings.mgr_title_settings
 	BoxLayout:
 		orientation: 'vertical'
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Label:
+				text: strings.label_timer_set
+				size_hint_x: None
+				valign: 'center'
+				halign: 'center'
+			TabCyclable:
+				id: timer_input
+				text: str(root.cash_values.get('timer_time', ''))
+				hint_text: 'MM:SS'
+				prev_widget: wedges_input
+				next_widget: vowel_input
 		BoxLayout:
 			orientation: 'horizontal'
 			size_hint_y: 0.25
@@ -106,7 +121,7 @@
 				text: str(root.cash_values.get('vowel_price', ''))
 				hint_text: strings.input_vowel_price
 				multiline: False
-				prev_widget: wedges_input
+				prev_widget: timer_input
 				next_widget: min_input
 		BoxLayout:
 			orientation: 'horizontal'
@@ -142,7 +157,7 @@
 					'\r\n'.join([str(i) for i in root.cash_values.get('cash_values', [])])
 				hint_text: strings.input_cash_values
 				prev_widget: min_input
-				next_widget: vowel_input
+				next_widget: timer_input
 		Widget:
 			size_hint_y: 0.02
 		BoxLayout:

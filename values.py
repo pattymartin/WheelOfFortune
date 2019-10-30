@@ -58,6 +58,8 @@ hotkey_defaults = [
 
 splitter_size = '5pt'
 
+timer_accuracy = 0.1
+
 reveal_interval = 0.9 # seconds between panels being revealed
 blue_interval = 0.5 # seconds between panels turning blue
 solve_reveal_interval = 0.01 # seconds between letters being revealed on solve
