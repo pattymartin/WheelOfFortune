@@ -48,14 +48,12 @@
 					text: strings.button_timer_start
 					on_release:
 						root.timer()
-						timer_layout_manager.current = 'running'
 			Screen:
 				name: 'running'
 				Button:
 					text: strings.button_timer_pause
 					on_release:
 						root.timer()
-						timer_layout_manager.current = 'paused'
 			Screen:
 				name: 'paused'
 				BoxLayout:
@@ -64,19 +62,16 @@
 						text: strings.button_timer_reset
 						on_release:
 							root.reset_timer()
-							timer_layout_manager.current = 'start'
 					Button:
 						text: strings.button_timer_resume
 						on_release:
 							root.timer()
-							timer_layout_manager.current = 'running'
 			Screen:
 				name: 'timeout'
 				Button:
 					text: strings.button_timer_reset
 					on_release:
 						root.reset_timer()
-						timer_layout_manager.current = 'start'
 		Button:
 			id: tossup_button
 			text: strings.mgr_btn_tossup

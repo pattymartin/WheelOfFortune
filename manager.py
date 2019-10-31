@@ -143,12 +143,16 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.choose_puzzle()
         elif combination == self.hotkeys.get('clear_puzzle'):
             self.clear_puzzle()
+        elif combination == self.hotkeys.get('solve'):
+            self.reveal_puzzle()
+        elif combination == self.hotkeys.get('timer_start'):
+            self.timer()
+        elif combination == self.hotkeys.get('timer_reset'):
+            self.reset_timer()
         elif combination == self.hotkeys.get('start_tossup'):
             self.tossup()
         elif combination == self.hotkeys.get('bonus_round'):
             self.bonus_round()
-        elif combination == self.hotkeys.get('solve'):
-            self.reveal_puzzle()
         elif combination == self.hotkeys.get('lose_turn'):
             self.lose_turn()
         elif combination == self.hotkeys.get('bankrupt'):
@@ -574,7 +578,10 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.seconds_left = self.timer_seconds
         
         if not self.timer_running:
+            self.timer_layout_manager.current = 'running'
             Clock.schedule_once(self.decrement_timer, values.timer_accuracy)
+        else:
+            self.timer_layout_manager.current = 'paused'
         
         self.timer_running = not self.timer_running
     
@@ -597,6 +604,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         self.timer_running = False
         self.seconds_left = self.timer_seconds
+        self.timer_layout_manager.current = 'start'
     
     def on_seconds_left(self, instance, value):
         """

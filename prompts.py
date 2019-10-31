@@ -328,8 +328,9 @@ class EditHotkeysPrompt(Popup):
             self.hotkey_select_1, self.hotkey_select_2,
             self.hotkey_select_3, self.hotkey_select_next,
             self.hotkey_select_puzzle, self.hotkey_clear_puzzle,
-            self.hotkey_start_tossup, self.hotkey_bonus_round,
-            self.hotkey_solve, self.hotkey_lose_turn,
+            self.hotkey_solve, self.hotkey_timer_start,
+            self.hotkey_timer_reset, self.hotkey_start_tossup,
+            self.hotkey_bonus_round, self.hotkey_lose_turn,
             self.hotkey_bankrupt, self.hotkey_bank_score]
         
         existing_hotkeys = data_caching.get_hotkeys()
