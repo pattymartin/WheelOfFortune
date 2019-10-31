@@ -72,6 +72,10 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.tossup_players_done = []
         self.puzzle_string = ''
         self.puzzle_clue = ''
+        self.speedup = False
+        self.speedup_consonants_remaining = True
+        self.consonants_remaining = True
+        self.vowels_remaining = True
     
         self.load_settings()
         self.tossup_button.disabled = False
@@ -179,16 +183,25 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.puzzle_string = ' '.join(args['puzzle'].split())
                 self.puzzle_clue = args['clue']
                 self.show_puzzle()
+            elif command == 'ding':
+                if not self.speedup:
+                    # TODO play sound
+                    print("DING")
             elif command == 'matches':
                 self.correct_letter(args)
             elif command == 'tossup_timeout':
                 self.tossup()
+            elif command == 'reveal_finished':
+                if self.speedup:
+                    # TODO play sound in 4 seconds
+                    print("BUZZ (in 4 seconds)")
             elif command == 'no_more_consonants':
-                # TODO
-                print("NO MORE CONSONANTS")
+                if self.speedup:
+                    self.speedup_consonants_remaining = False
+                else:
+                    self.no_more_consonants()
             elif command == 'no_more_vowels':
-                # TODO
-                print("NO MORE VOWELS")
+                self.no_more_vowels()
         except:
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
@@ -247,6 +260,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.letters_q.put(('flash', 'red', None))
             if self.tossup_running:
                 self.tossup(player=self.selected_player)
+            if self.speedup and not self.speedup_consonants_remaining:
+                self.no_more_consonants()
     
     def select_yellow(self):
         """
@@ -266,6 +281,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.letters_q.put(('flash', 'yellow', None))
             if self.tossup_running:
                 self.tossup(player=self.selected_player)
+            if self.speedup and not self.speedup_consonants_remaining:
+                self.no_more_consonants()
     
     def select_blue(self):
         """
@@ -285,6 +302,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.letters_q.put(('flash', 'blue', None))
             if self.tossup_running:
                 self.tossup(player=self.selected_player)
+            if self.speedup and not self.speedup_consonants_remaining:
+                self.no_more_consonants()
     
     def select_next_player(self):
         """
@@ -424,6 +443,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.puzzle_queue.a.put(('load', puzzle))
         self.letters_q.put(('reload', None, None))
         self.tossup_players_done = []
+        self.consonants_remaining = True
+        self.vowels_remaining = True
+        self.speedup_consonants_remaining = True
     
     def clear_puzzle(self):
         """
@@ -497,7 +519,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             on_dismiss=self.bind_keyboard_self)
         popup.open()
         bind_keyboard(popup)
-        popup.bind(on_dismiss=lambda i: popup._keyboard.release())
+        popup.bind(on_dismiss=popup.release_keyboard)
     
     def guessed_letter(self, letter):
         """
@@ -541,13 +563,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     def correct_letter(self, match):
         """
         Adjust the selected player's score based on the number of matches.
-        `match` is an tuple of the form (letter, number)
+        `match` is a tuple of the form (letter, number)
         indicating the letter and the number of matches.
         """
+        
         letter, matches = match
         if letter.lower() not in 'aeiou':
             self.add_score(matches * self.get_value())
         self.custom_value.text = ''
+        
+        if not matches and not self.speedup:
+            # TODO play sound
+            print("BUZZ")
         
         # show number of matches in puzzle_label
         self.puzzle_label.text = strings.label_matches.format(
@@ -566,6 +593,48 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 solve_callback=self.reveal_puzzle,
                 on_dismiss=self.bind_keyboard_self
             ).open()
+    
+    def final_spin(self):
+        """
+        Start a speed-up round.
+        """
+        
+        # TODO play sound and music
+        self.speedup = True
+    
+    def no_more_consonants(self):
+        """
+        Play a sound indicating no more consonants,
+        and remove consonants from letterboard.
+        """
+        
+        # only do this once per round
+        if self.consonants_remaining:
+            self.consonants_remaining = False
+            # TODO play sound
+            print("NO MORE CONSONANTS")
+            
+            self.unavailable_letters.extend([
+                c for c in strings.alphabet if not c in 'aeiou'
+                and not c in self.unavailable_letters])
+            self.letters_q.put(('no_more_consonants', None, None))
+    
+    def no_more_vowels(self):
+        """
+        Play a sound indicating no more vowels,
+        and remove vowels from letterboard.
+        """
+        
+        # only do this once per round
+        if self.vowels_remaining:
+            self.vowels_remaining = False
+            # TODO play sound
+            print("NO MORE VOWELS")
+        
+            self.unavailable_letters.extend([
+                c for c in strings.alphabet if c in 'aeiou'
+                and not c in self.unavailable_letters])
+            self.letters_q.put(('no_more_vowels', None, None))
     
     def timer(self):
         """

@@ -68,10 +68,17 @@
 							root.timer()
 			Screen:
 				name: 'timeout'
-				Button:
-					text: strings.button_timer_reset
-					on_release:
-						root.reset_timer()
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						text: strings.button_timer_reset
+						on_release:
+							root.reset_timer()
+					Button:
+						text: strings.button_final_spin
+						on_release:
+							root.final_spin()
+							root.reset_timer()
 		Button:
 			id: tossup_button
 			text: strings.mgr_btn_tossup

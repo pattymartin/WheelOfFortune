@@ -61,6 +61,7 @@ hotkey_defaults = [
     hotkey_default_bankrupt,
     hotkey_default_bank_score]
 
+speedup_timeout = 4
 splitter_size = '5pt'
 
 timer_accuracy = 0.1

@@ -255,6 +255,14 @@ class ChooseLetterPrompt(Popup):
         """Remove keyboard binding when the keyboard is closed."""
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
         self._keyboard = None
+    
+    def release_keyboard(self, instance):
+        """
+        Release the keyboard if it is still bound to this popup.
+        """
+        
+        if self._keyboard:
+            self._keyboard.release()
 
 class BonusRoundPrompt(Popup):
     """

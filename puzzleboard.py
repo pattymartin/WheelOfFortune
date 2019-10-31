@@ -313,6 +313,10 @@ class PuzzleLayout(GridLayout):
                         Clock.schedule_once(
                             layout.blue,
                             values.blue_interval * matches)
+                        # schedule "ding" sound
+                        Clock.schedule_once(
+                            lambda i: self.queue.b.put(('ding', None)),
+                            values.blue_interval * matches)
                         # schedule panel to be revealed
                         Clock.schedule_once(
                             layout.show_letter,
@@ -334,6 +338,9 @@ class PuzzleLayout(GridLayout):
             letter.lower() in consonants for letter in remaining_letters)
         if self.queue and len(letters) == 1:
             self.queue.b.put(('matches', (letters[0], matches)))
+            Clock.schedule_once(
+                lambda i: self.queue.b.put(('reveal_finished', None)),
+                values.reveal_interval * matches)
             if no_more_vowels:
                 # indicate no more vowels in the middle of letter reveals
                 Clock.schedule_once(
