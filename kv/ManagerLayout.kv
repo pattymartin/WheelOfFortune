@@ -161,6 +161,9 @@
                 on_release: root.guess_letter()
         BoxLayout:
             orientation: 'horizontal'
+			Button:
+				text: strings.button_buy_vowel
+				on_release: root.buy_vowel()
             Button:
                 text: strings.mgr_btn_lose_turn
                 on_release: root.lose_turn()

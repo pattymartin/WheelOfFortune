@@ -5,6 +5,7 @@ alphabet = 'abcdefghijklmnopqrstuvwxyz'
 bonus_round_letters = 'RSTLNE'
 
 button_bonus_round = 'Bonus\nRound'
+button_buy_vowel = 'Buy a\nVowel'
 button_close = 'Close'
 button_confirm = 'Confirm'
 button_default = 'Default'

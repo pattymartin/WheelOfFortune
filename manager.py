@@ -556,15 +556,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         and a letter is chosen.
         """
         
-        if letter.lower() in 'aeiou':
-            # do nothing if not enough money for a vowel
-            if self.get_score() < self.vowel_price:
-                return
-            # subtract vowel price from score
-            self.add_score(-self.vowel_price)
         self.unavailable_letters.append(letter.lower())
         self.puzzle_queue.a.put(('letter', letter))
         self.letters_q.put(('remove_letter', None, letter))
+    
+    def buy_vowel(self):
+        """
+        If the player can afford a vowel,
+        subtract `vowel_price` from their score.
+        """
+        
+        if self.get_score() >= self.vowel_price:
+            self.add_score(-self.vowel_price)
     
     def bonus_round_letters(self, letters):
         """
