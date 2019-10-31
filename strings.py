@@ -126,6 +126,18 @@ file_category_background = os.path.join(dir_assets,
     r'category_background.png')
 file_settings_icon = os.path.join(dir_assets,
     r'settings.png')
+file_sound_bankrupt = os.path.join(dir_assets,
+    r'bankrupt.mp3')
+file_sound_buzz = os.path.join(dir_assets,
+    r'buzz.wav')
+file_sound_ding = os.path.join(dir_assets,
+    r'ding.wav')
+file_sound_no_more_consonants = os.path.join(dir_assets,
+    r'no_more_consonants.wav')
+file_sound_no_more_vowels = os.path.join(dir_assets,
+    r'no_more_vowels.wav')
+file_sound_solve = os.path.join(dir_assets,
+    r'solve.wav')
 
 dir_kv = os.path.join(os.path.dirname(__file__),
     r'kv')

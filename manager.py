@@ -5,6 +5,7 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.core.audio import SoundLoader
 from kivy.lang import Builder
 from kivy.properties import NumericProperty
 from kivy.uix.behaviors.button import ButtonBehavior
@@ -39,11 +40,17 @@ class CommQueue:
     and read from `b`, and the child process
     can do the opposite.
     """
+    
     def __init__(self):
         self.a = multiprocessing.Queue()
         self.b = multiprocessing.Queue()
 
 class PlayerButton(ButtonBehavior, score.ScoreLayout):
+    """
+    A ScoreLayout which also serves as a button
+    to select a player.
+    """
+    
     def __init__(self, bg_color=(0, 0, 0, 1), **kwargs):
         super(PlayerButton, self).__init__(**kwargs)
         self.bg_color = bg_color
@@ -177,6 +184,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Check the queue for incoming commands.
         """
+        
         try:
             command, args = self.puzzle_queue.b.get(block=False)
             if command == 'puzzle_loaded':
@@ -185,16 +193,16 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.show_puzzle()
             elif command == 'ding':
                 if not self.speedup:
-                    # TODO play sound
-                    print("DING")
+                    self.play_sound(strings.file_sound_ding)
             elif command == 'matches':
                 self.correct_letter(args)
             elif command == 'tossup_timeout':
                 self.tossup()
             elif command == 'reveal_finished':
                 if self.speedup:
-                    # TODO play sound in 4 seconds
-                    print("BUZZ (in 4 seconds)")
+                    Clock.schedule_once(
+                        self.speedup_buzz,
+                        values.speedup_timeout)
             elif command == 'no_more_consonants':
                 if self.speedup:
                     self.speedup_consonants_remaining = False
@@ -212,6 +220,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         (and clue, if any)
         in the `puzzle_label`.
         """
+        
         if self.puzzle_string:
             self.puzzle_label.text = self.puzzle_string
             if self.puzzle_clue:
@@ -309,6 +318,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Select the next player.
         """
+        
         if self.selected_player == 1:
             # red selected, select yellow
             self.select_yellow()
@@ -333,6 +343,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Change the color of TextInput boxes to the specified `color`.
         """
+        
         self.name_input.background_color = color
         self.score_edit.background_color = color
         self.custom_value.background_color = color
@@ -341,6 +352,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Update the name of the selected player.
         """
+        
         if self.selected_player == 1:
             self.btn_red.name = text
             self.red_q.put(('name', text))
@@ -358,6 +370,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Get the score of the selected player.
         """
+        
         if self.selected_player == 1:
             return self.btn_red.score
         elif self.selected_player == 2:
@@ -370,6 +383,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Set the score of the selected player.
         """
+        
         if self.selected_player == 1:
             self.btn_red.score = score
             self.red_q.put(('score', score))
@@ -387,12 +401,14 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Add `score` to the selected player's score.
         """
+        
         self.set_score(self.get_score() + score)
     
     def get_total(self):
         """
         Get the game total of the selected player.
         """
+        
         if self.selected_player == 1:
             return self.btn_red.total
         elif self.selected_player == 2:
@@ -405,6 +421,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Set the game total of the selected player.
         """
+        
         if self.selected_player == 1:
             self.btn_red.total = total
             self.red_q.put(('total', total))
@@ -422,6 +439,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Add `total` to the selected player's game total.
         """
+        
         self.set_total(self.get_total() + total)
     
     def choose_puzzle(self):
@@ -437,6 +455,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Tell the layout to load `puzzle`.
         """
+        
         if self.tossup_running:
             self.tossup()
         self.unavailable_letters = []
@@ -446,11 +465,13 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.consonants_remaining = True
         self.vowels_remaining = True
         self.speedup_consonants_remaining = True
+        self.speedup = False
     
     def clear_puzzle(self):
         """
         Clear the puzzleboard.
         """
+        
         self.load_puzzle({
             'category': '',
             'clue': '',
@@ -463,6 +484,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         If `player` is 1, 2, or 3,
         select that player.
         """
+        
         if player:
             if player in self.tossup_players_done:
                 return  
@@ -491,6 +513,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Tell all ScoreApps to stop flashing.
         """
+        
         self.red_q.put(('stop_flash', None))
         self.ylw_q.put(('stop_flash', None))
         self.blu_q.put(('stop_flash', None))
@@ -502,6 +525,10 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Tell the layout to reveal the puzzle.
         """
+        
+        # TODO different sounds for different rounds
+        self.play_sound(strings.file_sound_solve)
+        self.speedup = False
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
     
@@ -509,6 +536,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Open a prompt to select a letter.
         """
+        
         if (
                 self.selected_player == 0
                 or self.get_value() == 0):
@@ -527,6 +555,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         This runs after `guess_letter()` is called
         and a letter is chosen.
         """
+        
         if letter.lower() in 'aeiou':
             # do nothing if not enough money for a vowel
             if self.get_score() < self.vowel_price:
@@ -573,8 +602,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.custom_value.text = ''
         
         if not matches and not self.speedup:
-            # TODO play sound
-            print("BUZZ")
+            self.play_sound(strings.file_sound_buzz)
         
         # show number of matches in puzzle_label
         self.puzzle_label.text = strings.label_matches.format(
@@ -611,8 +639,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         # only do this once per round
         if self.consonants_remaining:
             self.consonants_remaining = False
-            # TODO play sound
-            print("NO MORE CONSONANTS")
+            
+            self.play_sound(strings.file_sound_no_more_consonants)
             
             self.unavailable_letters.extend([
                 c for c in strings.alphabet if not c in 'aeiou'
@@ -628,8 +656,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         # only do this once per round
         if self.vowels_remaining:
             self.vowels_remaining = False
-            # TODO play sound
-            print("NO MORE VOWELS")
+            
+            self.play_sound(strings.file_sound_no_more_vowels)
         
             self.unavailable_letters.extend([
                 c for c in strings.alphabet if c in 'aeiou'
@@ -696,13 +724,17 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         Player has lost a turn;
         move to next player.
         """
+        
         self.select_next_player()
     
     def bankrupt(self):
         """
         Bankrupt the selected player.
         """
-        self.set_score(0)
+        
+        if self.selected_player:
+            self.play_sound(strings.file_sound_bankrupt)
+            self.set_score(0)
     
     def bank_score(self):
         """
@@ -710,6 +742,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         to their game total,
         then set each player's score to 0.
         """
+        
         self.add_total(self.get_score())
         
         # set score = 0 for each player
@@ -725,6 +758,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         Open a Popup prompting the user
         to fill in some game settings.
         """
+        
         popup = prompts.ManagerSettingsPrompt()
         popup.bind(on_dismiss=self.load_settings)
         popup.bind(on_dismiss=self.bind_keyboard_self)
@@ -734,6 +768,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Load settings from file.
         """
+        
         settings = data_caching.get_variables()
         try:
             self.vowel_price = int(settings.get('vowel_price', ''))
@@ -758,10 +793,29 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             for name, default
             in zip(values.hotkey_names, values.hotkey_defaults)}
     
+    def play_sound(self, filename):
+        """
+        Play the audio file specified by `filename`.
+        """
+        
+        sound = SoundLoader.load(filename)
+        if sound:
+            sound.play()
+    
+    def speedup_buzz(self, instance):
+        """
+        Play the buzz sound.
+        Does nothing if the puzzle has already been solved.
+        """
+        
+        if self.speedup:
+            self.play_sound(strings.file_sound_buzz)
+    
     def exit_app(self):
         """
         Tell all apps to stop, then stop this app.
         """
+        
         self.exit_other_apps()
         App.get_running_app().stop()
     
@@ -769,6 +823,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Tell all other apps to stop.
         """
+        
         for q in [self.puzzle_queue.a, self.red_q, self.ylw_q, self.blu_q]:
             q.put(('exit', None))
         self.letters_q.put(('exit', None, None))
@@ -788,6 +843,10 @@ class ManagerApp(App):
         return ManagerLayout(*self.args)
     
     def on_stop(self):
+        """
+        Close other apps when this app is closed.
+        """
+        
         self.root.exit_other_apps()
 
 class ScoreApp(App):
@@ -824,18 +883,21 @@ def launchManager(*args):
     """
     Launch a ManagerApp.
     """
+    
     ManagerApp(*args).run()
 
 def launchScore(*args):
     """
     Launch a ScoreApp.
     """
+    
     ScoreApp(*args).run()
 
 def launchLetterboard(*args):
     """
     Launch a LetterboardApp.
     """
+    
     LetterboardApp(*args).run()
 
 if __name__ == '__main__':
