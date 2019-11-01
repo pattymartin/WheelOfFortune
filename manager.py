@@ -458,7 +458,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         
         self.game = game
-        self.load_puzzle(self.game[0]['puzzle'])
+        if game:
+            self.load_puzzle(self.game[0]['puzzle'])
     
     def load_puzzle(self, puzzle):
         """
@@ -475,6 +476,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.vowels_remaining = True
         self.speedup_consonants_remaining = True
         self.speedup = False
+        
+        if self.game and self.game[0]['round_type'] in [
+                strings.round_type_tossup,
+                strings.round_type_triple_tossup,
+                strings.round_type_triple_tossup_final,
+                strings.round_type_bonus]:
+            self.select_layout_manager.current = 'solve?'
+        else:
+            self.select_layout_manager.current = 'solve'
     
     def next_puzzle(self):
         """
@@ -497,6 +507,12 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             'category': '',
             'clue': '',
             'puzzle': ' ' * 52})
+        
+        if len(self.game) <= 1:
+            # no more puzzles loaded after the current puzzle
+            self.select_layout_manager.current = 'select'
+        else:
+            self.select_layout_manager.current = 'next'
     
     def tossup(self, player=None):
         """
@@ -567,6 +583,12 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.speedup = False
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
+        
+        if len(self.game) <= 1:
+            # no more puzzles loaded after the current puzzle
+            self.select_layout_manager.current = 'select'
+        else:
+            self.select_layout_manager.current = 'next'
     
     def guess_letter(self):
         """
@@ -719,6 +741,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         else:
             self.timer_layout_manager.current = 'paused'
         
+        self.speedup = False
         self.timer_running = not self.timer_running
     
     def decrement_timer(self, instance):

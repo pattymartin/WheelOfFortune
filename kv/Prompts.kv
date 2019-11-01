@@ -1,4 +1,5 @@
 #:import data_caching data_caching
+#:import NoTransition kivy.uix.screenmanager.NoTransition
 #:import os os
 #:import strings strings
 #:import values values
@@ -113,6 +114,7 @@
 		size_hint_x: 0.25
 	ScreenManager:
 		id: screen_manager
+		transition: NoTransition()
 		size_hint_x: 1.75
 		Screen:
 			name: 'label'

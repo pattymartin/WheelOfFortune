@@ -4,6 +4,7 @@
 <ManagerLayout>:
     puzzle_label: puzzle_label
 	timer_label: timer_label
+	select_layout_manager: select_layout_manager
 	timer_layout_manager: timer_layout_manager
 	tossup_button: tossup_button
     name_input: name_input
@@ -31,18 +32,36 @@
     BoxLayout:
         orientation: 'horizontal'
         size_hint_y: 0.25
-        Button:
-            text: strings.title_select_puzzle
-            on_release: root.choose_puzzle()
-		Button:
-			text: strings.button_next_puzzle
-			on_release: root.next_puzzle()
+		ScreenManager:
+			id: select_layout_manager
+			Screen:
+				name: 'select'
+				Button:
+					text: strings.button_select_puzzle
+					on_release: root.choose_puzzle()
+			Screen:
+				name: 'next'
+				Button:
+					text: strings.button_next_puzzle
+					on_release: root.next_puzzle()
+			Screen:
+				name: 'solve'
+				Button:
+					text: strings.mgr_btn_reveal
+					on_release: root.reveal_puzzle()
+			Screen:
+				name: 'solve?'
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						text: strings.button_no_solve
+						on_release: root.reveal_puzzle(False)
+					Button:
+						text: strings.mgr_btn_reveal
+						on_release: root.reveal_puzzle()
         Button:
             text: strings.mgr_btn_clear
             on_release: root.clear_puzzle()
-        Button:
-            text: strings.mgr_btn_reveal
-            on_release: root.reveal_puzzle()
 		ScreenManager:
 			id: timer_layout_manager
 			Screen:
