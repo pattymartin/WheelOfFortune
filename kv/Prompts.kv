@@ -1,4 +1,5 @@
 #:import data_caching data_caching
+#:import os os
 #:import strings strings
 #:import values values
 <SavePuzzlePrompt>
@@ -53,8 +54,10 @@
 			size_hint_y: 0.25
 			Button:
 				text: strings.button_load
+				on_release: root.import_game()
 			Button:
 				text: strings.button_export
+				on_release: root.export_game()
 		ScrollView:
 			BoxLayout:
 				orientation: 'vertical'
@@ -427,6 +430,63 @@
             Button:
                 id: button_yes
                 text: strings.button_yes
+<FileChooserPrompt>:
+	chooser: chooser
+	title: strings.button_load
+	BoxLayout:
+		orientation: 'vertical'
+		FileChooserIconView:
+			id: chooser
+			path: root.chooser_path
+			multiselect: root.multiselect
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Button:
+				text: strings.button_close
+				on_release: root.dismiss()
+			Button:
+				text: strings.button_confirm
+				on_release: root.confirm()
+<FileSaverPrompt>:
+	chooser_path: ''
+	chooser: chooser
+	filename_input: filename_input
+	filename_label: filename_label
+	title: strings.button_export
+	BoxLayout:
+		orientation: 'vertical'
+		FileChooserIconView:
+			id: chooser
+			path: root.chooser_path
+			on_selection:
+				if self.selection: \
+				filename_input.text = os.path.basename(self.selection[0])
+		Widget:
+			size_hint_y: 0.02
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: None
+			height: 30
+			Label:
+				id: filename_label
+				text: strings.label_filename
+				size_hint_x: None
+				valign: 'center'
+				halign: 'center'
+			TextInput:
+				id: filename_input
+		Widget:
+			size_hint_y: 0.02
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Button:
+				text: strings.button_close
+				on_release: root.dismiss()
+			Button:
+				text: strings.button_confirm
+				on_release: root.input_save()
 <InfoPrompt>:
     id: info_prompt
     text_label: scroll_label.text_label

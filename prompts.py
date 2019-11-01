@@ -145,9 +145,52 @@ class LoadGamePrompt(Popup):
         self.rewards.pop(-1)
         self.fill_puzzle_layout()
     
-    def confirm(self):
+    def import_game(self):
         """
-        Call `callback` on the selected puzzles.
+        Load a game from a file.
+        """
+        
+        FileChooserPrompt(
+                self.import_game_from_file,
+                multiselect=False
+            ).open()
+    
+    def import_game_from_file(self, filenames):
+        """
+        Import a game from the selected `filename`.
+        """
+        
+        filename = filenames[0]
+        
+        order = []
+        rewards = []
+        puzzles = []
+        
+        for puzzle in data_caching.import_game(filename):
+            order.append(puzzle['round_type'])
+            rewards.append(puzzle['round_reward'])
+            puzzles.append(puzzle['puzzle'])
+        
+        if order and rewards and puzzles:
+            self.order = order
+            self.rewards = rewards
+            self.puzzles = puzzles
+        
+        self.fill_puzzle_layout()
+    
+    def export_game(self):
+        """
+        Save the game to a file.
+        """
+        
+        game, order, rewards = self.create_game()
+        FileSaverPrompt(data_caching.export_game, game).open()
+    
+    def create_game(self):
+        """
+        Create a game dict from the selected puzzles.
+        Returns the game dict, a list of round types,
+        and a list of rewards for each round.
         """
         
         game = []
@@ -183,6 +226,15 @@ class LoadGamePrompt(Popup):
                 pass
             
             i += 1
+        
+        return game, order, rewards
+    
+    def confirm(self):
+        """
+        Call `callback` on the selected puzzles.
+        """
+        
+        game, order, rewards = self.create_game()
         
         data_caching.update_variables({
             'game_order': order,
@@ -306,7 +358,9 @@ class LoadPuzzlePrompt(Popup):
         
         def load_button_click(instance):
             """
+            Prompt the user to load puzzles from a file.
             """
+            
             prompt = FileChooserPrompt(data_caching.import_puzzles)
             prompt.bind(on_dismiss=self.create_layout)
             prompt.open()
@@ -318,7 +372,9 @@ class LoadPuzzlePrompt(Popup):
         layout.add_widget(btn_load)
         
         btn_save = Button(text=strings.button_export)
-        btn_save.bind(on_release=FileSaverPrompt(self.selected_names).open)
+        btn_save.bind(on_release=lambda i: FileSaverPrompt(
+                data_caching.export_puzzles_by_name, self.selected_names
+            ).open())
         layout.add_widget(btn_save)
         
         btn_delete_all = Button(text=strings.button_delete_all)
@@ -647,108 +703,73 @@ class FileChooserPrompt(Popup):
     A Popup allowing the user to select files.
     """
     
-    def __init__(self, callback, **kwargs):
+    def __init__(self, callback, multiselect=True, **kwargs):
         """
         Create the Popup.
-        Files selected will be passed to `callback`
+        File(s) selected will be passed to `callback`
         as a list.
         """
-        super(FileChooserPrompt, self).__init__(
-            title=strings.button_load, **kwargs)
         
-        chooser_path = data_caching.get_variables().get(
+        self.callback = callback
+        self.multiselect = multiselect
+        
+        self.chooser_path = data_caching.get_variables().get(
             'file_chooser_path', '')
-        if not chooser_path or not os.path.exists(chooser_path):
-            chooser_path = os.getcwd()
+        if not os.path.exists(self.chooser_path):
+            self.chooser_path = os.getcwd()
         
-        layout = BoxLayout(orientation='vertical')
-        chooser = FileChooserIconView(path=chooser_path, multiselect=True)
-        layout.add_widget(chooser)
+        super(FileChooserPrompt, self).__init__(**kwargs)
+    
+    def confirm(self):
+        """
+        Pass the FileChooser's selection to `callback`.
+        """
         
-        def confirm(instance):
-            """
-            Pass the FileChooser's selection to `callback`.
-            """
-            callback(chooser.selection)
-            data_caching.update_variables({
-                'file_chooser_path': chooser.path})
-            self.dismiss()
-        
-        button_layout = BoxLayout(orientation='horizontal')
-        button_cancel = Button(text=strings.button_close)
-        button_confirm = Button(text=strings.button_confirm)
-        button_cancel.bind(on_release=self.dismiss)
-        button_confirm.bind(on_release=confirm)
-        button_layout.add_widget(button_cancel)
-        button_layout.add_widget(button_confirm)
-        button_layout.size_hint_y = 0.25
-        layout.add_widget(button_layout)
-        
-        self.content = layout
+        self.callback(self.chooser.selection)
+        data_caching.update_variables({
+            'file_chooser_path': self.chooser.path})
+        self.dismiss()
 
 class FileSaverPrompt(Popup):
     """
-    A Popup allowing the user to save puzzles to a file.
+    A Popup allowing the user to select a file
+    to write to.
     """
     
-    def __init__(self, puzzle_names, **kwargs):
-        super(FileSaverPrompt, self).__init__(
-            title=strings.button_export, **kwargs)
+    def __init__(self, callback, *args, **kwargs):
+        """
+        Create the Popup.
+        The selected file will be passed to `callback`,
+        along with any additional arguments specified.
+        """
         
-        chooser_path = data_caching.get_variables().get(
+        super(FileSaverPrompt, self).__init__(**kwargs)
+        self.callback = callback
+        self.args = args
+        
+        self.chooser_path = data_caching.get_variables().get(
             'file_chooser_path', '')
-        if not chooser_path or not os.path.exists(chooser_path):
-            chooser_path = os.getcwd()
-        
-        layout = BoxLayout(orientation='vertical')
-        chooser = FileChooserIconView(path=chooser_path)
-        layout.add_widget(chooser)
-        
-        layout.add_widget(Widget(size_hint_y=0.02))
-        
-        filename_layout, filename_label, filename_input = _input_layout(
-            strings.label_filename)
-        filename_layout.size_hint_y = None
-        filename_layout.height = 30
-        layout.add_widget(filename_layout)
-        
-        def set_filename_input():
-            if chooser.selection:
-                filename_input.text = os.path.basename(chooser.selection[0])
-        chooser.select_callback = set_filename_input
-        
-        layout.add_widget(Widget(size_hint_y=0.02))
-        
-        button_layout = BoxLayout(orientation='horizontal')
-        button_cancel = Button(text=strings.button_close)
-        button_confirm = Button(text=strings.button_confirm)
-        button_layout.add_widget(button_cancel)
-        button_layout.add_widget(button_confirm)
-        button_layout.size_hint_y = 0.25
-        layout.add_widget(button_layout)
-        
-        def input_save(instance):
-            """
-            Get text from the input box,
-            and save puzzles to the filename specified.
-            """
+        if not os.path.exists(self.chooser_path):
+            self.chooser_path = os.getcwd()
+    
+    def input_save(self):
+        """
+        Get text from the input box,
+        and call `callback` on the selected file,
+        along with the additional arguments.
+        """
             
-            filename = filename_input.text
-            
-            if filename:
-                data_caching.export_puzzles_by_name(
-                    puzzle_names,
-                    os.path.join(chooser.path, filename))
-                data_caching.update_variables({
-                    'file_chooser_path': chooser.path})
-                self.dismiss()
-            else:
-                filename_label.color = values.color_red
+        filename = self.filename_input.text
         
-        button_cancel.bind(on_release=self.dismiss)
-        button_confirm.bind(on_release=input_save)
-        
-        self.content = layout
+        if filename:
+            self.callback(
+                os.path.join(self.chooser.path, filename),
+                *self.args)
+            data_caching.update_variables({
+                'file_chooser_path': self.chooser.path})
+            self.dismiss()
+        else:
+            self.filename_label.color = values.color_red
 
 class InfoPrompt(Popup):
     """

@@ -109,6 +109,7 @@ def import_puzzles(file_list):
     of the form:
     {puzzle} {category} ({clue})
     """
+    
     unable_to_import = []
     all_found_puzzles = {}
     all_duplicate_names = []
@@ -159,7 +160,7 @@ def import_puzzles(file_list):
                     '\r\n'.join(all_duplicate_names))
             ).open()
 
-def export_puzzles_by_name(puzzle_names, filename):
+def export_puzzles_by_name(filename, puzzle_names):
     """
     Export puzzles with names in `puzzle_names`
     to the file `filename`.
@@ -168,17 +169,17 @@ def export_puzzles_by_name(puzzle_names, filename):
     if not puzzle_names:
         prompts.YesNoPrompt(
                 strings.label_no_export_selected,
-                lambda i: export_puzzles(read_puzzles(), filename),
+                lambda i: export_puzzles(filename, read_puzzles()),
                 None,
                 title=strings.title_no_export_selected
             ).open()
     else:
         puzzles = read_puzzles()
         export_puzzles(
-            OrderedDict((name, puzzles[name]) for name in puzzle_names),
-            filename)
+            filename,
+            OrderedDict((name, puzzles[name]) for name in puzzle_names))
 
-def export_puzzles(puzzles, filename):
+def export_puzzles(filename, puzzles):
     """
     Export `puzzles` to the file `filename`.
     `puzzles` should be a puzzles dict.
@@ -197,6 +198,81 @@ def export_puzzles(puzzles, filename):
                     puzzle['puzzle'],
                     puzzle['category'],
                     puzzle['clue']))
+    
+    if os.path.exists(filename):
+        prompts.YesNoPrompt(
+                strings.label_file_exists.format(filename),
+                write,
+                None,
+                title=strings.title_file_exists
+            ).open()
+    else:
+        write()
+
+def import_game(filename):
+    """
+    Read a game from a file
+    and return the game.
+    
+    Each line in the file must consist
+    of tab-separated values,
+    of the form:
+    {round_type} {round_reward} {puzzle} {category} ({clue})
+    """
+    
+    game = []
+    
+    try:
+        with open(filename) as f:
+            for line in f.readlines():
+                if line:
+                    fields = line.split('\t')
+                    
+                    round_type = fields[0].strip()
+                    round_reward = fields[1].strip()
+                    puzzle = fields[2].ljust(52)[:52].upper()
+                    category = fields[3].strip()
+                    try:
+                        clue = fields[4].strip()
+                    except IndexError:
+                        clue = ''
+                    
+                    game.append({
+                        'round_type': round_type,
+                        'round_reward': round_reward,
+                        'puzzle': {
+                            'puzzle': puzzle,
+                            'category': category,
+                            'clue': clue}})
+    except:
+        prompts.InfoPrompt(
+                title=strings.title_import_error,
+                text=strings.label_import_error.format(filename)
+            ).open()
+    
+    return game
+
+def export_game(filename, game):
+    """
+    Export `game` to the file `filename`.
+    """
+    
+    if not '.' in filename:
+        filename += '.txt'
+    
+    def write(instance=None):
+        """
+        Write the game to the file.
+        """
+        
+        with open(filename, 'w') as f:
+            for puzzle in game:
+                f.write('{}\t{}\t{}\t{}\t{}\n'.format(
+                    puzzle['round_type'],
+                    puzzle['round_reward'],
+                    puzzle['puzzle']['puzzle'],
+                    puzzle['puzzle']['category'],
+                    puzzle['puzzle']['clue']))
     
     if os.path.exists(filename):
         prompts.YesNoPrompt(
