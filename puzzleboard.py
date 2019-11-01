@@ -398,7 +398,15 @@ class PuzzleLayout(GridLayout):
         Prompt the user to select a puzzle,
         then load that puzzle.
         """
-        prompts.LoadPuzzlePrompt(self.load_puzzle).open()
+        prompts.LoadPuzzlePrompt(self.selected_puzzles).open()
+    
+    def selected_puzzles(self, puzzles):
+        """
+        Get selected puzzles from a LoadPuzzlePrompt,
+        and load the first one.
+        """
+        
+        self.load_puzzle(puzzles[0])
     
     def load_puzzle(self, puzzle):
         """

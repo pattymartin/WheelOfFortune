@@ -48,6 +48,175 @@ class SavePuzzlePrompt(Popup):
         else:
             cat_label.color = values.color_red
 
+class LoadGamePrompt(Popup):
+    """
+    A Popup to prompt the user to create a game.
+    The selected game will then be passed to `callback`.
+    A 'game' is a list of dicts, each with the keys
+    'round_type', 'round_reward', and 'puzzle'.
+    
+    The value of 'round_type' is a string,
+    the value of 'round_reward' is an int,
+    and the value of 'puzzle' is a dict with the keys
+    'puzzle', 'category', and 'clue' (all string values).
+    """
+    
+    def __init__(self, callback, **kwargs):
+        """Create the Popup."""
+        super(LoadGamePrompt, self).__init__(**kwargs)
+        self.callback = callback
+        
+        settings = data_caching.get_variables()
+        self.order = settings.get('game_order', values.default_game_order)
+        self.rewards = settings.get(
+            'game_rewards', values.default_game_rewards)
+        self.puzzles = []
+        
+        self.fill_puzzle_layout()
+    
+    def fill_puzzle_layout(self):
+        """
+        Fill in the selected puzzles.
+        """
+        
+        self.puzzle_layout.clear_widgets()
+        
+        # to make sure the button is only added once
+        select_button_added = False
+        
+        for i, (round_type, reward) in enumerate(zip(
+                self.order, self.rewards)):
+            
+            selection_callback = None
+            try:
+                puzzle = ' '.join(self.puzzles[i]['puzzle'].split())
+            except IndexError:
+                puzzle = ''
+                if not select_button_added:
+                    selection_callback = self.puzzles_selected
+                    select_button_added = True
+            self.puzzle_layout.add_widget(PuzzleSelectionLayout(
+                i+1, puzzle, round_type, reward,
+                selection_callback=selection_callback))
+        
+        add_round_button_layout = BoxLayout(
+            orientation='horizontal', size_hint_y=None, height=30)
+        add_round_button_layout.add_widget(Button(
+            text='-', size_hint_x=0.125, on_release=self.remove_round))
+        add_round_button_layout.add_widget(Button(
+            text='+', size_hint_x=0.125, on_release=self.add_round))
+        add_round_button_layout.add_widget(Button(
+            text=strings.button_clear_puzzles, size_hint_x=1.75,
+            on_release=self.clear_puzzles))
+        add_round_button_layout.add_widget(Widget(size_hint_x=2))
+        self.puzzle_layout.add_widget(add_round_button_layout)
+    
+    def puzzles_selected(self, puzzles):
+        """
+        Indicate the selected puzzles in the layout.
+        """
+        
+        self.puzzles.extend(puzzles)
+        self.fill_puzzle_layout()
+    
+    def clear_puzzles(self, instance):
+        """
+        Remove all puzzles from the puzzle layout.
+        """
+        
+        self.puzzles = []
+        self.fill_puzzle_layout()
+    
+    def add_round(self, instance):
+        """
+        Add another row to the puzzle layout.
+        """
+        
+        self.order.append('')
+        self.rewards.append('')
+        self.fill_puzzle_layout()
+    
+    def remove_round(self, instance):
+        """
+        Remove the last row from the puzzle layout.
+        """
+        
+        self.order.pop(-1)
+        self.rewards.pop(-1)
+        self.fill_puzzle_layout()
+    
+    def confirm(self):
+        """
+        Call `callback` on the selected puzzles.
+        """
+        
+        game = []
+        order = []
+        rewards = []
+        
+        i = 0
+        for child in self.puzzle_layout.children[::-1]:
+            try:
+                round_type = child.round_type_text
+                round_reward = child.reward_text
+                
+                if not round_type:
+                    round_type = strings.round_type_standard
+                if not round_reward:
+                    round_reward = '0'
+                
+                order.append(round_type)
+                rewards.append(round_reward)
+            except AttributeError:
+                # not a PuzzleSelectionLayout
+                continue
+            
+            try:
+                puzzle = self.puzzles[i]
+                
+                game.append({
+                    'puzzle': puzzle,
+                    'round_type': round_type,
+                    'round_reward': round_reward})
+            except IndexError:
+                # no more puzzles
+                pass
+            
+            i += 1
+        
+        data_caching.update_variables({
+            'game_order': order,
+            'game_rewards': rewards})
+        self.callback(game)
+        self.dismiss()
+
+class PuzzleSelectionLayout(BoxLayout):
+    """
+    A Layout to define what a row in the LoadGamePrompt
+    looks like.
+    """
+    
+    def __init__(self, number, puzzle, round_type, reward,
+                 selection_callback, **kwargs):
+        super(PuzzleSelectionLayout, self).__init__(**kwargs)
+        self.number = str(number)
+        self.puzzle = str(puzzle)
+        self.round_type = str(round_type)
+        self.reward = str(reward)
+        self.selection_callback = selection_callback
+        
+        if selection_callback:
+            self.screen_manager.current = 'button'
+            self.button_select.bind(on_release=self.select_clicked)
+    
+    def select_clicked(self, instance):
+        """
+        Launch the LoadPuzzlePrompt,
+        using `selection_callback` as the callback.
+        """
+        
+        LoadPuzzlePrompt(self.selection_callback).open()
+
 class LoadPuzzlePrompt(Popup):
     """
     A Popup to prompt the user to select a puzzle by name.
@@ -55,6 +224,7 @@ class LoadPuzzlePrompt(Popup):
     `callback` should be a function accepting a dict
     with the keys 'category', 'clue', and 'puzzle'.
     """
+    
     def __init__(self, callback, **kwargs):
         """Create the Popup."""
         super(LoadPuzzlePrompt, self).__init__(
@@ -100,7 +270,7 @@ class LoadPuzzlePrompt(Popup):
             
             selected_puzzles = [puzzles[name] for name in self.selected_names]
             if selected_puzzles:
-                self.callback(selected_puzzles[0])
+                self.callback(selected_puzzles)
             
             self.dismiss()
         

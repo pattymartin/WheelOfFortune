@@ -1,3 +1,5 @@
+import strings
+
 queue_start = 5
 queue_interval = 0
 tossup_interval = 0.924
@@ -63,6 +65,42 @@ hotkey_defaults = [
 
 speedup_timeout = 4
 splitter_size = '5pt'
+
+round_types = [
+    strings.round_type_standard,
+    strings.round_type_mystery,
+    strings.round_type_express,
+    strings.round_type_tossup,
+    strings.round_type_triple_tossup,
+    strings.round_type_triple_tossup_final,
+    strings.round_type_speedup,
+    strings.round_type_bonus]
+default_game_order = [
+    strings.round_type_tossup,
+    strings.round_type_tossup,
+    strings.round_type_standard,
+    strings.round_type_mystery,
+    strings.round_type_express,
+    strings.round_type_triple_tossup,
+    strings.round_type_triple_tossup,
+    strings.round_type_triple_tossup_final,
+    strings.round_type_speedup,
+    strings.round_type_speedup,
+    strings.round_type_speedup,
+    strings.round_type_bonus]
+default_game_rewards = [
+    1000,
+    2000,
+    0,
+    0,
+    0,
+    2000,
+    2000,
+    2000,
+    0,
+    0,
+    0,
+    0]
 
 timer_accuracy = 0.1
 

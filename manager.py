@@ -72,6 +72,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.blu_q = blu_q
         self.letters_q = letters_q
         
+        self.game = []
         self.selected_player = 0
         self.unavailable_letters = []
         self.timer_running = False
@@ -446,10 +447,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Prompt the user to select a puzzle.
         """
-        prompts.LoadPuzzlePrompt(
-                self.load_puzzle,
+        prompts.LoadGamePrompt(
+                self.load_game,
                 on_dismiss=self.bind_keyboard_self
             ).open()
+    
+    def load_game(self, game):
+        """
+        Load the game returned by a LoadGamePrompt.
+        """
+        
+        self.game = game
+        self.load_puzzle(self.game[0]['puzzle'])
     
     def load_puzzle(self, puzzle):
         """
@@ -466,6 +475,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.vowels_remaining = True
         self.speedup_consonants_remaining = True
         self.speedup = False
+    
+    def next_puzzle(self):
+        """
+        If there are still puzzles in the
+        list `game`, load the next one.
+        """
+        
+        try:
+            self.game.pop(0)
+            self.load_puzzle(self.game[0]['puzzle'])
+        except IndexError:
+            pass
     
     def clear_puzzle(self):
         """

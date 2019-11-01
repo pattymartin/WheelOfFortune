@@ -1,5 +1,6 @@
 #:import data_caching data_caching
 #:import strings strings
+#:import values values
 <SavePuzzlePrompt>
 	cat_input: cat_input
 	clue_input: clue_input
@@ -42,6 +43,91 @@
 			Button:
 				text: strings.button_save
 				on_release: root.input_save()
+<LoadGamePrompt>:
+	puzzle_layout: puzzle_layout
+	title: strings.title_select_game
+	BoxLayout:
+		orientation: 'vertical'
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Button:
+				text: strings.button_load
+			Button:
+				text: strings.button_export
+		ScrollView:
+			BoxLayout:
+				orientation: 'vertical'
+				size_hint_y: None
+				height: self.minimum_height
+				BoxLayout:
+					orientation: 'horizontal'
+					size_hint_y: None
+					height: 30
+					Widget:
+						size_hint_x: 0.25
+					Label:
+						text: '[b]{}[/b]'.format(strings.label_puzzle)
+						markup: True
+						size_hint_x: 1.75
+					Label:
+						text: '[b]{}[/b]'.format(strings.label_round_type)
+						markup: True
+					Label:
+						text: '[b]{}[/b]'.format(strings.label_reward)
+						markup: True
+				BoxLayout:
+					id: puzzle_layout
+					orientation: 'vertical'
+					size_hint_y: None
+					height: self.minimum_height
+		Widget:
+			size_hint_y: None
+			height: 5
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Button:
+				text: strings.button_close
+				on_release: root.dismiss()
+			Button:
+				text: strings.button_confirm
+				on_release: root.confirm()
+<PuzzleSelectionLayout>:
+	number: ''
+	puzzle: ''
+	round_type: ''
+	reward: ''
+	screen_manager: screen_manager
+	button_select: button_select
+	round_type_text: round_type_spinner.text
+	reward_text: reward_input.text
+	orientation: 'horizontal'
+	size_hint_y: None
+	height: 30
+	Label:
+		text: str(root.number)
+		size_hint_x: 0.25
+	ScreenManager:
+		id: screen_manager
+		size_hint_x: 1.75
+		Screen:
+			name: 'label'
+			Label:
+				id: puzzle_label
+				text: root.puzzle
+		Screen:
+			name: 'button'
+			Button:
+				id: button_select
+				text: strings.button_select_puzzles
+	Spinner:
+		id: round_type_spinner
+		text: root.round_type
+		values: values.round_types
+	TextInput:
+		id: reward_input
+		text: str(root.reward)
 <BonusRoundPrompt>:
 	title: strings.title_bonus_round
 	size_hint_y: None
