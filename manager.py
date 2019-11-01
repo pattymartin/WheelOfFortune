@@ -3,6 +3,7 @@ import multiprocessing
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
+from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
@@ -22,13 +23,6 @@ Builder.load_file(strings.file_kv_manager)
 class SquareButton(Button):
     """
     A button with its width set to equal its height
-    """
-    
-    pass
-
-class SettingsButton(ButtonBehavior, Label):
-    """
-    A square button with a settings icon
     """
     
     pass
@@ -477,14 +471,54 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.speedup_consonants_remaining = True
         self.speedup = False
         
-        if self.game and self.game[0]['round_type'] in [
+        clear_button_hidden = (not self.clear_button.size_hint_x)
+        timer_hidden = (not self.timer_layout_manager.size_hint_x)
+        tossup_button_hidden = (not self.tossup_button.size_hint_x)
+        bonus_button_hidden = (not self.bonus_button.size_hint_x)
+        
+        if not puzzle['puzzle'].split(): # puzzle cleared
+            if len(self.game) <= 1:
+                # no more puzzles loaded after the current puzzle
+                self.select_layout_manager.current = 'select'
+            else:
+                self.select_layout_manager.current = 'next'
+            
+            if not clear_button_hidden:
+                self.show_hide(self.clear_button)
+            
+            if not tossup_button_hidden:
+                self.show_hide(self.tossup_button)
+            
+            if not bonus_button_hidden:
+                self.show_hide(self.bonus_button)
+            return
+        elif self.game:
+            round_type = self.game[0]['round_type']
+            
+            tossup_round = round_type in [
                 strings.round_type_tossup,
                 strings.round_type_triple_tossup,
-                strings.round_type_triple_tossup_final,
-                strings.round_type_bonus]:
-            self.select_layout_manager.current = 'solve?'
-        else:
-            self.select_layout_manager.current = 'solve'
+                strings.round_type_triple_tossup_final]
+            bonus_round = (round_type == strings.round_type_bonus)
+            speedup_round = (
+                self.game[0]['round_type'] == strings.round_type_speedup)
+            
+            if bonus_round:
+                self.select_layout_manager.current = 'solve?'
+            else:
+                self.select_layout_manager.current = 'solve'
+            
+            if speedup_round == timer_hidden:
+                self.show_hide(self.timer_layout_manager)
+            
+            if tossup_round == tossup_button_hidden:
+                self.show_hide(self.tossup_button)
+            
+            if bonus_round == bonus_button_hidden:
+                self.show_hide(self.bonus_button)
+        
+        if clear_button_hidden:
+            self.show_hide(self.clear_button)
     
     def next_puzzle(self):
         """
@@ -507,12 +541,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             'category': '',
             'clue': '',
             'puzzle': ' ' * 52})
-        
-        if len(self.game) <= 1:
-            # no more puzzles loaded after the current puzzle
-            self.select_layout_manager.current = 'select'
-        else:
-            self.select_layout_manager.current = 'next'
     
     def tossup(self, player=None):
         """
@@ -526,6 +554,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             if player in self.tossup_players_done:
                 return  
             self.tossup_players_done.append(player)
+            if set(self.tossup_players_done) == set([1, 2, 3]):
+                self.select_layout_manager.current = 'solve?'
         
         if self.tossup_running:
             self.puzzle_queue.a.put(('pause_tossup', None))
@@ -537,6 +567,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.select_yellow()
             elif player == 3:
                 self.select_blue()
+            else:
+                # only called without player on timeout
+                self.select_layout_manager.current = 'next'
         else:
             if set(self.tossup_players_done) == set([1, 2, 3]):
                 return
@@ -872,6 +905,40 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         if self.speedup:
             self.play_sound(strings.file_sound_buzz)
+    
+    def show_hide(self, widget, horizontal=True):
+        """
+        Toggle a widget's visibility by setting
+        its size_hint_x to 0 or 1.
+        Or, if `horizontal` is False,
+        alter the size_hint_y instead.
+        """
+        
+        def make_invisible(a, w):
+            """
+            Set the widget's opacity and width to 0.
+            """
+            
+            if horizontal:
+                widget.width = 0
+            else:
+                widget.height = 0
+            widget.opacity = 0
+        
+        attr = 'size_hint_x' if horizontal else 'size_hint_y'
+        
+        # 1 if already hidden, 0 if shown
+        val = 0 if getattr(widget, attr) else 1
+        
+        # animate widget until attr == val
+        animation = Animation(**{attr: val}, d=0.5)
+        
+        if not val:
+            animation.bind(on_complete=make_invisible)
+        else:
+            widget.opacity = 1
+        
+        animation.start(widget)
     
     def exit_app(self):
         """

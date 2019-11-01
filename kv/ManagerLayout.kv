@@ -6,7 +6,9 @@
 	timer_label: timer_label
 	select_layout_manager: select_layout_manager
 	timer_layout_manager: timer_layout_manager
+	clear_button: clear_button
 	tossup_button: tossup_button
+	bonus_button: bonus_button
     name_input: name_input
     score_edit: score_edit
     custom_value: custom_value
@@ -60,10 +62,16 @@
 						text: strings.mgr_btn_reveal
 						on_release: root.reveal_puzzle()
         Button:
+			id: clear_button
+			size_hint_x: 0
+			width: 0
+			opacity: 0
             text: strings.mgr_btn_clear
             on_release: root.clear_puzzle()
 		ScreenManager:
 			id: timer_layout_manager
+			size_hint_x: 0
+			width: 0
 			Screen:
 				name: 'start'
 				Button:
@@ -104,8 +112,15 @@
 		Button:
 			id: tossup_button
 			text: strings.mgr_btn_tossup
+			size_hint_x: 0
+			width: 0
+			opacity: 0
 			on_release: root.tossup()
 		Button:
+			id: bonus_button
+			size_hint_x: 0
+			width: 0
+			opacity: 0
 			text: strings.button_bonus_round
 			on_release: root.bonus_round()
     BoxLayout:
@@ -122,88 +137,94 @@
             id: btn_blu
             bg_color: values.color_blue
             on_release: root.select_blue()
-    GridLayout:
-        rows: 2
-        cols: 2
-        BoxLayout:
-            orientation: 'horizontal'
-            TabCyclable:
-                id: name_input
-                hint_text: strings.input_name
-				multiline: False
-				on_text_validate:
-					root.update_name(self.text)
-					root.bind_keyboard_self()
-				prev_widget: custom_value
-				next_widget: score_edit
-            SquareButton:
-                text: strings.button_ok
-                on_release: root.update_name(name_input.text)
-        BoxLayout:
-            orientation: 'horizontal'
-            Button:
-                text: '-'
-                size_hint_x: 0.5
-				on_release:
-					root.add_score(-data_caching.str_to_int(score_edit.text))
-            TabCyclable:
-                id: score_edit
-                hint_text: strings.input_adjust_score
-				multiline: False
-				on_text_validate:
-					root.bind_keyboard_self()
-				prev_widget: name_input
-				next_widget: custom_value
-            Button:
-                text: '+'
-                size_hint_x: 0.5
-				on_release:
-					root.add_score(data_caching.str_to_int(score_edit.text))
-        BoxLayout:
-            orientation: 'horizontal'
-            BoxLayout:
-                orientation: 'vertical'
-                TabCyclable:
-                    id: custom_value
-                    hint_text: strings.input_custom
+	BoxLayout:
+		orientation: 'horizontal'
+		BoxLayout:
+			orientation: 'vertical'
+			BoxLayout:
+				orientation: 'horizontal'
+				size_hint_y: 0.5
+				TabCyclable:
+					id: name_input
+					hint_text: strings.input_name
+					multiline: False
+					on_text_validate:
+						root.update_name(self.text)
+						root.bind_keyboard_self()
+					prev_widget: custom_value
+					next_widget: score_edit
+				Button:
+					text: strings.button_ok
+					size_hint_x: None
+					width: 2 * self.height
+					on_release: root.update_name(name_input.text)
+			BoxLayout:
+				orientation: 'horizontal'
+				size_hint_y: 0.5
+				TabCyclable:
+					id: score_edit
+					hint_text: strings.input_adjust_score
 					multiline: False
 					on_text_validate:
 						root.bind_keyboard_self()
-					prev_widget: score_edit
-					next_widget: name_input
-                BoxLayout:
-                    orientation: 'horizontal'
-                    Spinner:
-                        id: dropdown
-                        text: strings.mgr_select_value
-                    SettingsButton:
-                        on_release: root.cash_settings()
-            SquareButton:
-                text: strings.button_guess_letter
-                on_release: root.guess_letter()
-        BoxLayout:
-            orientation: 'horizontal'
+					prev_widget: name_input
+					next_widget: custom_value
+				SquareButton:
+					text: '-'
+					on_release:
+						root.add_score(-data_caching.str_to_int(score_edit.text))
+				SquareButton:
+					text: '+'
+					on_release:
+						root.add_score(data_caching.str_to_int(score_edit.text))
+			BoxLayout:
+				orientation: 'horizontal'
+				BoxLayout:
+					orientation: 'vertical'
+					TabCyclable:
+						id: custom_value
+						hint_text: strings.input_custom
+						multiline: False
+						on_text_validate:
+							root.bind_keyboard_self()
+						prev_widget: score_edit
+						next_widget: name_input
+					BoxLayout:
+						orientation: 'horizontal'
+						SettingsButton:
+							on_release: root.cash_settings()
+						Spinner:
+							id: dropdown
+							text: strings.mgr_select_value
+				SquareButton:
+					text: strings.button_guess_letter
+					on_release: root.guess_letter()
+		GridLayout:
+			rows: 2
+			cols: 2
+			Button:
+				text: strings.mgr_btn_lose_turn
+				on_release: root.lose_turn()
+			Button:
+				text: strings.mgr_btn_bankrupt
+				on_release: root.bankrupt()
 			Button:
 				text: strings.button_buy_vowel
 				on_release: root.buy_vowel()
-            Button:
-                text: strings.mgr_btn_lose_turn
-                on_release: root.lose_turn()
-            Button:
-                text: strings.mgr_btn_bankrupt
-                on_release: root.bankrupt()
-            Button:
-                text: strings.mgr_btn_bank
-                on_release: root.bank_score()
+			Button:
+				text: strings.mgr_btn_bank
+				on_release: root.bank_score()
 <Button>:
     halign: 'center'
 <SquareButton>:
     size_hint_x: None
     width:self.height
-<SettingsButton>:
+<SettingsButton@ButtonBehavior+Label>:
     size_hint_x: None
     width:self.height
     canvas.before:
+		Color:
+			rgba: 1, 1, 1, 1
         Rectangle:
             pos: self.pos
             size: self.size
