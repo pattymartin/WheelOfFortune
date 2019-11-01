@@ -542,13 +542,28 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.letters_q.put(('stop_flash', 'yellow', None))
         self.letters_q.put(('stop_flash', 'blue', None))
     
-    def reveal_puzzle(self):
+    def reveal_puzzle(self, player_solved=True):
         """
         Tell the layout to reveal the puzzle.
+        If `player_solved` is False, do not play
+        the sounds indicating their success.
         """
         
-        # TODO different sounds for different rounds
-        self.play_sound(strings.file_sound_solve)
+        if player_solved:
+            if self.game:
+                round_type = self.game[0]['round_type']
+                if round_type == strings.round_type_bonus:
+                    self.play_sound(strings.file_sound_solve_bonus)
+                elif round_type == strings.round_type_triple_tossup:
+                    self.play_sound(strings.file_sound_solve_triple_tossup)
+                elif round_type in [
+                        strings.round_type_tossup,
+                        strings.round_type_triple_tossup_final]:
+                    self.play_sound(strings.file_sound_solve_tossup)
+                elif self.game[0]['puzzle']['clue']:
+                    self.play_sound(strings.file_sound_solve_clue)
+                else:
+                    self.play_sound(strings.file_sound_solve)
         self.speedup = False
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()

@@ -155,6 +155,14 @@ file_sound_no_more_vowels = os.path.join(dir_assets,
     r'no_more_vowels.wav')
 file_sound_solve = os.path.join(dir_assets,
     r'solve.wav')
+file_sound_solve_bonus = os.path.join(dir_assets,
+    r'bonus_round_solve.wav')
+file_sound_solve_clue = os.path.join(dir_assets,
+    r'clue_solve.wav')
+file_sound_solve_tossup = os.path.join(dir_assets,
+    r'tossup_solve.wav')
+file_sound_solve_triple_tossup = os.path.join(dir_assets,
+    r'triple_tossup_1-2_solve.wav')
 
 dir_kv = os.path.join(os.path.dirname(__file__),
     r'kv')
