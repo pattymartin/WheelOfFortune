@@ -8,7 +8,8 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.lang import Builder
-from kivy.properties import NumericProperty
+from kivy.properties import (
+    BooleanProperty, ListProperty, NumericProperty, StringProperty)
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -54,7 +55,11 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     A BoxLayout for the ManagerApp.
     """
     
+    game = ListProperty([])
+    puzzle_string = StringProperty('')
     seconds_left = NumericProperty(0)
+    revealed = BooleanProperty(True)
+    tossup_players_done = ListProperty([])
     
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
@@ -66,13 +71,10 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.blu_q = blu_q
         self.letters_q = letters_q
         
-        self.game = []
         self.selected_player = 0
         self.unavailable_letters = []
         self.timer_running = False
         self.tossup_running = False
-        self.tossup_players_done = []
-        self.puzzle_string = ''
         self.puzzle_clue = ''
         self.speedup = False
         self.speedup_consonants_remaining = True
@@ -192,6 +194,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             elif command == 'matches':
                 self.correct_letter(args)
             elif command == 'tossup_timeout':
+                self.revealed = True
                 self.tossup()
             elif command == 'reveal_finished':
                 if self.speedup:
@@ -471,54 +474,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.speedup_consonants_remaining = True
         self.speedup = False
         
-        clear_button_hidden = (not self.clear_button.size_hint_x)
-        timer_hidden = (not self.timer_layout_manager.size_hint_x)
-        tossup_button_hidden = (not self.tossup_button.size_hint_x)
-        bonus_button_hidden = (not self.bonus_button.size_hint_x)
-        
-        if not puzzle['puzzle'].split(): # puzzle cleared
-            if len(self.game) <= 1:
-                # no more puzzles loaded after the current puzzle
-                self.select_layout_manager.current = 'select'
-            else:
-                self.select_layout_manager.current = 'next'
-            
-            if not clear_button_hidden:
-                self.show_hide(self.clear_button)
-            
-            if not tossup_button_hidden:
-                self.show_hide(self.tossup_button)
-            
-            if not bonus_button_hidden:
-                self.show_hide(self.bonus_button)
-            return
-        elif self.game:
-            round_type = self.game[0]['round_type']
-            
-            tossup_round = round_type in [
-                strings.round_type_tossup,
-                strings.round_type_triple_tossup,
-                strings.round_type_triple_tossup_final]
-            bonus_round = (round_type == strings.round_type_bonus)
-            speedup_round = (
-                self.game[0]['round_type'] == strings.round_type_speedup)
-            
-            if bonus_round:
-                self.select_layout_manager.current = 'solve?'
-            else:
-                self.select_layout_manager.current = 'solve'
-            
-            if speedup_round == timer_hidden:
-                self.show_hide(self.timer_layout_manager)
-            
-            if tossup_round == tossup_button_hidden:
-                self.show_hide(self.tossup_button)
-            
-            if bonus_round == bonus_button_hidden:
-                self.show_hide(self.bonus_button)
-        
-        if clear_button_hidden:
-            self.show_hide(self.clear_button)
+        # consider revealed if the puzzleboard is clear
+        self.revealed = True if not puzzle['puzzle'].split() else False
     
     def next_puzzle(self):
         """
@@ -554,8 +511,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             if player in self.tossup_players_done:
                 return  
             self.tossup_players_done.append(player)
-            if set(self.tossup_players_done) == set([1, 2, 3]):
-                self.select_layout_manager.current = 'solve?'
         
         if self.tossup_running:
             self.puzzle_queue.a.put(('pause_tossup', None))
@@ -567,9 +522,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.select_yellow()
             elif player == 3:
                 self.select_blue()
-            else:
-                # only called without player on timeout
-                self.select_layout_manager.current = 'next'
         else:
             if set(self.tossup_players_done) == set([1, 2, 3]):
                 return
@@ -617,11 +569,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
         
-        if len(self.game) <= 1:
-            # no more puzzles loaded after the current puzzle
-            self.select_layout_manager.current = 'select'
-        else:
-            self.select_layout_manager.current = 'next'
+        self.revealed = True
     
     def guess_letter(self):
         """

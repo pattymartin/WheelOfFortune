@@ -160,23 +160,24 @@ class LoadGamePrompt(Popup):
         Import a game from the selected `filename`.
         """
         
-        filename = filenames[0]
-        
-        order = []
-        rewards = []
-        puzzles = []
-        
-        for puzzle in data_caching.import_game(filename):
-            order.append(puzzle['round_type'])
-            rewards.append(puzzle['round_reward'])
-            puzzles.append(puzzle['puzzle'])
-        
-        if order and rewards and puzzles:
-            self.order = order
-            self.rewards = rewards
-            self.puzzles = puzzles
-        
-        self.fill_puzzle_layout()
+        if filenames:
+            filename = filenames[0]
+            
+            order = []
+            rewards = []
+            puzzles = []
+            
+            for puzzle in data_caching.import_game(filename):
+                order.append(puzzle['round_type'])
+                rewards.append(puzzle['round_reward'])
+                puzzles.append(puzzle['puzzle'])
+            
+            if order and rewards and puzzles:
+                self.order = order
+                self.rewards = rewards
+                self.puzzles = puzzles
+            
+            self.fill_puzzle_layout()
     
     def export_game(self):
         """

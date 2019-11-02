@@ -36,6 +36,22 @@
         size_hint_y: 0.25
 		ScreenManager:
 			id: select_layout_manager
+			curr:
+				# simply setting `current` here caused strange behavior
+				None if not self.has_screen('solve?') \
+				else 'select' if root.revealed and len(root.game) <= 1 \
+				else 'next' if root.revealed and len(root.game) > 1 \
+				else 'solve?' if (
+				(		root.game and \
+				(		root.game[0]['round_type'] == \
+				(			strings.round_type_bonus))
+				)	or \
+				(		set(root.tossup_players_done) == set([1, 2, 3])) \
+				) \
+				else 'solve'
+			on_curr:
+				if self.curr != self.current: \
+				self.current = self.curr
 			Screen:
 				name: 'select'
 				Button:
@@ -63,6 +79,8 @@
 						on_release: root.reveal_puzzle()
         Button:
 			id: clear_button
+			visible: True if root.puzzle_string else False
+			on_visible: root.show_hide(self)
 			size_hint_x: 0
 			width: 0
 			opacity: 0
@@ -70,6 +88,12 @@
             on_release: root.clear_puzzle()
 		ScreenManager:
 			id: timer_layout_manager
+			visible:
+				True if ( \
+				root.game \
+				and root.game[0]['round_type'] == strings.round_type_speedup) \
+				else False
+			on_visible: root.show_hide(self)
 			size_hint_x: 0
 			width: 0
 			Screen:
@@ -111,6 +135,16 @@
 							root.reset_timer()
 		Button:
 			id: tossup_button
+			visible:
+				True if ( \
+				root.puzzle_string \
+				and root.game \
+				and root.game[0]['round_type'] in [\
+				strings.round_type_tossup, \
+				strings.round_type_triple_tossup, \
+				strings.round_type_triple_tossup_final]) \
+				else False
+			on_visible: root.show_hide(self)
 			text: strings.mgr_btn_tossup
 			size_hint_x: 0
 			width: 0
@@ -118,6 +152,13 @@
 			on_release: root.tossup()
 		Button:
 			id: bonus_button
+			visible:
+				True if (\
+				root.puzzle_string \
+				and root.game \
+				and root.game[0]['round_type'] == strings.round_type_bonus) \
+				else False
+			on_visible: root.show_hide(self)
 			size_hint_x: 0
 			width: 0
 			opacity: 0
