@@ -1,10 +1,12 @@
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.modalview import ModalView
+from kivy.uix.screenmanager import ScreenManager
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-import strings
+import strings, values
 
 Builder.load_file(strings.file_kv_my_widgets)
 
@@ -78,3 +80,50 @@ class TabCyclable(TextInput):
             super(TabCyclable, self).keyboard_on_key_down(
                 window, keycode, text, modifiers)
             return False
+
+class FinalSpinTimer(ScreenManager):
+    """
+    A ScreenManager with a timer,
+    which changes buttons based on the state of the timer.
+    """
+    
+    def start_stop_reset(self):
+        """
+        If the timer is paused, start the timer.
+        If the timer is running, stop the timer.
+        If the time has run out, reset the timer.
+        """
+        
+        if self.seconds_left <= 0:
+            self.reset()
+            return
+        
+        self.final_spin_started = False
+        
+        self.running = not self.running
+        
+        if self.running:
+            Clock.schedule_once(self.decrement, values.timer_accuracy)
+    
+    def decrement(self, instance):
+        """
+        Reduce `seconds_left` by
+        `values.timer_accuracy` seconds.
+        Then schedule this function in another
+        `values.timer_accuracy` seconds.
+        """
+        
+        if self.seconds_left <= 0:
+            self.running = False
+        
+        if self.running:
+            self.seconds_left -= values.timer_accuracy
+            Clock.schedule_once(self.decrement, values.timer_accuracy)
+    
+    def reset(self):
+        """
+        Reset the timer.
+        """
+        
+        self.running = False
+        self.seconds_left = self.start_time

@@ -5,7 +5,7 @@
     puzzle_label: puzzle_label
 	timer_label: timer_label
 	select_layout_manager: select_layout_manager
-	timer_layout_manager: timer_layout_manager
+	timer: timer
 	clear_button: clear_button
 	tossup_button: tossup_button
 	bonus_button: bonus_button
@@ -26,6 +26,12 @@
 			pos_hint: {'x': 0, 'y': 0}
 		Label:
 			id: timer_label
+			text:
+				'' if timer.seconds_left == timer.start_time \
+				else strings.label_time_out if timer.seconds_left <= 0 \
+				else strings.label_timer.format( \
+				(		int(timer.seconds_left / 60)), \
+				(		int(timer.seconds_left % 60)))
 			text_size: self.size
 			halign: 'right'
 			valign: 'top'
@@ -86,8 +92,8 @@
 			opacity: 0
             text: strings.mgr_btn_clear
             on_release: root.clear_puzzle()
-		ScreenManager:
-			id: timer_layout_manager
+		FinalSpinTimer:
+			id: timer
 			visible:
 				True if ( \
 				root.game \
@@ -96,43 +102,6 @@
 			on_visible: root.show_hide(self)
 			size_hint_x: 0
 			width: 0
-			Screen:
-				name: 'start'
-				Button:
-					text: strings.button_timer_start
-					on_release:
-						root.timer()
-			Screen:
-				name: 'running'
-				Button:
-					text: strings.button_timer_pause
-					on_release:
-						root.timer()
-			Screen:
-				name: 'paused'
-				BoxLayout:
-					orientation: 'horizontal'
-					Button:
-						text: strings.button_timer_reset
-						on_release:
-							root.reset_timer()
-					Button:
-						text: strings.button_timer_resume
-						on_release:
-							root.timer()
-			Screen:
-				name: 'timeout'
-				BoxLayout:
-					orientation: 'horizontal'
-					Button:
-						text: strings.button_timer_reset
-						on_release:
-							root.reset_timer()
-					Button:
-						text: strings.button_final_spin
-						on_release:
-							root.final_spin()
-							root.reset_timer()
 		Button:
 			id: tossup_button
 			visible:

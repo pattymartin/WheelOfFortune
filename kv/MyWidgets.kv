@@ -3,3 +3,56 @@
     Button:
         text: strings.button_fullscreen
         on_release: root.toggle_fullscreen()
+<FinalSpinTimer>:
+	running: False
+	seconds_left: 0
+	start_time: 0
+	final_spin_started: False
+	curr:
+		# simply setting `current` here caused strange behavior
+		None if not self.has_screen('timeout') \
+		else 'timeout' if self.start_time and self.seconds_left <= 0 \
+		else 'running' if self.running \
+		else 'start' if self.seconds_left == self.start_time \
+		else 'paused'
+	on_curr:
+		if self.curr != self.current: \
+		self.current = self.curr
+	Screen:
+		name: 'start'
+		Button:
+			text: strings.button_timer_start
+			on_release:
+				root.start_stop_reset()
+	Screen:
+		name: 'running'
+		Button:
+			text: strings.button_timer_pause
+			on_release:
+				root.start_stop_reset()
+	Screen:
+		name: 'paused'
+		BoxLayout:
+			orientation: 'horizontal'
+			Button:
+				text: strings.button_timer_reset
+				on_release:
+					root.seconds_left = 0
+					root.start_stop_reset()
+			Button:
+				text: strings.button_timer_resume
+				on_release:
+					root.start_stop_reset()
+	Screen:
+		name: 'timeout'
+		BoxLayout:
+			orientation: 'horizontal'
+			Button:
+				text: strings.button_timer_reset
+				on_release:
+					root.start_stop_reset()
+			Button:
+				text: strings.button_final_spin
+				on_release:
+					root.final_spin_started = True
+					root.start_stop_reset()

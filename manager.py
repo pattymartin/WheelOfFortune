@@ -73,10 +73,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         self.selected_player = 0
         self.unavailable_letters = []
-        self.timer_running = False
         self.tossup_running = False
         self.puzzle_clue = ''
-        self.speedup = False
         self.speedup_consonants_remaining = True
         self.consonants_remaining = True
         self.vowels_remaining = True
@@ -154,9 +152,17 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         elif combination == self.hotkeys.get('solve'):
             self.reveal_puzzle()
         elif combination == self.hotkeys.get('timer_start'):
-            self.timer()
+            if self.game and self.game[0]['round_type'] in [
+                    strings.round_type_tossup,
+                    strings.round_type_triple_tossup,
+                    strings.round_type_triple_tossup_final]:
+                self.timer.start_stop_reset()
         elif combination == self.hotkeys.get('timer_reset'):
-            self.reset_timer()
+            if self.game and self.game[0]['round_type'] in [
+                    strings.round_type_tossup,
+                    strings.round_type_triple_tossup,
+                    strings.round_type_triple_tossup_final]:
+                self.timer.reset()
         elif combination == self.hotkeys.get('start_tossup'):
             self.tossup()
         elif combination == self.hotkeys.get('bonus_round'):
@@ -189,7 +195,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.puzzle_clue = args['clue']
                 self.show_puzzle()
             elif command == 'ding':
-                if not self.speedup:
+                if not self.timer.final_spin_started:
                     self.play_sound(strings.file_sound_ding)
             elif command == 'matches':
                 self.correct_letter(args)
@@ -197,12 +203,12 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.revealed = True
                 self.tossup()
             elif command == 'reveal_finished':
-                if self.speedup:
+                if self.timer.final_spin_started:
                     Clock.schedule_once(
                         self.speedup_buzz,
                         values.speedup_timeout)
             elif command == 'no_more_consonants':
-                if self.speedup:
+                if self.timer.final_spin_started:
                     self.speedup_consonants_remaining = False
                 else:
                     self.no_more_consonants()
@@ -267,7 +273,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.letters_q.put(('flash', 'red', None))
             if self.tossup_running:
                 self.tossup(player=self.selected_player)
-            if self.speedup and not self.speedup_consonants_remaining:
+            if (self.timer.final_spin_started
+                    and not self.speedup_consonants_remaining):
                 self.no_more_consonants()
     
     def select_yellow(self):
@@ -288,7 +295,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.letters_q.put(('flash', 'yellow', None))
             if self.tossup_running:
                 self.tossup(player=self.selected_player)
-            if self.speedup and not self.speedup_consonants_remaining:
+            if (self.timer.final_spin_started
+                    and not self.speedup_consonants_remaining):
                 self.no_more_consonants()
     
     def select_blue(self):
@@ -309,7 +317,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.letters_q.put(('flash', 'blue', None))
             if self.tossup_running:
                 self.tossup(player=self.selected_player)
-            if self.speedup and not self.speedup_consonants_remaining:
+            if (self.timer.final_spin_started
+                    and not self.speedup_consonants_remaining):
                 self.no_more_consonants()
     
     def select_next_player(self):
@@ -472,7 +481,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.consonants_remaining = True
         self.vowels_remaining = True
         self.speedup_consonants_remaining = True
-        self.speedup = False
+        self.timer.final_spin_started = False
         
         # consider revealed if the puzzleboard is clear
         self.revealed = True if not puzzle['puzzle'].split() else False
@@ -565,7 +574,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                     self.play_sound(strings.file_sound_solve_clue)
                 else:
                     self.play_sound(strings.file_sound_solve)
-        self.speedup = False
+        self.timer.final_spin_started = False
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
         
@@ -643,7 +652,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.add_score(matches * self.get_value())
         self.custom_value.text = ''
         
-        if not matches and not self.speedup:
+        if not matches and not self.timer.final_spin_started:
             self.play_sound(strings.file_sound_buzz)
         
         # show number of matches in puzzle_label
@@ -663,14 +672,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 solve_callback=self.reveal_puzzle,
                 on_dismiss=self.bind_keyboard_self
             ).open()
-    
-    def final_spin(self):
-        """
-        Start a speed-up round.
-        """
-        
-        # TODO play sound and music
-        self.speedup = True
     
     def no_more_consonants(self):
         """
@@ -705,62 +706,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 c for c in strings.alphabet if c in 'aeiou'
                 and not c in self.unavailable_letters])
             self.letters_q.put(('no_more_vowels', None, None))
-    
-    def timer(self):
-        """
-        Start the final spin timer.
-        If the timer is already running,
-        stop the timer.
-        """
-        
-        if not self.seconds_left:
-            self.seconds_left = self.timer_seconds
-        
-        if not self.timer_running:
-            self.timer_layout_manager.current = 'running'
-            Clock.schedule_once(self.decrement_timer, values.timer_accuracy)
-        else:
-            self.timer_layout_manager.current = 'paused'
-        
-        self.speedup = False
-        self.timer_running = not self.timer_running
-    
-    def decrement_timer(self, instance):
-        """
-        Reduce `seconds_left` by
-        `values.timer_accuracy` seconds.
-        Then schedule this function in another
-        `values.timer_accuracy` seconds.
-        """
-        
-        if self.timer_running:
-            self.seconds_left -= values.timer_accuracy
-            Clock.schedule_once(self.decrement_timer, values.timer_accuracy)
-    
-    def reset_timer(self):
-        """
-        Reset the final spin timer.
-        """
-        
-        self.timer_running = False
-        self.seconds_left = self.timer_seconds
-        self.timer_layout_manager.current = 'start'
-    
-    def on_seconds_left(self, instance, value):
-        """
-        Keep the `timer_label` updated with the current
-        time remaining.
-        """
-        
-        if self.seconds_left == self.timer_seconds:
-            self.timer_label.text = ''
-        elif self.seconds_left <= 0:
-            self.timer_label.text = strings.label_time_out
-            self.timer_running = False
-            self.timer_layout_manager.current = 'timeout'
-        else:
-            self.timer_label.text = strings.label_timer.format(
-                int(self.seconds_left / 60), int(self.seconds_left % 60))
     
     def lose_turn(self):
         """
@@ -827,9 +772,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             minutes, seconds = (0, 0)
         minutes = data_caching.str_to_int(minutes)
         seconds = data_caching.str_to_int(seconds)
-        self.timer_seconds = (minutes * 60) + seconds
-        self.seconds_left = self.timer_seconds
-        self.timer_layout_manager.disabled = not bool(self.timer_seconds)
+        self.timer.start_time = (minutes * 60) + seconds
+        self.timer.seconds_left = self.timer.start_time
         
         self.hotkeys = {
             name: settings.get(name, default).lower()
@@ -851,7 +795,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         Does nothing if the puzzle has already been solved.
         """
         
-        if self.speedup:
+        if self.timer.final_spin_started:
             self.play_sound(strings.file_sound_buzz)
     
     def show_hide(self, widget, horizontal=True):
