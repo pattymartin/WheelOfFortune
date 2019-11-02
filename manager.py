@@ -481,7 +481,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.consonants_remaining = True
         self.vowels_remaining = True
         self.speedup_consonants_remaining = True
-        self.timer.final_spin_started = False
         
         # consider revealed if the puzzleboard is clear
         self.revealed = True if not puzzle['puzzle'].split() else False
@@ -494,7 +493,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         try:
             self.game.pop(0)
-            self.load_puzzle(self.game[0]['puzzle'])
+            puzzle = self.game[0]
+            
+            if self.timer.final_spin_started:
+                while puzzle['round_type'] == strings.round_type_speedup:
+                    self.game.pop(0)
+                    puzzle = self.game[0]
+                self.timer.final_spin_started = False
+            
+            self.load_puzzle(puzzle['puzzle'])
         except IndexError:
             pass
     
@@ -574,7 +581,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                     self.play_sound(strings.file_sound_solve_clue)
                 else:
                     self.play_sound(strings.file_sound_solve)
-        self.timer.final_spin_started = False
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
         
