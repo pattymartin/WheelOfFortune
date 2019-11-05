@@ -95,9 +95,12 @@ class LoadGamePrompt(Popup):
                 if not select_button_added:
                     selection_callback = self.puzzles_selected
                     select_button_added = True
-            self.puzzle_layout.add_widget(PuzzleSelectionLayout(
+            psl = PuzzleSelectionLayout(
                 i+1, puzzle, round_type, reward,
-                selection_callback=selection_callback))
+                selection_callback=selection_callback)
+            psl.round_type_spinner.bind(text=lambda i, v: self.update_values())
+            psl.reward_input.bind(text=lambda i, v: self.update_values())
+            self.puzzle_layout.add_widget(psl)
         
         add_round_button_layout = BoxLayout(
             orientation='horizontal', size_hint_y=None, height=30)
@@ -132,8 +135,8 @@ class LoadGamePrompt(Popup):
         Add another row to the puzzle layout.
         """
         
-        self.order.append('')
-        self.rewards.append('')
+        self.order.append(strings.round_type_standard)
+        self.rewards.append('0')
         self.fill_puzzle_layout()
     
     def remove_round(self, instance):
@@ -184,63 +187,58 @@ class LoadGamePrompt(Popup):
         Save the game to a file.
         """
         
-        game, order, rewards = self.create_game()
-        FileSaverPrompt(data_caching.export_game, game).open()
+        FileSaverPrompt(data_caching.export_game, self.create_game()).open()
     
-    def create_game(self):
+    def update_values(self):
         """
-        Create a game dict from the selected puzzles.
-        Returns the game dict, a list of round types,
-        and a list of rewards for each round.
+        Update `order` and `values` to reflect
+        the values selected by the user.
+        This is called every time the user changes a value.
         """
         
-        game = []
-        order = []
-        rewards = []
+        self.order = []
+        self.rewards = []
         
-        i = 0
         for child in self.puzzle_layout.children[::-1]:
             try:
-                round_type = child.round_type_text
-                round_reward = child.reward_text
+                round_type = child.round_type_spinner.text
+                round_reward = data_caching.str_to_int(child.reward_input.text)
                 
                 if not round_type:
                     round_type = strings.round_type_standard
                 if not round_reward:
                     round_reward = '0'
                 
-                order.append(round_type)
-                rewards.append(round_reward)
+                self.order.append(round_type)
+                self.rewards.append(round_reward)
             except AttributeError:
                 # not a PuzzleSelectionLayout
                 continue
-            
-            try:
-                puzzle = self.puzzles[i]
-                
-                game.append({
-                    'puzzle': puzzle,
-                    'round_type': round_type,
-                    'round_reward': round_reward})
-            except IndexError:
-                # no more puzzles
-                pass
-            
-            i += 1
+    
+    def create_game(self):
+        """
+        Create a game from the selected puzzles.
+        Returns a list of game dicts with the keys
+        'puzzle', 'round_type', and 'round_reward'.
+        """
         
-        return game, order, rewards
+        return [
+            {
+                'puzzle': puzzle,
+                'round_type': round_type,
+                'round_reward': round_reward}
+            for puzzle, round_type, round_reward
+            in zip(self.puzzles, self.order, self.rewards)]
     
     def confirm(self):
         """
         Call `callback` on the selected puzzles.
         """
         
-        game, order, rewards = self.create_game()
-        
         data_caching.update_variables({
-            'game_order': order,
-            'game_rewards': rewards})
-        self.callback(game)
+            'game_order': self.order,
+            'game_rewards': self.rewards})
+        self.callback(self.create_game())
         self.dismiss()
 
 class PuzzleSelectionLayout(BoxLayout):
@@ -251,6 +249,16 @@ class PuzzleSelectionLayout(BoxLayout):
     
     def __init__(self, number, puzzle, round_type, reward,
                  selection_callback, **kwargs):
+        """
+        Create the layout.
+        `number` is the index displayed at the left.
+        `puzzle` is the name of a puzzle.
+        `round_type` is the puzzle's `round_type`.
+        `reward` is the reward for solving the puzzle.
+        If a button in this layout is used to select new puzzles,
+        `selection_callback` will be called on the selected puzzles.
+        """
+        
         super(PuzzleSelectionLayout, self).__init__(**kwargs)
         self.number = str(number)
         self.puzzle = str(puzzle)

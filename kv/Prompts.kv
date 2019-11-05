@@ -104,8 +104,8 @@
 	reward: ''
 	screen_manager: screen_manager
 	button_select: button_select
-	round_type_text: round_type_spinner.text
-	reward_text: reward_input.text
+	round_type_spinner: round_type_spinner
+	reward_input: reward_input
 	orientation: 'horizontal'
 	size_hint_y: None
 	height: 30
@@ -132,6 +132,7 @@
 		values: values.round_types
 	TextInput:
 		id: reward_input
+		multiline: False
 		text: str(root.reward)
 <BonusRoundPrompt>:
 	title: strings.title_bonus_round
