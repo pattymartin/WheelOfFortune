@@ -51,6 +51,7 @@ label_edit_hotkey_waiting = 'Waiting... {}'
 label_exit_app = 'Exit app?'
 label_file_exists = 'File "{}" already exists. Overwrite?'
 label_filename = 'File name:'
+label_final_spin_bonus = 'Final Spin\nBonus'
 label_hotkey_bank_score = 'Bank score:'
 label_hotkey_bankrupt = 'Bankrupt:'
 label_hotkey_bonus_round = 'Bonus Round:'
@@ -185,6 +186,8 @@ import values
 
 input_clue_solve_reward = 'Enter a number (default {})'.format(
     currency_format.format(values.default_clue_solve_reward))
+input_final_spin_bonus = 'Enter a number (default {})'.format(
+    currency_format.format(values.default_final_spin_bonus))
 input_min_win = 'Enter a number (default {})'.format(
     currency_format.format(values.default_min_win))
 input_vowel_price = 'Enter a number (default {})'.format(

@@ -47,6 +47,7 @@
 				# simply setting `current` here caused strange behavior
 				None if not self.has_screen('solve?') \
 				else 'clue' if (
+				(	root.puzzle_string) and
 				(	not self.clue_solved) and
 				(	root.revealed) and
 				(	root.game) and
@@ -242,6 +243,13 @@
 							on_release: root.cash_settings()
 						Spinner:
 							id: dropdown
+							bonus_values:
+								[v + ' (+{})'.format(
+								(		strings.currency_format.format(
+								(			root.final_spin_bonus)))
+								)	for v in self.values]
+							final_spin_started: timer.final_spin_started
+							ignore_on_text: False
 							disabled:
 								True if root.game \
 								and root.game[0]['round_type'] in [\
@@ -251,6 +259,8 @@
 								(	strings.round_type_bonus)] \
 								else False
 							text: strings.mgr_select_value
+							on_final_spin_started: root.update_dropdown()
+							on_text: root.update_dropdown()
 				SquareButton:
 					text: strings.button_guess_letter
 					disabled: dropdown.disabled

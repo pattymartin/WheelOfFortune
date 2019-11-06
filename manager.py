@@ -60,6 +60,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     seconds_left = NumericProperty(0)
     revealed = BooleanProperty(True)
     tossup_players_done = ListProperty([])
+    final_spin_bonus = NumericProperty(0)
     
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
@@ -680,7 +681,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if custom_value:
             return data_caching.str_to_int(custom_value)
         else:
-            return data_caching.str_to_int(self.dropdown.text)
+            return sum([data_caching.str_to_int(number)
+                for number in self.dropdown.text.split('+')])
     
     def correct_letter(self, match):
         """
@@ -817,6 +819,11 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.clue_solve_reward = values.default_clue_solve_reward
         
         try:
+            self.final_spin_bonus = int(settings.get('final_spin_bonus'))
+        except (ValueError, TypeError):
+            self.final_spin_bonus = values.default_final_spin_bonus
+        
+        try:
             minutes, seconds = settings.get('timer_time', ':').split(':')
         except ValueError:
             minutes, seconds = (0, 0)
@@ -850,6 +857,39 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         if self.timer.final_spin_started:
             self.play_sound(strings.file_sound_buzz)
+    
+    def update_dropdown(self):
+        """
+        Update the cash values dropdown
+        so that it indicates if the
+        final spin bonus is applied.
+        """
+        
+        # this function will be called every time the text changes.
+        # ignore_on_text is used to avoid recursion
+        if not self.dropdown.ignore_on_text:
+            self.dropdown.ignore_on_text = True
+            
+            text = self.dropdown.text
+            values = self.dropdown.values
+            bonus = self.dropdown.bonus_values
+            
+            if self.timer.final_spin_started:
+                # final spin started; bonus should be shown
+                try:
+                    self.dropdown.text = bonus[values.index(text)]
+                except ValueError:
+                    # text not in values; bonus already shown
+                    pass
+            else:
+                # final spin not started; bonus should not be shown
+                try:
+                    self.dropdown.text = values[bonus.index(text)]
+                except ValueError:
+                    # text not in bonus; bonus already not shown
+                    pass
+            
+            self.dropdown.ignore_on_text = False
     
     def show_hide(self, widget, horizontal=True):
         """

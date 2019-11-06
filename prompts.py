@@ -538,6 +538,8 @@ class ManagerSettingsPrompt(Popup):
         min_win = data_caching.str_to_int(self.min_input.text, None)
         clue_solve_reward = data_caching.str_to_int(
             self.clue_reward_input.text, None)
+        final_spin_bonus = data_caching.str_to_int(
+            self.final_spin_bonus_input.text, None)
         cash_values = [data_caching.str_to_int(line)
             for line in self.wedges_input.text.split()]
         
@@ -547,6 +549,8 @@ class ManagerSettingsPrompt(Popup):
             'min_win': min_win if min_win is not None else '',
             'clue_solve_reward':
                 clue_solve_reward if clue_solve_reward is not None else '',
+            'final_spin_bonus':
+                final_spin_bonus if final_spin_bonus is not None else '',
             'cash_values': sorted([v for v in cash_values if v])})
         
         self.dismiss()

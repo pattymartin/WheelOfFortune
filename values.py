@@ -15,6 +15,7 @@ color_none = (0, 0, 0, 0)
 color_white = (1, 1, 1, 1)
 
 default_clue_solve_reward = 3000
+default_final_spin_bonus = 1000
 default_vowel_price = 250
 default_min_win = 1000
 
