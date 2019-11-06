@@ -582,7 +582,8 @@ class EditHotkeysPrompt(Popup):
             self.hotkey_solve, self.hotkey_timer_start,
             self.hotkey_timer_reset, self.hotkey_start_tossup,
             self.hotkey_bonus_round, self.hotkey_lose_turn,
-            self.hotkey_bankrupt, self.hotkey_bank_score]
+            self.hotkey_bankrupt, self.hotkey_buy_vowel,
+            self.hotkey_bank_score]
         
         existing_hotkeys = data_caching.get_hotkeys()
         

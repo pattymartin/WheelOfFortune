@@ -159,21 +159,30 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.clear_puzzle()
         elif combination == self.hotkeys.get('solve'):
             self.reveal_puzzle()
-        elif combination == self.hotkeys.get('timer_start'):
-            if self.game and self.game[0]['round_type'] in [
+        elif (
+                combination == self.hotkeys.get('timer_start')
+                and self.game
+                and self.game[0]['round_type'] == strings.round_type_speedup):
+            self.timer.start_stop_reset()
+        elif (
+                combination == self.hotkeys.get('timer_reset')
+                and self.game
+                and self.game[0]['round_type'] == strings.round_type_speedup):
+            self.timer.reset()
+        elif (
+                combination == self.hotkeys.get('start_tossup')
+				and root.puzzle_string
+				and root.game
+				and root.game[0]['round_type'] in [
                     strings.round_type_tossup,
                     strings.round_type_triple_tossup,
-                    strings.round_type_triple_tossup_final]:
-                self.timer.start_stop_reset()
-        elif combination == self.hotkeys.get('timer_reset'):
-            if self.game and self.game[0]['round_type'] in [
-                    strings.round_type_tossup,
-                    strings.round_type_triple_tossup,
-                    strings.round_type_triple_tossup_final]:
-                self.timer.reset()
-        elif combination == self.hotkeys.get('start_tossup'):
+                    strings.round_type_triple_tossup_final]):
             self.tossup()
-        elif combination == self.hotkeys.get('bonus_round'):
+        elif (
+                combination == self.hotkeys.get('bonus_round')
+                and self.puzzle_string
+                and self.game
+                and self.game[0]['round_type'] == strings.round_type_bonus):
             self.bonus_round()
         elif not (
                 self.game
@@ -187,6 +196,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.lose_turn()
             elif combination == self.hotkeys.get('bankrupt'):
                 self.bankrupt()
+            elif combination == self.hotkeys.get('buy_vowel'):
+                self.buy_vowel()
             elif combination == self.hotkeys.get('bank_score'):
                 self.bank_score()
     
