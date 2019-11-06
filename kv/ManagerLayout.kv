@@ -78,9 +78,17 @@
 					on_release: root.next_puzzle()
 			Screen:
 				name: 'solve'
-				Button:
-					text: strings.mgr_btn_reveal
-					on_release: root.reveal_puzzle()
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						on_release: root.play_sound(strings.file_sound_buzz)
+						Image:
+							source: strings.file_cancel_icon
+							height: self.parent.height * 0.75
+							center: self.parent.center
+					Button:
+						text: strings.mgr_btn_reveal
+						on_release: root.reveal_puzzle()
 			Screen:
 				name: 'solve?'
 				BoxLayout:
