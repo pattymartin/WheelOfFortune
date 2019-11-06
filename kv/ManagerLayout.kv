@@ -208,22 +208,20 @@
 							text: strings.mgr_select_value
 				SquareButton:
 					text: strings.button_guess_letter
+					id: guess_letter_button
 					disabled:
 						True if root.game \
 						and root.game[0]['round_type'] in [\
 						(	strings.round_type_tossup), \
+						(	strings.round_type_triple_tossup), \
+						(	strings.round_type_triple_tossup_final), \
 						(	strings.round_type_bonus)] \
 						else False
 					on_release: root.guess_letter()
 		GridLayout:
 			rows: 2
 			cols: 2
-			disabled:
-				True if root.game \
-				and root.game[0]['round_type'] in [\
-				(	strings.round_type_tossup), \
-				(	strings.round_type_bonus)] \
-				else False
+			disabled: guess_letter_button.disabled
 			Button:
 				text: strings.mgr_btn_lose_turn
 				on_release: root.lose_turn()

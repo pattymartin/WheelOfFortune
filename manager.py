@@ -139,6 +139,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 and self.game
                 and self.game[0]['round_type'] not in [
                     strings.round_type_tossup,
+                    strings.round_type_triple_tossup,
+                    strings.round_type_triple_tossup_final,
                     strings.round_type_bonus]):
             self.guessed_letter(letter)
         elif combination == self.hotkeys.get('select_1'):
@@ -175,6 +177,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.game
                 and self.game[0]['round_type'] in [
                     strings.round_type_tossup,
+                    strings.round_type_triple_tossup,
+                    strings.round_type_triple_tossup_final,
                     strings.round_type_bonus]):
             # following hotkeys cannot be used in a tossup
             if combination == self.hotkeys.get('lose_turn'):
@@ -587,10 +591,17 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                         strings.round_type_tossup,
                         strings.round_type_triple_tossup_final]:
                     self.play_sound(strings.file_sound_solve_tossup)
-                elif self.game[0]['puzzle']['clue']:
-                    self.play_sound(strings.file_sound_solve_clue)
+                    self.add_total(int(self.game[0]['round_reward']))
                 else:
-                    self.play_sound(strings.file_sound_solve)
+                    # not a tossup or bonus round,
+                    # increase score if less than minimum prize
+                    if self.get_score() < self.min_win:
+                        self.set_score(self.min_win)
+                    
+                    if self.game[0]['puzzle']['clue']:
+                        self.play_sound(strings.file_sound_solve_clue)
+                    else:
+                        self.play_sound(strings.file_sound_solve)
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
         
@@ -778,7 +789,11 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.vowel_price = int(settings.get('vowel_price', ''))
         except ValueError:
             self.vowel_price = values.default_vowel_price
-        self.min_win = settings.get('min_win', values.default_min_win)
+        min_win_str = settings.get('min_win')
+        if not min_win_str:
+            self.min_win = values.default_min_win
+        else:
+            self.min_win = int(min_win_str)
         self.dropdown.values = [strings.currency_format.format(value)
             for value in settings.get('cash_values', [])]
         
