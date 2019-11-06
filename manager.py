@@ -135,7 +135,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 not relevant_modifiers
                 and letter in strings.alphabet
                 and self.selected_player != 0
-                and self.get_value() != 0):
+                and self.get_value() != 0
+                and self.game
+                and self.game[0]['round_type'] != strings.round_type_tossup):
             self.guessed_letter(letter)
         elif combination == self.hotkeys.get('select_1'):
             self.select_red()
@@ -167,12 +169,16 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.tossup()
         elif combination == self.hotkeys.get('bonus_round'):
             self.bonus_round()
-        elif combination == self.hotkeys.get('lose_turn'):
-            self.lose_turn()
-        elif combination == self.hotkeys.get('bankrupt'):
-            self.bankrupt()
-        elif combination == self.hotkeys.get('bank_score'):
-            self.bank_score()
+        elif not (
+                self.game
+                and self.game[0]['round_type'] == strings.round_type_tossup):
+            # following hotkeys cannot be used in a tossup
+            if combination == self.hotkeys.get('lose_turn'):
+                self.lose_turn()
+            elif combination == self.hotkeys.get('bankrupt'):
+                self.bankrupt()
+            elif combination == self.hotkeys.get('bank_score'):
+                self.bank_score()
     
     def _keyboard_closed(self):
         """Remove keyboard binding when the keyboard is closed."""

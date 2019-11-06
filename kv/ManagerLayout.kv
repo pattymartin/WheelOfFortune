@@ -208,10 +208,19 @@
 							text: strings.mgr_select_value
 				SquareButton:
 					text: strings.button_guess_letter
+					disabled:
+						True if root.game \
+						and root.game[0]['round_type'] \
+						== strings.round_type_tossup \
+						else False
 					on_release: root.guess_letter()
 		GridLayout:
 			rows: 2
 			cols: 2
+			disabled:
+				True if root.game \
+				and root.game[0]['round_type'] == strings.round_type_tossup \
+				else False
 			Button:
 				text: strings.mgr_btn_lose_turn
 				on_release: root.lose_turn()
