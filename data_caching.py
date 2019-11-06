@@ -314,13 +314,15 @@ def write_hotkeys(hotkeys):
     
     update_variables({'hotkeys': hotkeys})
 
-def str_to_int(s):
+def str_to_int(s, default_value=0):
     """
     Convert a string to an int,
     ignoring non-numeric characters.
+    If there are no numeric characters,
+    returns `default_value`.
     """
     try:
         return int(''.join(
             [c for c in str(s) if c.isnumeric()]))
     except ValueError:
-        return 0
+        return default_value

@@ -181,6 +181,7 @@
 	timer_input: timer_input
 	vowel_input: vowel_input
 	min_input: min_input
+	clue_reward_input: clue_reward_input
 	wedges_input: wedges_input
 	cash_values: data_caching.get_variables()
 	title: strings.mgr_title_settings
@@ -229,6 +230,21 @@
 				hint_text: strings.input_min_win
 				multiline: False
 				prev_widget: vowel_input
+				next_widget: clue_reward_input
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Label:
+				text: strings.label_clue_solve_reward
+				size_hint_x: None
+				valign: 'center'
+				halign: 'center'
+			TabCyclable:
+				id: clue_reward_input
+				text: str(root.cash_values.get('clue_solve_reward', ''))
+				hint_text: strings.input_clue_solve_reward
+				multiline: False
+				prev_widget: min_input
 				next_widget: wedges_input
 		BoxLayout:
 			orientation: 'horizontal'
@@ -248,7 +264,7 @@
 				text:
 					'\r\n'.join([str(i) for i in root.cash_values.get('cash_values', [])])
 				hint_text: strings.input_cash_values
-				prev_widget: min_input
+				prev_widget: clue_reward_input
 				next_widget: timer_input
 		Widget:
 			size_hint_y: 0.02

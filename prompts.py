@@ -534,15 +534,19 @@ class ManagerSettingsPrompt(Popup):
         else:
             timer_time = '{}:{:02}'.format(timer_minutes, timer_seconds)
         
-        vowel_price = data_caching.str_to_int(self.vowel_input.text)
-        min_win = data_caching.str_to_int(self.min_input.text)
+        vowel_price = data_caching.str_to_int(self.vowel_input.text, None)
+        min_win = data_caching.str_to_int(self.min_input.text, None)
+        clue_solve_reward = data_caching.str_to_int(
+            self.clue_reward_input.text, None)
         cash_values = [data_caching.str_to_int(line)
             for line in self.wedges_input.text.split()]
         
         data_caching.update_variables({
             'timer_time': timer_time,
-            'vowel_price': vowel_price if vowel_price else '',
-            'min_win': min_win if min_win else '',
+            'vowel_price': vowel_price if vowel_price is not None else '',
+            'min_win': min_win if min_win is not None else '',
+            'clue_solve_reward':
+                clue_solve_reward if clue_solve_reward is not None else '',
             'cash_values': sorted([v for v in cash_values if v])})
         
         self.dismiss()

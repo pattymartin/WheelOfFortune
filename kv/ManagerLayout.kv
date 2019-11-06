@@ -1,6 +1,6 @@
 #:import data_caching data_caching
 #:import strings strings
-#: import values values
+#:import values values
 <ManagerLayout>:
     puzzle_label: puzzle_label
 	timer_label: timer_label
@@ -42,22 +42,30 @@
         size_hint_y: 0.25
 		ScreenManager:
 			id: select_layout_manager
+			clue_solved: False
 			curr:
 				# simply setting `current` here caused strange behavior
 				None if not self.has_screen('solve?') \
+				else 'clue' if (
+				(	not self.clue_solved) and
+				(	root.revealed) and
+				(	root.game) and
+				(	root.game[0]['puzzle']['clue'])) \
 				else 'select' if root.revealed and len(root.game) <= 1 \
 				else 'next' if root.revealed and len(root.game) > 1 \
 				else 'solve?' if (
-				(		root.game and \
-				(		root.game[0]['round_type'] == \
+				(		root.game and
+				(		root.game[0]['round_type'] ==
 				(			strings.round_type_bonus))
-				)	or \
-				(		set(root.tossup_players_done) == set([1, 2, 3])) \
+				)	or
+				(		set(root.tossup_players_done) == set([1, 2, 3]))
 				) \
 				else 'solve'
 			on_curr:
 				if self.curr != self.current: \
 				self.current = self.curr
+				if self.curr != 'clue' and not root.revealed: \
+				self.clue_solved = False
 			Screen:
 				name: 'select'
 				Button:
@@ -78,11 +86,31 @@
 				BoxLayout:
 					orientation: 'horizontal'
 					Button:
-						text: strings.button_no_solve
 						on_release: root.reveal_puzzle(False)
+						Image:
+							source: strings.file_cancel_icon
+							height: self.parent.height * 0.75
+							center: self.parent.center
 					Button:
 						text: strings.mgr_btn_reveal
 						on_release: root.reveal_puzzle()
+			Screen:
+				name: 'clue'
+				BoxLayout:
+					orientation: 'horizontal'
+					Button:
+						on_release:
+							root.solve_clue(False)
+							select_layout_manager.clue_solved = True
+						Image:
+							source: strings.file_cancel_icon
+							height: self.parent.height * 0.75
+							center: self.parent.center
+					Button:
+						text: strings.button_clue_solve
+						on_release: 
+							root.solve_clue(True)
+							select_layout_manager.clue_solved = True
         Button:
 			id: clear_button
 			visible: True if root.puzzle_string else False
@@ -194,6 +222,7 @@
 					TabCyclable:
 						id: custom_value
 						hint_text: strings.input_custom
+						disabled: dropdown.disabled
 						multiline: False
 						on_text_validate:
 							root.bind_keyboard_self()
@@ -205,23 +234,23 @@
 							on_release: root.cash_settings()
 						Spinner:
 							id: dropdown
+							disabled:
+								True if root.game \
+								and root.game[0]['round_type'] in [\
+								(	strings.round_type_tossup), \
+								(	strings.round_type_triple_tossup), \
+								(	strings.round_type_triple_tossup_final), \
+								(	strings.round_type_bonus)] \
+								else False
 							text: strings.mgr_select_value
 				SquareButton:
 					text: strings.button_guess_letter
-					id: guess_letter_button
-					disabled:
-						True if root.game \
-						and root.game[0]['round_type'] in [\
-						(	strings.round_type_tossup), \
-						(	strings.round_type_triple_tossup), \
-						(	strings.round_type_triple_tossup_final), \
-						(	strings.round_type_bonus)] \
-						else False
+					disabled: dropdown.disabled
 					on_release: root.guess_letter()
 		GridLayout:
 			rows: 2
 			cols: 2
-			disabled: guess_letter_button.disabled
+			disabled: dropdown.disabled
 			Button:
 				text: strings.mgr_btn_lose_turn
 				on_release: root.lose_turn()

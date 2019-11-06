@@ -8,6 +8,7 @@ button_bonus_round = 'Bonus\nRound'
 button_buy_vowel = 'Buy a\nVowel'
 button_clear_puzzles = 'Clear puzzles'
 button_close = 'Close'
+button_clue_solve = 'Clue\nSolve'
 button_confirm = 'Confirm'
 button_default = 'Default'
 button_edit_hotkeys = 'Hotkeys'
@@ -19,7 +20,6 @@ button_fullscreen = 'Toggle\nFullscreen'
 button_load = 'Import'
 button_next_puzzle = 'Next Puzzle'
 button_no = 'No'
-button_no_solve = 'No\nSolve'
 button_ok = 'OK'
 button_reveal = 'Reveal'
 button_save = 'Save'
@@ -36,12 +36,11 @@ currency_format = '${:,}'
 input_adjust_score = 'Adjust score'
 input_cash_values = 'Enter numbers separated by any whitespace'
 input_custom = 'Enter custom cash value'
-input_min_win = 'Enter a number (default $1,000)'
 input_name = 'Edit player name'
-input_vowel_price = 'Enter a number (default $250)'
 
 label_category = 'Category'
 label_clue = 'Clue'
+label_clue_solve_reward = 'Clue Solve\nReward'
 label_delete_all_puzzles = 'Delete all puzzles?'
 label_delete_puzzle = 'Delete puzzle "{}"?'
 label_edit_hotkey_info = (
@@ -133,6 +132,8 @@ dir_assets = os.path.join(os.path.dirname(__file__),
     r'assets')
 file_alert_icon = os.path.join(dir_assets,
     r'alert.png')
+file_cancel_icon = os.path.join(dir_assets,
+    r'cancel.png')
 file_panel = os.path.join(dir_assets,
     r'panel.png')
 file_panel_blue = os.path.join(dir_assets,
@@ -149,6 +150,8 @@ file_sound_bankrupt = os.path.join(dir_assets,
     r'bankrupt.mp3')
 file_sound_buzz = os.path.join(dir_assets,
     r'buzz.wav')
+file_sound_clue_correct = os.path.join(dir_assets,
+    r'clue_correct.wav')
 file_sound_ding = os.path.join(dir_assets,
     r'ding.wav')
 file_sound_no_more_consonants = os.path.join(dir_assets,
@@ -176,3 +179,13 @@ file_kv_prompts = os.path.join(dir_kv,
     r'Prompts.kv')
 
 file_settings = r'settings.json'
+
+# circular import, can't import at top
+import values
+
+input_clue_solve_reward = 'Enter a number (default {})'.format(
+    currency_format.format(values.default_clue_solve_reward))
+input_min_win = 'Enter a number (default {})'.format(
+    currency_format.format(values.default_min_win))
+input_vowel_price = 'Enter a number (default {})'.format(
+    currency_format.format(values.default_vowel_price))

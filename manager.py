@@ -607,6 +607,21 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         self.revealed = True
     
+    def solve_clue(self, player_solved):
+        """
+        If `player_solved` is True,
+        add `clue_solve_reward` to the
+        selected player's score, and play
+        the 'clue correct' sound.
+        Otherwise, play the buzzer sound.
+        """
+        
+        if player_solved:
+            self.add_score(self.clue_solve_reward)
+            self.play_sound(strings.file_sound_clue_correct)
+        else:
+            self.play_sound(strings.file_sound_buzz)
+    
     def guess_letter(self):
         """
         Open a prompt to select a letter.
@@ -785,17 +800,21 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         
         settings = data_caching.get_variables()
+        
         try:
-            self.vowel_price = int(settings.get('vowel_price', ''))
-        except ValueError:
+            self.vowel_price = int(settings.get('vowel_price'))
+        except (ValueError, TypeError):
             self.vowel_price = values.default_vowel_price
-        min_win_str = settings.get('min_win')
-        if not min_win_str:
+        
+        try:
+            self.min_win = int(settings.get('min_win'))
+        except (ValueError, TypeError):
             self.min_win = values.default_min_win
-        else:
-            self.min_win = int(min_win_str)
-        self.dropdown.values = [strings.currency_format.format(value)
-            for value in settings.get('cash_values', [])]
+        
+        try:
+            self.clue_solve_reward = int(settings.get('clue_solve_reward'))
+        except (ValueError, TypeError):
+            self.clue_solve_reward = values.default_clue_solve_reward
         
         try:
             minutes, seconds = settings.get('timer_time', ':').split(':')
@@ -805,6 +824,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         seconds = data_caching.str_to_int(seconds)
         self.timer.start_time = (minutes * 60) + seconds
         self.timer.seconds_left = self.timer.start_time
+        
+        self.dropdown.values = [strings.currency_format.format(value)
+            for value in settings.get('cash_values', [])]
         
         self.hotkeys = {
             name: settings.get(name, default).lower()

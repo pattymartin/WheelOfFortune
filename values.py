@@ -1,5 +1,3 @@
-import strings
-
 queue_start = 5
 queue_interval = 0
 tossup_interval = 0.924
@@ -16,6 +14,7 @@ color_light_blue = (0.75, 0.75, 1, 1)
 color_none = (0, 0, 0, 0)
 color_white = (1, 1, 1, 1)
 
+default_clue_solve_reward = 3000
 default_vowel_price = 250
 default_min_win = 1000
 
@@ -66,6 +65,19 @@ hotkey_defaults = [
 speedup_timeout = 4
 splitter_size = '5pt'
 
+timer_accuracy = 0.1
+
+reveal_interval = 0.9 # seconds between panels being revealed
+blue_interval = 0.5 # seconds between panels turning blue
+solve_reveal_interval = 0.01 # seconds between letters being revealed on solve
+load_interval = 0.05 # seconds between letters loading
+
+opacity_adjustment = 0.25
+opacity_interval = 0.001
+
+# circular import, can't import at top
+import strings
+
 round_types = [
     strings.round_type_standard,
     strings.round_type_mystery,
@@ -101,13 +113,3 @@ default_game_rewards = [
     0,
     0,
     0]
-
-timer_accuracy = 0.1
-
-reveal_interval = 0.9 # seconds between panels being revealed
-blue_interval = 0.5 # seconds between panels turning blue
-solve_reveal_interval = 0.01 # seconds between letters being revealed on solve
-load_interval = 0.05 # seconds between letters loading
-
-opacity_adjustment = 0.25
-opacity_interval = 0.001

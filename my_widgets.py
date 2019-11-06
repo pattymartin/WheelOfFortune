@@ -72,9 +72,17 @@ class TabCyclable(TextInput):
     def keyboard_on_key_down(self, window, keycode, text, modifiers):
         if 'tab' in keycode:
             if 'shift' in modifiers:
-                self.prev_widget.focus = True
+                prev_widget = self.prev_widget
+                # skip over the widget if it is disabled
+                while prev_widget.disabled:
+                    prev_widget = prev_widget.prev_widget
+                prev_widget.focus = True
             else:
-                self.next_widget.focus = True
+                next_widget = self.next_widget
+                # skip over the widget if it is disabled
+                while next_widget.disabled:
+                    next_widget = next_widget.next_widget
+                next_widget.focus = True
             return True
         else:
             super(TabCyclable, self).keyboard_on_key_down(
