@@ -81,15 +81,8 @@
 				name: 'solve'
 				BoxLayout:
 					orientation: 'horizontal'
-					Button:
+					CancelButton:
 						on_release: root.play_sound(strings.file_sound_buzz)
-						AnchorLayout:
-							size_hint: None, None
-							size: self.parent.size
-							Image:
-								source: strings.file_cancel_icon
-								size_hint_y: None
-								height: self.parent.height * 0.5
 					Button:
 						text: strings.mgr_btn_reveal
 						on_release: root.reveal_puzzle()
@@ -97,12 +90,8 @@
 				name: 'solve?'
 				BoxLayout:
 					orientation: 'horizontal'
-					Button:
+					CancelButton:
 						on_release: root.reveal_puzzle(False)
-						Image:
-							source: strings.file_cancel_icon
-							height: self.parent.height * 0.75
-							center: self.parent.center
 					Button:
 						text: strings.mgr_btn_reveal
 						on_release: root.reveal_puzzle()
@@ -110,14 +99,10 @@
 				name: 'clue'
 				BoxLayout:
 					orientation: 'horizontal'
-					Button:
+					CancelButton:
 						on_release:
 							root.solve_clue(False)
 							select_layout_manager.clue_solved = True
-						Image:
-							source: strings.file_cancel_icon
-							height: self.parent.height * 0.75
-							center: self.parent.center
 					Button:
 						text: strings.button_clue_solve
 						on_release: 
@@ -289,6 +274,14 @@
 <SquareButton>:
     size_hint_x: None
     width:self.height
+<CancelButton@Button>:
+	AnchorLayout:
+		size_hint: None, None
+		size: self.parent.size
+		Image:
+			source: strings.file_cancel_icon
+			size_hint_y: None
+			height: self.parent.height * 0.5
 <SettingsButton@ButtonBehavior+Label>:
     size_hint_x: None
     width:self.height

@@ -177,15 +177,22 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 and self.game
                 and self.game[0]['round_type'] == strings.round_type_speedup):
             self.timer.reset()
-        elif (
-                combination == self.hotkeys.get('start_tossup')
-				and root.puzzle_string
-				and root.game
-				and root.game[0]['round_type'] in [
-                    strings.round_type_tossup,
-                    strings.round_type_triple_tossup,
-                    strings.round_type_triple_tossup_final]):
-            self.tossup()
+        elif combination == self.hotkeys.get('start_tossup'):
+            if (
+                    self.puzzle_string
+                    and self.game
+                    and self.game[0]['round_type'] in [
+                        strings.round_type_tossup,
+                        strings.round_type_triple_tossup,
+                        strings.round_type_triple_tossup_final]):
+                self.tossup()
+            elif (
+                    self.timer.current == 'timeout'
+                    and self.game
+                    and self.game[0]['round_type']
+                        == strings.round_type_speedup):
+                self.timer.final_spin_started = True
+                self.timer.start_stop_reset()
         elif (
                 combination == self.hotkeys.get('bonus_round')
                 and self.puzzle_string
