@@ -136,7 +136,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 not relevant_modifiers
                 and letter in strings.alphabet
                 and self.selected_player != 0
-                and self.get_value() != 0
+                and (self.get_value() != 0
+                    or letter in 'aeiou')
                 and self.game
                 and self.game[0]['round_type'] not in [
                     strings.round_type_tossup,
@@ -704,6 +705,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         if letter.lower() not in 'aeiou':
             self.add_score(matches * self.get_value())
         self.custom_value.text = ''
+        if not self.timer.final_spin_started:
+            self.dropdown.text = strings.mgr_select_value
         
         if not matches and not self.timer.final_spin_started:
             self.play_sound(strings.file_sound_buzz)
