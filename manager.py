@@ -158,7 +158,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         elif combination == self.hotkeys.get('clear_puzzle'):
             self.clear_puzzle()
         elif combination == self.hotkeys.get('solve'):
-            self.reveal_puzzle()
+            if self.select_layout_manager.current == 'select':
+                self.choose_puzzle()
+            elif self.select_layout_manager.current == 'next':
+                self.next_puzzle()
+            elif self.select_layout_manager.current == 'clue':
+                self.solve_clue(True)
+                self.select_layout_manager.clue_solved = True
+            else:
+                self.reveal_puzzle()
         elif (
                 combination == self.hotkeys.get('timer_start')
                 and self.game
