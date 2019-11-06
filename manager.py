@@ -199,6 +199,14 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 and self.game
                 and self.game[0]['round_type'] == strings.round_type_bonus):
             self.bonus_round()
+        elif combination == self.hotkeys.get('buzzer'):
+            if self.select_layout_manager.current == 'solve?':
+                self.reveal_puzzle(False)
+            elif self.select_layout_manager.current == 'clue':
+                self.solve_clue(False)
+                self.select_layout_manager.clue_solved = True
+            else:
+                self.play_sound(strings.file_sound_buzz)
         elif not (
                 self.game
                 and self.game[0]['round_type'] in [
