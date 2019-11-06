@@ -159,6 +159,10 @@ file_sound_no_more_consonants = os.path.join(dir_assets,
     r'no_more_consonants.wav')
 file_sound_no_more_vowels = os.path.join(dir_assets,
     r'no_more_vowels.wav')
+file_sound_reveal_puzzle = os.path.join(dir_assets,
+    r'puzzle_reveal.wav')
+file_sound_reveal_tossup = os.path.join(dir_assets,
+    r'tossup_reveal.wav')
 file_sound_solve = os.path.join(dir_assets,
     r'solve.wav')
 file_sound_solve_bonus = os.path.join(dir_assets,

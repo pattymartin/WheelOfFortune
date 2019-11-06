@@ -83,10 +83,13 @@
 					orientation: 'horizontal'
 					Button:
 						on_release: root.play_sound(strings.file_sound_buzz)
-						Image:
-							source: strings.file_cancel_icon
-							height: self.parent.height * 0.75
-							center: self.parent.center
+						AnchorLayout:
+							size_hint: None, None
+							size: self.parent.size
+							Image:
+								source: strings.file_cancel_icon
+								size_hint_y: None
+								height: self.parent.height * 0.5
 					Button:
 						text: strings.mgr_btn_reveal
 						on_release: root.reveal_puzzle()

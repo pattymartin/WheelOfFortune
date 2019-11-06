@@ -475,7 +475,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     
     def load_game(self, game):
         """
-        Load the game returned by a LoadGamePrompt.
+        Load the game selected by a LoadGamePrompt.
         """
         
         self.game = game
@@ -486,6 +486,15 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         """
         Tell the layout to load `puzzle`.
         """
+        
+        if puzzle['puzzle'].strip():
+            if self.game and self.game[0]['round_type'] in [
+                    strings.round_type_tossup,
+                    strings.round_type_triple_tossup,
+                    strings.round_type_triple_tossup_final]:
+                self.play_sound(strings.file_sound_reveal_tossup)
+            else:
+                self.play_sound(strings.file_sound_reveal_puzzle)
         
         if self.tossup_running:
             self.tossup()
