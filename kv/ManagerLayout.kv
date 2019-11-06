@@ -210,8 +210,9 @@
 					text: strings.button_guess_letter
 					disabled:
 						True if root.game \
-						and root.game[0]['round_type'] \
-						== strings.round_type_tossup \
+						and root.game[0]['round_type'] in [\
+						(	strings.round_type_tossup), \
+						(	strings.round_type_bonus)] \
 						else False
 					on_release: root.guess_letter()
 		GridLayout:
@@ -219,7 +220,9 @@
 			cols: 2
 			disabled:
 				True if root.game \
-				and root.game[0]['round_type'] == strings.round_type_tossup \
+				and root.game[0]['round_type'] in [\
+				(	strings.round_type_tossup), \
+				(	strings.round_type_bonus)] \
 				else False
 			Button:
 				text: strings.mgr_btn_lose_turn

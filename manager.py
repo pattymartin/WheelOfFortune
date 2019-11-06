@@ -137,7 +137,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 and self.selected_player != 0
                 and self.get_value() != 0
                 and self.game
-                and self.game[0]['round_type'] != strings.round_type_tossup):
+                and self.game[0]['round_type'] not in [
+                    strings.round_type_tossup,
+                    strings.round_type_bonus]):
             self.guessed_letter(letter)
         elif combination == self.hotkeys.get('select_1'):
             self.select_red()
@@ -171,7 +173,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.bonus_round()
         elif not (
                 self.game
-                and self.game[0]['round_type'] == strings.round_type_tossup):
+                and self.game[0]['round_type'] in [
+                    strings.round_type_tossup,
+                    strings.round_type_bonus]):
             # following hotkeys cannot be used in a tossup
             if combination == self.hotkeys.get('lose_turn'):
                 self.lose_turn()
