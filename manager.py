@@ -561,6 +561,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         self.set_total(self.get_total() + total)
     
+    def reset_scores(self):
+        """
+        Reset all players' scores and game totals.
+        """
+        
+        for i in range(1, 4):
+            self.selected_player = i
+            self.set_score(0)
+            self.set_total(0)
+        
+        self.deselect_player()
+    
     def choose_puzzle(self):
         """
         Prompt the user to select a puzzle.
@@ -579,6 +591,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.game = game
         if game:
             self.load_puzzle(self.game[0]['puzzle'])
+        self.reset_scores()
     
     def load_puzzle(self, puzzle):
         """
