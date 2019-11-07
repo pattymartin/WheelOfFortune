@@ -499,23 +499,6 @@ class ChooseLetterPrompt(Popup):
         if self._keyboard:
             self._keyboard.release()
 
-class BonusRoundPrompt(Popup):
-    """
-    A Popup asking the user to enter the contestant's
-    letters for the bonus round.
-    """
-    
-    def __init__(self, letters_callback, solve_callback, **kwargs):
-        """
-        Create the Popup.
-        Selected letters will be passed to `callback`
-        as a string.
-        """
-        
-        super(BonusRoundPrompt, self).__init__(**kwargs)
-        self.letters_callback = letters_callback
-        self.solve_callback = solve_callback
-
 class ManagerSettingsPrompt(Popup):
     """
     A Popup with settings for the manager.
@@ -581,9 +564,9 @@ class EditHotkeysPrompt(Popup):
             self.hotkey_select_puzzle, self.hotkey_clear_puzzle,
             self.hotkey_solve, self.hotkey_timer_start,
             self.hotkey_timer_reset, self.hotkey_start_tossup,
-            self.hotkey_bonus_round, self.hotkey_buzzer,
-            self.hotkey_lose_turn, self.hotkey_bankrupt,
-            self.hotkey_buy_vowel, self.hotkey_bank_score]
+            self.hotkey_buzzer, self.hotkey_lose_turn,
+            self.hotkey_bankrupt, self.hotkey_buy_vowel,
+            self.hotkey_bank_score]
         
         existing_hotkeys = data_caching.get_hotkeys()
         

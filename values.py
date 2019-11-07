@@ -38,7 +38,6 @@ hotkey_default_solve = 'enter'
 hotkey_default_timer_start = '`'
 hotkey_default_timer_reset = 'ctrl+`'
 hotkey_default_start_tossup = '4'
-hotkey_default_bonus_round = '5'
 hotkey_default_buzzer = '8'
 hotkey_default_lose_turn = '9'
 hotkey_default_bankrupt = '0'
@@ -47,8 +46,8 @@ hotkey_default_bank_score = '='
 hotkey_names = [
     'select_1', 'select_2', 'select_3', 'select_next',
     'select_puzzle', 'clear_puzzle', 'solve',
-    'timer_start', 'timer_reset', 'start_tossup', 'bonus_round',
-    'buzzer', 'lose_turn', 'bankrupt', 'buy_vowel', 'bank_score']
+    'timer_start', 'timer_reset', 'start_tossup', 'buzzer',
+    'lose_turn', 'bankrupt', 'buy_vowel', 'bank_score']
 hotkey_defaults = [
     hotkey_default_select_1,
     hotkey_default_select_2,
@@ -60,7 +59,6 @@ hotkey_defaults = [
     hotkey_default_timer_start,
     hotkey_default_timer_reset,
     hotkey_default_start_tossup,
-    hotkey_default_bonus_round,
     hotkey_default_buzzer,
     hotkey_default_lose_turn,
     hotkey_default_bankrupt,

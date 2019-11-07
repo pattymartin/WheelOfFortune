@@ -191,12 +191,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                         == strings.round_type_speedup):
                 self.timer.final_spin_started = True
                 self.timer.start_stop_reset()
-        elif (
-                combination == self.hotkeys.get('bonus_round')
-                and self.puzzle_string
-                and self.game
-                and self.game[0]['round_type'] == strings.round_type_bonus):
-            self.bonus_round()
         elif combination == self.hotkeys.get('buzzer'):
             if self.select_layout_manager.current == 'solve?':
                 self.reveal_puzzle(False)
@@ -833,18 +827,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             letter=letter.upper(), matches=matches)
         # schedule to show the puzzle again
         Clock.schedule_once(self.show_puzzle, values.time_show_matches)
-    
-    def bonus_round(self):
-        """
-        Prompts the user to enter the contestant's
-        letters for the bonus round.
-        """
-        
-        prompts.BonusRoundPrompt(
-                letters_callback=self.bonus_round_letters,
-                solve_callback=self.reveal_puzzle,
-                on_dismiss=self.bind_keyboard_self
-            ).open()
     
     def no_more_consonants(self):
         """

@@ -134,49 +134,6 @@
 		id: reward_input
 		multiline: False
 		text: str(root.reward)
-<BonusRoundPrompt>:
-	title: strings.title_bonus_round
-	size_hint_y: None
-	height: 180
-	size_hint_max_x: 600
-	GridLayout:
-		rows: 4
-		cols: 2
-		Label:
-			id: given_letters
-			text: strings.bonus_round_letters
-			size_hint_y: None
-			height: 30
-		Button:
-			text: strings.button_reveal
-			on_release: root.letters_callback(given_letters.text)
-			size_hint_y: None
-			height: 30
-		TextInput:
-			id: contestant_letters
-			size_hint_y: None
-			height: 30
-		Button:
-			text: strings.button_reveal
-			on_release: root.letters_callback(contestant_letters.text)
-			size_hint_y: None
-			height: 30
-		Widget:
-			size_hint_y: None
-			height: 30
-		Widget:
-			size_hint_y: None
-			height: 30
-		Button:
-			text: strings.button_close
-			on_release: root.dismiss()
-			size_hint_y: None
-			height: 30
-		Button:
-			text: strings.mgr_btn_reveal
-			on_release: root.solve_callback()
-			size_hint_y: None
-			height: 30
 <ManagerSettingsPrompt>:
 	timer_input: timer_input
 	vowel_input: vowel_input
@@ -304,7 +261,6 @@
 	hotkey_timer_start: hotkey_timer_start
 	hotkey_timer_reset: hotkey_timer_reset
 	hotkey_start_tossup: hotkey_start_tossup
-	hotkey_bonus_round: hotkey_bonus_round
 	hotkey_buzzer: hotkey_buzzer
 	hotkey_lose_turn: hotkey_lose_turn
 	hotkey_bankrupt: hotkey_bankrupt
@@ -370,10 +326,6 @@
 						id: hotkey_start_tossup
 						description: strings.label_hotkey_start_tossup
 						name: 'start_tossup'
-					HotkeyLayout:
-						id: hotkey_bonus_round
-						description: strings.label_hotkey_bonus_round
-						name: 'bonus_round'
 					HotkeyLayout:
 						id: hotkey_buzzer
 						description: strings.label_hotkey_buzzer
