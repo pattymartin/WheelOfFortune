@@ -458,14 +458,14 @@
     select_callback: None
     on_selection: self.select_callback() if self.select_callback else None
 <YesNoPrompt>
+	label_text: ''
     id: yes_no_prompt
-    text_label: scroll_label.text_label
     button_no: button_no
     button_yes: button_yes
     BoxLayout:
         orientation: 'vertical'
         ScrollableLabel:
-            id: scroll_label
+            label_text: root.label_text
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: 0.25
@@ -534,17 +534,81 @@
 				on_release: root.input_save()
 <InfoPrompt>:
     id: info_prompt
-    text_label: scroll_label.text_label
+	label_text: ''
     BoxLayout:
         orientation: 'vertical'
         ScrollableLabel:
-            id: scroll_label
+            label_text: root.label_text
         Button:
             text: strings.button_ok
             size_hint_y: 0.25
             on_release: info_prompt.dismiss()
+<TiebreakerPrompt>:
+	eligible_players: []
+	player_names: []
+	title: strings.title_tie
+	BoxLayout:
+		orientation: 'vertical'
+		ScrollableLabel:
+			label_text: strings.label_select_tiebreaker
+		Button:
+			text: strings.button_select_puzzle
+			on_release: root.select_puzzle()
+		BoxLayout:
+			orientation: 'horizontal'
+			Button:
+				background_normal: ''
+				background_color: values.color_red
+				size_hint_x: 1 if 1 in root.eligible_players else 0
+				opacity: 1 if self.size_hint_x else 0
+				width: 0
+				font_name: values.font_score
+				font_size: self.height / 4
+				text:
+					strings.button_player_wins.format(\
+					root.player_names[0] \
+					if root.player_names and root.player_names[0] \
+					else strings.button_player1)
+				on_release:
+					root.select_player_cb(1)
+					root.permission_to_dismiss = True
+					root.dismiss()
+			Button:
+				background_normal: ''
+				background_color: values.color_yellow
+				size_hint_x: 1 if 2 in root.eligible_players else 0
+				opacity: 1 if self.size_hint_x else 0
+				width: 0
+				font_name: values.font_score
+				font_size: self.height / 4
+				text:
+					strings.button_player_wins.format(\
+					root.player_names[1] \
+					if root.player_names and root.player_names[1] \
+					else strings.button_player2)
+				on_release:
+					root.select_player_cb(2)
+					root.permission_to_dismiss = True
+					root.dismiss()
+			Button:
+				background_normal: ''
+				background_color: values.color_blue
+				size_hint_x: 1 if 3 in root.eligible_players else 0
+				opacity: 1 if self.size_hint_x else 0
+				width: 0
+				font_name: values.font_score
+				font_size: self.height / 4
+				text:
+					strings.button_player_wins.format(\
+					root.player_names[2] \
+					if root.player_names and root.player_names[2] \
+					else strings.button_player3)
+				on_release:
+					root.select_player_cb(3)
+					root.permission_to_dismiss = True
+					root.dismiss()
 <ScrollableLabel@AnchorLayout>:
-    text_label: text_label
+	label_text: ''
     BoxLayout:
         orientation: 'vertical'
         Widget:
@@ -557,7 +621,7 @@
                 size_hint_y: None
                 height: self.minimum_height
                 Label:
-                    id: text_label
+                    text: root.label_text
                     size_hint_y: None
                     size: self.texture_size
         Widget:

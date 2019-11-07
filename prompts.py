@@ -460,7 +460,7 @@ class YesNoPrompt(Popup):
     def __init__(self, text, yes_callback, no_callback, **kwargs):
         """Create the Popup."""
         super(YesNoPrompt, self).__init__(**kwargs)
-        self.text_label.text = text
+        self.label_text = text
         self.button_no.bind(on_release=_wrap_with_dismiss(no_callback, self))
         self.button_yes.bind(on_release=_wrap_with_dismiss(yes_callback, self))
 
@@ -797,7 +797,59 @@ class InfoPrompt(Popup):
     def __init__(self, text, **kwargs):
         """Create the popup."""
         super(InfoPrompt, self).__init__(**kwargs)
-        self.text_label.text = text
+        self.label_text = text
+
+class TiebreakerPrompt(Popup):
+    """
+    A Popup prompting the user to select a puzzle
+    as a tiebreaker.
+    """
+    
+    def __init__(self, load_tiebreaker_cb, select_player_cb,
+                 eligible_players, player_names, **kwargs):
+        """
+        Create the Popup.
+        If a tiebreaker puzzle is selected, it will be passed
+        to `load_tiebreaker_cb`.
+        If a winner is manually selected instead,
+        the number of the player will be passed to
+        `select_player_cb`.
+        """
+        
+        super(TiebreakerPrompt, self).__init__(**kwargs)
+        
+        self.load_tiebreaker_cb = load_tiebreaker_cb
+        self.select_player_cb = select_player_cb
+        self.eligible_players = eligible_players
+        self.player_names = player_names
+        
+        self.permission_to_dismiss = False
+        self.bind(on_dismiss=self.dismiss_callback)
+    
+    def select_puzzle(self):
+        """
+        Open a LoadPuzzlePrompt.
+        """
+        
+        def puzzles_chosen_callback(puzzles):
+            """
+            Get the puzzles chosen by the LoadPuzzlePrompt,
+            and pass the first one to `self.load_tiebreaker_cb`.
+            """
+            
+            self.load_tiebreaker_cb(puzzles[0])
+            self.permission_to_dismiss = True
+            self.dismiss()
+        
+        LoadPuzzlePrompt(puzzles_chosen_callback).open()
+    
+    def dismiss_callback(self, instance):
+        """
+        Prevent the Popup from closing until
+        a choice has been made.
+        """
+        
+        return not self.permission_to_dismiss
 
 def _wrap_with_dismiss(callback, popup):
     """

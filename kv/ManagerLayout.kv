@@ -8,7 +8,6 @@
 	timer: timer
 	clear_button: clear_button
 	tossup_button: tossup_button
-	bonus_button: bonus_button
     name_input: name_input
     score_edit: score_edit
     custom_value: custom_value
@@ -16,264 +15,333 @@
     btn_red: btn_red
     btn_ylw: btn_ylw
     btn_blu: btn_blu
-    
-    orientation: 'vertical'
-	FloatLayout:
-		size_hint_y: 0.5
-		Label:
-			id: puzzle_label
-			halign: 'center'
-			pos_hint: {'x': 0, 'y': 0}
-		Label:
-			id: timer_label
-			text:
-				'' if timer.seconds_left == timer.start_time \
-				else strings.label_time_out if timer.seconds_left <= 0 \
-				else strings.label_timer.format( \
-				(		int(timer.seconds_left / 60)), \
-				(		int(timer.seconds_left % 60)))
-			text_size: self.size
-			halign: 'right'
-			valign: 'top'
-			padding: (5, 5)
-			pos_hint: {'x': 0, 'y': 0}
-    BoxLayout:
-        orientation: 'horizontal'
-        size_hint_y: 0.25
-		ScreenManager:
-			id: select_layout_manager
-			clue_solved: False
-			curr:
-				# simply setting `current` here caused strange behavior
-				None if not self.has_screen('solve?') \
-				else 'clue' if (
-				(	root.puzzle_string) and
-				(	not self.clue_solved) and
-				(	root.revealed) and
-				(	root.game) and
-				(	root.game[0]['puzzle']['clue'])) \
-				else 'select' if root.revealed and len(root.game) <= 1 \
-				else 'next' if root.revealed and len(root.game) > 1 \
-				else 'solve?' if (
-				(		root.game and
-				(		root.game[0]['round_type'] ==
-				(			strings.round_type_bonus))
-				)	or
-				(		set(root.tossup_players_done) == set([1, 2, 3]))
-				) \
-				else 'solve'
-			on_curr:
-				if self.curr != self.current: \
-				self.current = self.curr
-				if self.curr != 'clue' and not root.revealed: \
-				self.clue_solved = False
-			Screen:
-				name: 'select'
-				Button:
-					text: strings.button_select_puzzle
-					on_release: root.choose_puzzle()
-			Screen:
-				name: 'next'
-				Button:
-					text: strings.button_next_puzzle
-					on_release: root.next_puzzle()
-			Screen:
-				name: 'solve'
-				BoxLayout:
-					orientation: 'horizontal'
-					CancelButton:
-						on_release: root.play_sound(strings.file_sound_buzz)
-					Button:
-						text: strings.mgr_btn_reveal
-						on_release: root.reveal_puzzle()
-			Screen:
-				name: 'solve?'
-				BoxLayout:
-					orientation: 'horizontal'
-					CancelButton:
-						on_release: root.reveal_puzzle(False)
-					Button:
-						text: strings.mgr_btn_reveal
-						on_release: root.reveal_puzzle()
-			Screen:
-				name: 'clue'
-				BoxLayout:
-					orientation: 'horizontal'
-					CancelButton:
-						on_release:
-							root.solve_clue(False)
-							select_layout_manager.clue_solved = True
-					Button:
-						text: strings.button_clue_solve
-						on_release: 
-							root.solve_clue(True)
-							select_layout_manager.clue_solved = True
-        Button:
-			id: clear_button
-			visible: True if root.puzzle_string else False
-			on_visible: root.show_hide(self)
-			size_hint_x: 0
-			width: 0
-			opacity: 0
-            text: strings.mgr_btn_clear
-            on_release: root.clear_puzzle()
-		FinalSpinTimer:
-			id: timer
-			visible:
-				True if ( \
-				root.game \
-				and root.game[0]['round_type'] == strings.round_type_speedup) \
-				else False
-			on_visible: root.show_hide(self)
-			size_hint_x: 0
-			width: 0
-		Button:
-			id: tossup_button
-			visible:
-				True if ( \
-				root.puzzle_string \
-				and root.game \
-				and root.game[0]['round_type'] in [\
-				strings.round_type_tossup, \
-				strings.round_type_triple_tossup, \
-				strings.round_type_triple_tossup_final]) \
-				else False
-			on_visible: root.show_hide(self)
-			text: strings.mgr_btn_tossup
-			size_hint_x: 0
-			width: 0
-			opacity: 0
-			on_release: root.tossup()
-		Button:
-			id: bonus_button
-			visible:
-				True if (\
-				root.puzzle_string \
-				and root.game \
-				and root.game[0]['round_type'] == strings.round_type_bonus) \
-				else False
-			on_visible: root.show_hide(self)
-			size_hint_x: 0
-			width: 0
-			opacity: 0
-			text: strings.button_bonus_round
-			on_release: root.bonus_round()
-    BoxLayout:
-        orientation: 'horizontal'
-        PlayerButton:
-            id: btn_red
-            bg_color: values.color_red
-            on_release: root.select_red()
-        PlayerButton:
-            id: btn_ylw
-            bg_color: values.color_yellow
-            on_release: root.select_yellow()
-        PlayerButton:
-            id: btn_blu
-            bg_color: values.color_blue
-            on_release: root.select_blue()
-	BoxLayout:
-		orientation: 'horizontal'
+	curr:
+		None if not self.has_screen('bonus_round') \
+		else 'bonus_round' if (
+		(	self.puzzle_string) and
+		(	self.game) and
+		(	self.game[0]['round_type'] == strings.round_type_bonus)) \
+		else 'normal'
+	on_curr:
+		if self.curr != self.current: \
+		self.current = self.curr
+	Screen:
+		name: 'normal'
 		BoxLayout:
 			orientation: 'vertical'
+			FloatLayout:
+				size_hint_y: 0.5
+				Label:
+					id: puzzle_label
+					halign: 'center'
+					pos_hint: {'x': 0, 'y': 0}
+				Label:
+					id: timer_label
+					text:
+						'' if timer.seconds_left == timer.start_time \
+						else strings.label_time_out if timer.seconds_left <= 0 \
+						else strings.label_timer.format( \
+						(		int(timer.seconds_left / 60)), \
+						(		int(timer.seconds_left % 60)))
+					text_size: self.size
+					halign: 'right'
+					valign: 'top'
+					padding: (5, 5)
+					pos_hint: {'x': 0, 'y': 0}
 			BoxLayout:
 				orientation: 'horizontal'
-				size_hint_y: 0.5
-				TabCyclable:
-					id: name_input
-					hint_text: strings.input_name
-					multiline: False
-					on_text_validate:
-						root.update_name(self.text)
-						root.bind_keyboard_self()
-					prev_widget: custom_value
-					next_widget: score_edit
+				size_hint_y: 0.25
+				ScreenManager:
+					id: select_layout_manager
+					clue_solved: False
+					curr:
+						# simply setting `current` here caused strange behavior
+						None if not self.has_screen('solve?') \
+						else 'clue' if (
+						(	root.puzzle_string) and
+						(	not self.clue_solved) and
+						(	root.revealed) and
+						(	root.game) and
+						(	root.game[0]['puzzle']['clue'])) \
+						else 'select' if root.revealed and len(root.game) <= 1 \
+						else 'next' if root.revealed and len(root.game) > 1 \
+						else 'solve?' if (
+						(		root.game and
+						(		root.game[0]['round_type'] ==
+						(			strings.round_type_bonus))
+						)	or
+						(		set(root.tossup_players_done) == set([1, 2, 3]))
+						) \
+						else 'solve'
+					on_curr:
+						if self.curr != self.current: \
+						self.current = self.curr
+						if self.curr != 'clue' and not root.revealed: \
+						self.clue_solved = False
+					Screen:
+						name: 'select'
+						Button:
+							text: strings.button_select_puzzle
+							on_release: root.choose_puzzle()
+					Screen:
+						name: 'next'
+						Button:
+							text: strings.button_next_puzzle
+							on_release: root.next_puzzle()
+					Screen:
+						name: 'solve'
+						BoxLayout:
+							orientation: 'horizontal'
+							CancelButton:
+								on_release: root.play_sound(strings.file_sound_buzz)
+							Button:
+								text: strings.mgr_btn_reveal
+								on_release: root.reveal_puzzle()
+					Screen:
+						name: 'solve?'
+						BoxLayout:
+							orientation: 'horizontal'
+							CancelButton:
+								on_release: root.reveal_puzzle(False)
+							Button:
+								text: strings.mgr_btn_reveal
+								on_release: root.reveal_puzzle()
+					Screen:
+						name: 'clue'
+						BoxLayout:
+							orientation: 'horizontal'
+							CancelButton:
+								on_release:
+									root.solve_clue(False)
+									select_layout_manager.clue_solved = True
+							Button:
+								text: strings.button_clue_solve
+								on_release: 
+									root.solve_clue(True)
+									select_layout_manager.clue_solved = True
 				Button:
-					text: strings.button_ok
-					size_hint_x: None
-					width: 2 * self.height
-					on_release: root.update_name(name_input.text)
+					id: clear_button
+					visible: True if root.puzzle_string else False
+					on_visible: root.show_hide(self)
+					size_hint_x: 0
+					width: 0
+					opacity: 0
+					text: strings.mgr_btn_clear
+					on_release: root.clear_puzzle()
+				FinalSpinTimer:
+					id: timer
+					visible:
+						True if ( \
+						root.game \
+						and root.game[0]['round_type'] == strings.round_type_speedup) \
+						else False
+					on_visible: root.show_hide(self)
+					size_hint_x: 0
+					width: 0
+				Button:
+					id: tossup_button
+					visible:
+						True if ( \
+						root.puzzle_string \
+						and root.game \
+						and root.game[0]['round_type'] in [\
+						strings.round_type_tossup, \
+						strings.round_type_triple_tossup, \
+						strings.round_type_triple_tossup_final]) \
+						else False
+					on_visible: root.show_hide(self)
+					text: strings.mgr_btn_tossup
+					size_hint_x: 0
+					width: 0
+					opacity: 0
+					on_release: root.tossup()
 			BoxLayout:
 				orientation: 'horizontal'
-				size_hint_y: 0.5
-				TabCyclable:
-					id: score_edit
-					hint_text: strings.input_adjust_score
-					multiline: False
-					on_text_validate:
-						root.bind_keyboard_self()
-					prev_widget: name_input
-					next_widget: custom_value
-				SquareButton:
-					text: '-'
-					on_release:
-						root.add_score(-data_caching.str_to_int(score_edit.text))
-				SquareButton:
-					text: '+'
-					on_release:
-						root.add_score(data_caching.str_to_int(score_edit.text))
+				PlayerButton:
+					id: btn_red
+					bg_color: values.color_red
+					on_release: root.select_red()
+				PlayerButton:
+					id: btn_ylw
+					bg_color: values.color_yellow
+					on_release: root.select_yellow()
+				PlayerButton:
+					id: btn_blu
+					bg_color: values.color_blue
+					on_release: root.select_blue()
 			BoxLayout:
 				orientation: 'horizontal'
 				BoxLayout:
 					orientation: 'vertical'
-					TabCyclable:
-						id: custom_value
-						hint_text: strings.input_custom
-						disabled: dropdown.disabled
-						multiline: False
-						on_text_validate:
-							root.bind_keyboard_self()
-						prev_widget: score_edit
-						next_widget: name_input
 					BoxLayout:
 						orientation: 'horizontal'
-						SettingsButton:
-							on_release: root.cash_settings()
-						Spinner:
-							id: dropdown
-							bonus_values:
-								[v + ' (+{})'.format(
-								(		strings.currency_format.format(
-								(			root.final_spin_bonus)))
-								)	for v in self.values]
-							final_spin_started: timer.final_spin_started
-							ignore_on_text: False
-							disabled:
-								True if root.game \
-								and root.game[0]['round_type'] in [\
-								(	strings.round_type_tossup), \
-								(	strings.round_type_triple_tossup), \
-								(	strings.round_type_triple_tossup_final), \
-								(	strings.round_type_bonus)] \
-								else False
-							text: strings.mgr_select_value
-							on_final_spin_started: root.update_dropdown()
-							on_text: root.update_dropdown()
-				SquareButton:
-					text: strings.button_guess_letter
+						size_hint_y: 0.5
+						TabCyclable:
+							id: name_input
+							hint_text: strings.input_name
+							multiline: False
+							on_text_validate:
+								root.update_name(self.text)
+								root.bind_keyboard_self()
+							prev_widget: custom_value
+							next_widget: score_edit
+						Button:
+							text: strings.button_ok
+							size_hint_x: None
+							width: 2 * self.height
+							on_release: root.update_name(name_input.text)
+					BoxLayout:
+						orientation: 'horizontal'
+						size_hint_y: 0.5
+						TabCyclable:
+							id: score_edit
+							hint_text: strings.input_adjust_score
+							multiline: False
+							on_text_validate:
+								root.bind_keyboard_self()
+							prev_widget: name_input
+							next_widget: custom_value
+						Button:
+							text: '-'
+							size_hint_x: None
+							width: self.height
+							on_release:
+								root.add_score(-data_caching.str_to_int(score_edit.text))
+						Button:
+							text: '+'
+							size_hint_x: None
+							width: self.height
+							on_release:
+								root.add_score(data_caching.str_to_int(score_edit.text))
+					BoxLayout:
+						orientation: 'horizontal'
+						BoxLayout:
+							orientation: 'vertical'
+							TabCyclable:
+								id: custom_value
+								hint_text: strings.input_custom
+								disabled: dropdown.disabled
+								multiline: False
+								on_text_validate:
+									root.bind_keyboard_self()
+								prev_widget: score_edit
+								next_widget: name_input
+							BoxLayout:
+								orientation: 'horizontal'
+								SettingsButton:
+									on_release: root.cash_settings()
+								Spinner:
+									id: dropdown
+									bonus_values:
+										[v + ' (+{})'.format(
+										(		strings.currency_format.format(
+										(			root.final_spin_bonus)))
+										)	for v in self.values]
+									final_spin_started: timer.final_spin_started
+									ignore_on_text: False
+									disabled:
+										True if root.game \
+										and root.game[0]['round_type'] in [\
+										(	strings.round_type_tossup), \
+										(	strings.round_type_triple_tossup), \
+										(	strings.round_type_triple_tossup_final), \
+										(	strings.round_type_bonus)] \
+										else False
+									text: strings.mgr_select_value
+									on_final_spin_started: root.update_dropdown()
+									on_text: root.update_dropdown()
+						Button:
+							text: strings.button_guess_letter
+							size_hint_x: None
+							width: self.height
+							disabled: dropdown.disabled
+							on_release: root.guess_letter()
+				GridLayout:
+					rows: 2
+					cols: 2
 					disabled: dropdown.disabled
-					on_release: root.guess_letter()
-		GridLayout:
-			rows: 2
-			cols: 2
-			disabled: dropdown.disabled
-			Button:
-				text: strings.mgr_btn_lose_turn
-				on_release: root.lose_turn()
-			Button:
-				text: strings.mgr_btn_bankrupt
-				on_release: root.bankrupt()
-			Button:
-				text: strings.button_buy_vowel
-				on_release: root.buy_vowel()
-			Button:
-				text: strings.mgr_btn_bank
-				on_release: root.bank_score()
+					Button:
+						text: strings.mgr_btn_lose_turn
+						on_release: root.lose_turn()
+					Button:
+						text: strings.mgr_btn_bankrupt
+						on_release: root.bankrupt()
+					Button:
+						text: strings.button_buy_vowel
+						on_release: root.buy_vowel()
+					Button:
+						text: strings.mgr_btn_bank
+						on_release: root.bank_score()
+	Screen:
+		name: 'bonus_round'
+		BoxLayout:
+			orientation: 'vertical'
+			PlayerButton:
+				reference_button:
+					root.btn_red if root.selected_player == 1 \
+					else root.btn_ylw if root.selected_player == 2 \
+					else root.btn_blu
+				bg_color:
+					self.reference_button.bg_color if self.reference_button \
+					else values.color_red
+				name:
+					self.reference_button.name if self.reference_button \
+					else ''
+				score:
+					self.reference_button.score if self.reference_button \
+					else 0
+				total:
+					self.reference_button.total if self.reference_button \
+					else 0
+			Widget:
+				size_hint_y: None
+				height: 15
+			BoxLayout:
+				orientation: 'horizontal'
+				size_hint_y: 0.5
+				Label:
+					id: given_letters
+					text: strings.bonus_round_letters
+				Button:
+					text: strings.button_reveal
+					on_release: root.bonus_round_letters(given_letters.text)
+			BoxLayout:
+				orientation: 'horizontal'
+				size_hint_y: 0.5
+				TextInput:
+					id: contestant_letters
+				Button:
+					text: strings.button_reveal
+					on_release:
+						root.bonus_round_letters(contestant_letters.text)
+			Widget:
+				size_hint_y: None
+				height: 15
+			ScreenManager:
+				curr:
+					None if not self.has_screen('clear') \
+					else 'clear' if root.revealed \
+					else 'solve'
+				on_curr:
+					if self.curr != self.current: \
+					self.current = self.curr
+				Screen:
+					name: 'solve'
+					BoxLayout:
+						orientation: 'horizontal'
+						CancelButton:
+							on_release: root.reveal_puzzle(False)
+						Button:
+							text: strings.mgr_btn_reveal
+							on_release: root.reveal_puzzle()
+				Screen:
+					name: 'clear'
+					Button:
+						text: strings.mgr_btn_clear
+						on_release: root.clear_puzzle()
+					
 <Button>:
     halign: 'center'
-<SquareButton>:
-    size_hint_x: None
-    width:self.height
 <CancelButton@Button>:
 	AnchorLayout:
 		size_hint: None, None

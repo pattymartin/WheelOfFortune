@@ -9,24 +9,19 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.lang import Builder
 from kivy.properties import (
-    BooleanProperty, ListProperty, NumericProperty, StringProperty)
+    BooleanProperty, ListProperty, NumericProperty,
+    ObjectProperty, StringProperty)
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
+from kivy.uix.screenmanager import ScreenManager
 from kivy.uix.textinput import TextInput
 
 import data_caching, prompts, puzzleboard, score, strings, used_letters, values
 from my_widgets import bind_keyboard, Fullscreenable
 
 Builder.load_file(strings.file_kv_manager)
-
-class SquareButton(Button):
-    """
-    A button with its width set to equal its height
-    """
-    
-    pass
 
 class CommQueue:
     """
@@ -46,13 +41,11 @@ class PlayerButton(ButtonBehavior, score.ScoreLayout):
     to select a player.
     """
     
-    def __init__(self, bg_color=(0, 0, 0, 1), **kwargs):
-        super(PlayerButton, self).__init__(**kwargs)
-        self.bg_color = bg_color
+    pass
 
-class ManagerLayout(BoxLayout, Fullscreenable):
+class ManagerLayout(ScreenManager, Fullscreenable):
     """
-    A BoxLayout for the ManagerApp.
+    The root layout for the ManagerApp.
     """
     
     game = ListProperty([])
@@ -61,6 +54,11 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     revealed = BooleanProperty(True)
     tossup_players_done = ListProperty([])
     final_spin_bonus = NumericProperty(0)
+    selected_player = NumericProperty(0)
+    
+    btn_red = ObjectProperty(None)
+    btn_ylw = ObjectProperty(None)
+    btn_blu = ObjectProperty(None)
     
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
@@ -72,13 +70,13 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.blu_q = blu_q
         self.letters_q = letters_q
         
-        self.selected_player = 0
         self.unavailable_letters = []
         self.tossup_running = False
         self.puzzle_clue = ''
         self.speedup_consonants_remaining = True
         self.consonants_remaining = True
         self.vowels_remaining = True
+        self.tie_resolved = False
     
         self.load_settings()
         self.tossup_button.disabled = False
@@ -242,6 +240,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             command, args = self.puzzle_queue.b.get(block=False)
             if command == 'puzzle_loaded':
                 self.puzzle_string = ' '.join(args['puzzle'].split())
+                if self.puzzle_string:
+                    self.tie_resolved = False
                 self.puzzle_clue = args['clue']
                 self.show_puzzle()
             elif command == 'ding':
@@ -371,21 +371,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                     and not self.speedup_consonants_remaining):
                 self.no_more_consonants()
     
-    def select_next_player(self):
-        """
-        Select the next player.
-        """
-        
-        if self.selected_player == 1:
-            # red selected, select yellow
-            self.select_yellow()
-        elif self.selected_player == 2:
-            # yellow selected, select blue
-            self.select_blue()
-        else:
-            # blue or no player selected, select red
-            self.select_red()
-    
     def deselect_player(self):
         """
         Deselect the selected player.
@@ -395,6 +380,83 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.selection_color(values.color_white)
         self.name_input.text = ''
         self.stop_all_flashing()
+    
+    def select_player(self, player_number):
+        """
+        Select the player indicated by `player_number`.
+        """
+        
+        if player_number == 1:
+            self.select_red()
+        elif player_number == 2:
+            self.select_yellow()
+        elif player_number == 3:
+            self.select_blue()
+        else:
+            self.deselect_player()
+    
+    def select_next_player(self):
+        """
+        Select the next player.
+        """
+        
+        self.select_player((self.selected_player % 3) + 1)
+    
+    def select_winner(self):
+        """
+        Select a player to proceed to the bonus round,
+        then set the layout to bonus round mode.
+        """
+        
+        max_score = 0
+        winning_players = []
+        
+        tmp = self.selected_player
+        for i in range(1, 4):
+            self.selected_player = i
+            total = self.get_total()
+            if total > max_score:
+                max_score = total
+                winning_players = [i]
+            elif total == max_score:
+                winning_players.append(i)
+        self.selected_player = tmp
+    
+        def load_tiebreaker(puzzle):
+            """
+            Load a puzzle dict as a tiebreaker toss-up.
+            """
+            
+            round = {
+                'round_type': strings.round_type_tossup,
+                'round_reward': 0,
+                'puzzle': puzzle}
+            self.game = [round] + self.game
+            self.load_puzzle(puzzle)
+            self.tossup_players_done = [
+                i for i in range(1, 4) if not i in winning_players]
+        
+        def winner_chosen(i):
+            """
+            Declare player `i`
+            as the winner.
+            """
+            
+            self.select_player(i)
+            self.load_puzzle(self.game[0]['puzzle'])
+        
+        if len(winning_players) > 1:
+            if not self.tie_resolved:
+                prompts.TiebreakerPrompt(
+                        load_tiebreaker, winner_chosen, winning_players,
+                        player_names = [btn.name for btn in (
+                            self.btn_red, self.btn_ylw, self.btn_blu)]
+                    ).open()
+            else:
+                # proceed to bonus round with selected player
+                self.load_puzzle(self.game[0]['puzzle'])
+        else:
+            winner_chosen(winning_players[0])
     
     def selection_color(self, color):
         """
@@ -513,6 +575,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         Load the game selected by a LoadGamePrompt.
         """
         
+        self.tie_resolved = False
         self.game = game
         if game:
             self.load_puzzle(self.game[0]['puzzle'])
@@ -560,7 +623,13 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                     puzzle = self.game[0]
                 self.timer.final_spin_started = False
             
-            self.load_puzzle(puzzle['puzzle'])
+            if (
+                    self.game
+                    and self.game[0]['round_type']
+                        == strings.round_type_bonus):
+                self.select_winner()
+            else:
+                self.load_puzzle(puzzle['puzzle'])
         except IndexError:
             pass
     
@@ -627,6 +696,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         if player_solved:
             if self.game:
+                self.tie_resolved = True
                 round_type = self.game[0]['round_type']
                 if round_type == strings.round_type_bonus:
                     self.play_sound(strings.file_sound_solve_bonus)
