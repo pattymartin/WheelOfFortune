@@ -43,7 +43,7 @@ class PlayerButton(ButtonBehavior, score.ScoreLayout):
     
     pass
 
-class ManagerLayout(ScreenManager, Fullscreenable):
+class ManagerLayout(BoxLayout, Fullscreenable):
     """
     The root layout for the ManagerApp.
     """
