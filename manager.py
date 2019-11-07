@@ -134,7 +134,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 not relevant_modifiers
                 and letter in strings.alphabet
                 and self.selected_player != 0
-                and (self.get_value() != 0
+                and (self.get_value() is not None
                     or letter in 'aeiou')
                 and self.game
                 and self.game[0]['round_type'] not in [
@@ -751,7 +751,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         if (
                 self.selected_player == 0
-                or self.get_value() == 0):
+                or self.get_value() is None):
             return
         popup = prompts.ChooseLetterPrompt(
             self.guessed_letter,
@@ -798,12 +798,17 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         indicated by the cash value spinner.
         """
         
-        custom_value = self.custom_value.text
-        if custom_value:
-            return data_caching.str_to_int(custom_value)
+        custom_value = data_caching.str_to_int(self.custom_value.text, None)
+        if custom_value is not None:
+            return custom_value
         else:
-            return sum([data_caching.str_to_int(number)
-                for number in self.dropdown.text.split('+')])
+            values = [data_caching.str_to_int(number, None)
+                for number in self.dropdown.text.split('+')]
+            values = [v for v in values if v is not None]
+            if values:
+                return sum(values)
+            else:
+                return None
     
     def correct_letter(self, match):
         """
@@ -814,7 +819,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         letter, matches = match
         if letter.lower() not in 'aeiou':
-            self.add_score(matches * self.get_value())
+            value = self.get_value()
+            if value:
+                self.add_score(matches * value)
         self.custom_value.text = ''
         if not self.timer.final_spin_started:
             self.dropdown.text = strings.mgr_select_value
