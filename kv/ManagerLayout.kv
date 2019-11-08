@@ -126,7 +126,7 @@
 					Button:
 						id: clear_button
 						visible: True if root.puzzle_string else False
-						on_visible: root.show_hide(self)
+						on_visible: root.show_hide(self, visible=self.visible)
 						size_hint_x: 0
 						width: 0
 						opacity: 0
@@ -139,7 +139,7 @@
 							root.game \
 							and root.game[0]['round_type'] == strings.round_type_speedup) \
 							else False
-						on_visible: root.show_hide(self)
+						on_visible: root.show_hide(self, visible=self.visible)
 						size_hint_x: 0
 						width: 0
 					Button:
@@ -153,7 +153,7 @@
 							strings.round_type_triple_tossup, \
 							strings.round_type_triple_tossup_final]) \
 							else False
-						on_visible: root.show_hide(self)
+						on_visible: root.show_hide(self, visible=self.visible)
 						text: strings.mgr_btn_tossup
 						size_hint_x: 0
 						width: 0
@@ -255,11 +255,15 @@
 										on_final_spin_started: root.update_dropdown()
 										on_text: root.update_dropdown()
 							Button:
-								text: strings.button_guess_letter
+								text:
+									strings.button_increase_score.format(\
+									(	root.matches))
 								size_hint_x: None
 								width: self.height
 								disabled: dropdown.disabled
-								on_release: root.guess_letter()
+								on_release:
+									root.increase_score()
+									root.matches = 0
 					GridLayout:
 						rows: 2
 						cols: 2

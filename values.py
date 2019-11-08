@@ -32,11 +32,12 @@ hotkey_default_select_1 = '1'
 hotkey_default_select_2 = '2'
 hotkey_default_select_3 = '3'
 hotkey_default_select_next = 'spacebar'
+hotkey_default_increase_score = 'enter'
 hotkey_default_select_puzzle = 'ctrl+o'
 hotkey_default_clear_puzzle = 'backspace'
-hotkey_default_solve = 'enter'
+hotkey_default_solve = 'right'
 hotkey_default_timer_start = '`'
-hotkey_default_timer_reset = 'ctrl+`'
+hotkey_default_timer_reset = 'shift+`'
 hotkey_default_start_tossup = '4'
 hotkey_default_buzzer = '8'
 hotkey_default_lose_turn = '9'
@@ -45,7 +46,7 @@ hotkey_default_buy_vowel = '-'
 hotkey_default_bank_score = '='
 hotkey_names = [
     'select_1', 'select_2', 'select_3', 'select_next',
-    'select_puzzle', 'clear_puzzle', 'solve',
+    'increase_score', 'select_puzzle', 'clear_puzzle', 'solve',
     'timer_start', 'timer_reset', 'start_tossup', 'buzzer',
     'lose_turn', 'bankrupt', 'buy_vowel', 'bank_score']
 hotkey_defaults = [
@@ -53,6 +54,7 @@ hotkey_defaults = [
     hotkey_default_select_2,
     hotkey_default_select_3,
     hotkey_default_select_next,
+    hotkey_default_increase_score,
     hotkey_default_select_puzzle,
     hotkey_default_clear_puzzle,
     hotkey_default_solve,

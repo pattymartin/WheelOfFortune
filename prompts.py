@@ -435,7 +435,7 @@ class LoadPuzzlePrompt(Popup):
         
         toggle_button = ToggleButton(text=name)
         self.toggle_buttons.append(toggle_button)
-        toggle_button.bind(on_release=select_name)
+        toggle_button.bind(on_press=select_name)
         layout.add_widget(toggle_button)
         
         delete_button = Button(text='X')
@@ -523,7 +523,7 @@ class ManagerSettingsPrompt(Popup):
             self.clue_reward_input.text, None)
         final_spin_bonus = data_caching.str_to_int(
             self.final_spin_bonus_input.text, None)
-        cash_values = [data_caching.str_to_int(line)
+        cash_values = [data_caching.str_to_int(line, None)
             for line in self.wedges_input.text.split()]
         
         data_caching.update_variables({
@@ -534,7 +534,7 @@ class ManagerSettingsPrompt(Popup):
                 clue_solve_reward if clue_solve_reward is not None else '',
             'final_spin_bonus':
                 final_spin_bonus if final_spin_bonus is not None else '',
-            'cash_values': sorted([v for v in cash_values if v])})
+            'cash_values': sorted([v for v in cash_values if v is not None])})
         
         self.dismiss()
     
@@ -561,12 +561,12 @@ class EditHotkeysPrompt(Popup):
         self.hotkey_layouts = [
             self.hotkey_select_1, self.hotkey_select_2,
             self.hotkey_select_3, self.hotkey_select_next,
-            self.hotkey_select_puzzle, self.hotkey_clear_puzzle,
-            self.hotkey_solve, self.hotkey_timer_start,
-            self.hotkey_timer_reset, self.hotkey_start_tossup,
-            self.hotkey_buzzer, self.hotkey_lose_turn,
-            self.hotkey_bankrupt, self.hotkey_buy_vowel,
-            self.hotkey_bank_score]
+            self.hotkey_increase_score, self.hotkey_select_puzzle,
+            self.hotkey_clear_puzzle, self.hotkey_solve,
+            self.hotkey_timer_start, self.hotkey_timer_reset,
+            self.hotkey_start_tossup, self.hotkey_buzzer,
+            self.hotkey_lose_turn, self.hotkey_bankrupt,
+            self.hotkey_buy_vowel, self.hotkey_bank_score]
         
         existing_hotkeys = data_caching.get_hotkeys()
         

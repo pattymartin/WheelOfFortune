@@ -55,6 +55,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     tossup_players_done = ListProperty([])
     final_spin_bonus = NumericProperty(0)
     selected_player = NumericProperty(0)
+    matches = NumericProperty(0)
     
     btn_red = ObjectProperty(None)
     btn_ylw = ObjectProperty(None)
@@ -151,6 +152,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.select_blue()
         elif combination == self.hotkeys.get('select_next'):
             self.select_next_player()
+        elif combination == self.hotkeys.get('increase_score'):
+            self.increase_score()
         elif combination == self.hotkeys.get('select_puzzle'):
             self.choose_puzzle()
         elif combination == self.hotkeys.get('clear_puzzle'):
@@ -812,28 +815,35 @@ class ManagerLayout(BoxLayout, Fullscreenable):
     
     def correct_letter(self, match):
         """
-        Adjust the selected player's score based on the number of matches.
+        Indicate the number of matches in the manager.
+        If there are no matches, play the buzzer sound.
         `match` is a tuple of the form (letter, number)
         indicating the letter and the number of matches.
         """
         
-        letter, matches = match
-        if letter.lower() not in 'aeiou':
-            value = self.get_value()
-            if value:
-                self.add_score(matches * value)
-        self.custom_value.text = ''
-        if not self.timer.final_spin_started:
-            self.dropdown.text = strings.mgr_select_value
+        letter, self.matches = match
         
-        if not matches and not self.timer.final_spin_started:
+        if not self.matches and not self.timer.final_spin_started:
             self.play_sound(strings.file_sound_buzz)
         
         # show number of matches in puzzle_label
         self.puzzle_label.text = strings.label_matches.format(
-            letter=letter.upper(), matches=matches)
+            letter=letter.upper(), matches=self.matches)
         # schedule to show the puzzle again
         Clock.schedule_once(self.show_puzzle, values.time_show_matches)
+    
+    def increase_score(self):
+        """
+        Adjust the selected player's score based on
+        the number of matches.
+        """
+        
+        value = self.get_value()
+        if value:
+            self.add_score(self.matches * value)
+        self.custom_value.text = ''
+        if not self.timer.final_spin_started:
+            self.dropdown.text = strings.mgr_select_value
     
     def no_more_consonants(self):
         """
@@ -1009,13 +1019,18 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             
             self.dropdown.ignore_on_text = False
     
-    def show_hide(self, widget, horizontal=True):
+    def show_hide(self, widget, horizontal=True, visible=None):
         """
         Toggle a widget's visibility by setting
         its size_hint_x to 0 or 1.
         Or, if `horizontal` is False,
         alter the size_hint_y instead.
+        If `visible` is set to True or False,
+        show or hide the widget respectively,
+        instead of toggling.
         """
+        
+        Animation.cancel_all(widget)
         
         def make_invisible(a, w):
             """
@@ -1030,8 +1045,11 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         attr = 'size_hint_x' if horizontal else 'size_hint_y'
         
-        # 1 if already hidden, 0 if shown
-        val = 0 if getattr(widget, attr) else 1
+        if visible is None:
+            # 1 if already hidden, 0 if shown
+            val = 0 if getattr(widget, attr) else 1
+        else:
+            val = 1 if visible else 0
         
         # animate widget until attr == val
         animation = Animation(**{attr: val}, d=0.5)
