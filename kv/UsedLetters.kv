@@ -1,0 +1,43 @@
+#:import values values
+#:import ScoreLayout score.ScoreLayout
+<LettersWithScore>:
+	scores: {'red': red_score, 'yellow': ylw_score, 'blue': blu_score}
+	letterboard: letterboard
+	orientation: 'vertical'
+	BoxLayout:
+		orientation: 'horizontal'
+		size_hint_y: 0.25
+		ScoreLayout:
+			id: red_score
+			bg_color: values.color_red
+		ScoreLayout:
+			id: ylw_score
+			bg_color: values.color_yellow
+		ScoreLayout:
+			id: blu_score
+			bg_color: values.color_blue
+	LetterboardLayout:
+		id: letterboard
+<LetterboardLetter>:
+	visible:
+		(self.text.lower() not in self.parent.unavailable) \
+		if self.parent else True
+	vowel: self.text.lower() in 'aeiou'
+	opacity: 1 if self.visible else 0
+	disabled: not self.visible
+	font_name: values.font_panel
+	font_size: self.height * 0.75
+	color: (1, 1, 1, 1) if self.vowel else (0, 0, 0, 1)
+	on_release:
+		if self.parent.callback: self.parent.callback(self.text)
+	canvas.before:
+		Color:
+			rgba: (1, 0, 0, 1) if self.vowel else (1, 1, 1, 1)
+		Rectangle:
+			pos: self.pos
+			size: self.size
+		Color:
+			rgba: (0, 0, 0, 1)
+		Line:
+			width: 5
+			rectangle: self.x, self.y, self.width, self.height

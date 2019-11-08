@@ -1,6 +1,8 @@
 from kivy.app import App
-from kivy.uix.behaviors import ButtonBehavior
 from kivy.clock import Clock
+from kivy.lang import Builder
+from kivy.properties import ListProperty
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -8,6 +10,8 @@ from kivy.uix.widget import Widget
 
 import score, strings, values
 from my_widgets import Fullscreenable
+
+Builder.load_file(strings.file_kv_used_letters)
 
 class LettersWithScore(BoxLayout, Fullscreenable):
     """
@@ -52,26 +56,7 @@ class LettersWithScore(BoxLayout, Fullscreenable):
         exit:
             close the current App.
         """
-        super(LettersWithScore, self).__init__(
-            orientation='vertical', **kwargs)
-        
-        score_box = BoxLayout(orientation='horizontal')
-        red_score = score.ScoreLayout(bg_color=values.color_red)
-        ylw_score = score.ScoreLayout(bg_color=values.color_yellow)
-        blu_score = score.ScoreLayout(bg_color=values.color_blue)
-        score_box.add_widget(red_score)
-        score_box.add_widget(ylw_score)
-        score_box.add_widget(blu_score)
-        score_box.size_hint_y = 0.25
-        self.add_widget(score_box)
-        
-        self.scores = {
-            'red': red_score,
-            'blue': blu_score,
-            'yellow': ylw_score}
-        
-        self.letterboard = LetterboardLayout()
-        self.add_widget(self.letterboard)
+        super(LettersWithScore, self).__init__(**kwargs)
         
         self.queue = queue
         if self.queue:
@@ -85,13 +70,10 @@ class LettersWithScore(BoxLayout, Fullscreenable):
             command, color, args = self.queue.get(block=False)
             if command == 'remove_letter':
                 self.letterboard.unavailable.append(args.lower())
-                self.letterboard.fill_layout()
             elif command == 'remove_letters':
                 self.letterboard.unavailable.extend([c.lower() for c in args])
-                self.letterboard.fill_layout()
             elif command == 'reload':
                 self.letterboard.unavailable = []
-                self.letterboard.fill_layout()
             elif command == 'name':
                 self.scores[color].name = args
             elif command == 'score':
@@ -107,12 +89,10 @@ class LettersWithScore(BoxLayout, Fullscreenable):
                 self.letterboard.unavailable.extend([
                     c for c in strings.alphabet if not c in 'aeiou'
                     and not c in self.letterboard.unavailable])
-                self.letterboard.fill_layout()
             elif command == 'no_more_vowels':
                 self.letterboard.unavailable.extend([
                     c for c in strings.alphabet if c in 'aeiou'
                     and not c in self.letterboard.unavailable])
-                self.letterboard.fill_layout()
             elif command == 'exit':
                 App.get_running_app().stop()
         except:
@@ -124,17 +104,15 @@ class LetterboardLayout(GridLayout):
     A layout showing available letters.
     """
     
+    unavailable = ListProperty([])
+    
     def __init__(self, callback=None, unavailable=[], queue=None,
                  rows=4, cols=7, **kwargs):
         """Create the layout."""
         super(LetterboardLayout, self).__init__(rows=rows, cols=cols, **kwargs)
         self.callback = callback
         self.unavailable = unavailable
-        self.fill_layout()
-    
-    def fill_layout(self):
-        """Fill in the layout."""
-        self.clear_widgets()
+        
         vowels = 'aeiou'
         consonants = [c for c in strings.alphabet if not c in vowels]
         
@@ -142,13 +120,8 @@ class LetterboardLayout(GridLayout):
             """
             Add a LetterboardLetter containing the specified `letter`.
             """
-            if letter.lower() in self.unavailable:
-                self.add_widget(Widget())
-                return
-            ll = LetterboardLetter(text=letter.upper())
-            if self.callback:
-                ll.bind(on_release=lambda i: self.callback(ll.text))
-            self.add_widget(ll)
+            
+            self.add_widget(LetterboardLetter(text=letter.upper()))
         
         for c in consonants:
             add_letter(c)
@@ -163,4 +136,5 @@ class LetterboardLetter(ButtonBehavior, Label):
     """
     A single letter on the LetterboardLayout.
     """
+    
     pass

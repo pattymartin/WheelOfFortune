@@ -190,6 +190,8 @@ file_kv_my_widgets = os.path.join(dir_kv,
     r'MyWidgets.kv')
 file_kv_prompts = os.path.join(dir_kv,
     r'Prompts.kv')
+file_kv_used_letters = os.path.join(dir_kv,
+    r'UsedLetters.kv')
 
 file_settings = r'settings.json'
 
