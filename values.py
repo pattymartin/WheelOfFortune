@@ -2,6 +2,7 @@ queue_start = 5
 queue_interval = 0
 tossup_interval = 0.924
 time_show_matches = 5
+score_flash_interval = 0.5
 
 edit_hotkey_timeout = 5
 

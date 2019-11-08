@@ -102,6 +102,7 @@ class LettersWithScore(BoxLayout, Fullscreenable):
                 self.scores[color].flash()
             elif command == 'stop_flash':
                 self.scores[color].flashing = False
+                self.scores[color].flash_visible = False
             elif command == 'no_more_consonants':
                 self.letterboard.unavailable.extend([
                     c for c in strings.alphabet if not c in 'aeiou'
