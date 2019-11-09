@@ -145,12 +145,6 @@ file_cancel_icon = os.path.join(dir_assets,
     r'cancel.png')
 file_panel = os.path.join(dir_assets,
     r'panel.png')
-file_panel_blue = os.path.join(dir_assets,
-    r'panel_blue.png')
-file_panel_white = os.path.join(dir_assets,
-    r'panel_white.png')
-file_panel_corner = os.path.join(dir_assets,
-    r'panel_corner.png')
 file_category_background = os.path.join(dir_assets,
     r'category_background.png')
 file_settings_icon = os.path.join(dir_assets,

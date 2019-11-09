@@ -16,19 +16,50 @@
 
 <Panel>:
 	layout: ll
+	background_normal: ''
+	background_color: (0, 0, 0, 1)
 	LetterLayout:
 		id: ll
+		blue_state: False
+		white_state: False
 		source_image: src_im
 		text_label: txt
 		pos: self.parent.pos
 		size: self.parent.size
+		padding: self.width * 0.15
+		canvas:
+			Color:
+				rgba: (109/255, 228/255, 184/255, 1)
+			Line:
+				cap: 'square'
+				width: self.width * 0.015
+				rectangle: self.x, self.y, self.width, self.height
 		Image:
 			id: src_im
 			source: strings.file_panel
 		Label:
+			size: src_im.size
+			opacity: 1 if ll.white_state else 0
+			canvas.after:
+				Color:
+					rgba: 1, 1, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		Label:
+			id: todo_delete_id
+			size: src_im.size
+			opacity: 1 if ll.blue_state else 0
+			canvas.after:
+				Color:
+					rgba: 0, 0, 1, 1
+				Rectangle:
+					size: self.size
+					pos: self.pos
+		Label:
 			id: txt
 			font_name: values.font_panel
-			font_size: self.size[0] * values.font_panel_size
+			font_size: root.size[0] * values.font_panel_size
 			bold: True
 			halign: 'center'
 			valign: 'center'
@@ -36,10 +67,17 @@
 <PuzzleLayout>:
 	rows: 4
 	cols: 14
-	panel_ratio: 1
-	aspect_ratio: self.panel_ratio * self.cols / self.rows
+	reference_layout: None
+	panel_aspect_ratio:
+		(self.reference_layout.source_image.norm_image_size[0] \
+		+ (self.reference_layout.padding[0] * 2)) \
+		/ (self.reference_layout.source_image.norm_image_size[1] \
+		+ (self.reference_layout.padding[0] * 2)) \
+		if self.reference_layout \
+		else 1
 	parent_aspect_ratio:
 		(self.parent.width / self.parent.height) if self.parent else 1
+	aspect_ratio: self.panel_aspect_ratio * self.cols / self.rows
 	size_hint: None, None
     height:
         (self.width / self.aspect_ratio) \
@@ -51,16 +89,6 @@
         if self.aspect_ratio < self.parent_aspect_ratio \
         else self.parent.width if self.parent \
 		else 0
-
-<RotatedImage>:
-	canvas.before:
-		PushMatrix
-		Rotate:
-			angle: 180
-			axis: (root.axis_x, root.axis_y, root.axis_z)
-			origin: root.center
-	canvas.after:
-		PopMatrix
 
 <Category@Label>:
 	font_name: values.font_category

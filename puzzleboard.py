@@ -43,31 +43,15 @@ class PuzzleLayout(GridLayout):
         
         for i in range(self.rows):
             for j in range(self.cols):
-                top_left = (0, 0)
-                top_right = (0, self.cols-1)
-                bottom_left = (self.rows-1, 0)
-                bottom_right = (self.rows-1, self.cols-1)
-                corners = [top_left, top_right, bottom_left, bottom_right]
                 
-                if (i, j) in corners:
-                    source_image = strings.file_panel_corner
-                    if (i, j) == top_left:
-                        # rotate image 180 degrees
-                        widget = RotatedImage(0, 0, 1, source=source_image)
-                    elif (i, j) == top_right:
-                        # flip image vertically
-                        widget = RotatedImage(1, 0, 0, source=source_image)
-                    elif (i, j) == bottom_left:
-                        # flip image horizontally
-                        widget = RotatedImage(0, 1, 0, source=source_image)
-                    else:
-                        widget = Image(source=source_image)
-                    self.add_widget(widget)
+                if (i, j) in [(0, 0), (0, self.cols-1),
+                              (self.rows-1, 0), (self.rows-1, self.cols-1)]:
+                    self.add_widget(Widget())
                 else:
                     # create panels
                     panel = Panel()
                     self.add_widget(panel)
-                    self.panel_ratio = panel.layout.source_image.image_ratio
+                    self.reference_layout = panel.layout
         
         bind_keyboard(self)
         
@@ -388,15 +372,18 @@ class LetterLayout(AnchorLayout):
     
     def blue(self, td=None):
         """Turn this panel blue."""
-        self.source_image.source = strings.file_panel_blue
+        self.blue_state = True
+        self.white_state = False
     
     def white(self):
         """Turn this panel white."""
-        self.source_image.source = strings.file_panel_white
+        self.white_state = True
+        self.blue_state = False
     
     def green(self):
         """Turn this panel to show the WOF logo."""
-        self.source_image.source = strings.file_panel
+        self.blue_state = False
+        self.white_state = False
     
     def show_letter(self, td=None):
         """Turn the panel white and reveal the letter."""
@@ -560,17 +547,6 @@ class Panel(Button):
             except AttributeError:
                 # empty widget
                 pass
-
-class RotatedImage(Image):
-    axis_x = NumericProperty()
-    axis_y = NumericProperty()
-    axis_z = NumericProperty()
-    
-    def __init__(self, x, y, z, **kwargs):
-        super(RotatedImage, self).__init__(**kwargs)
-        self.axis_x = x
-        self.axis_y = y
-        self.axis_z = z
 
 class PuzzleboardApp(App):
     """Puzzleboard Kivy App"""
