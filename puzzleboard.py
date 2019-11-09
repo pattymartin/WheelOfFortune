@@ -17,164 +17,37 @@ from kivy.uix.widget import Widget
 import data_caching, prompts, strings, values
 from my_widgets import bind_keyboard, Fullscreenable
 
-Builder.load_string(r"""
-#:import strings strings
-#:import values values
-<Panel>:
-    layout: ll
-    LetterLayout:
-        id: ll
-        source_image: src_im
-        text_label: txt
-        anchor_x: 'center'
-        anchor_y: 'center'
-        pos: self.parent.pos
-        size: self.parent.size
-        Image:
-            id: src_im
-            source: strings.file_panel
-        Label:
-            id: txt
-            font_name: values.font_panel
-            font_size: self.size[0] * values.font_panel_size
-            bold: True
-            halign: 'center'
-            valign: 'center'
-
-<RotatedImage>:
-    canvas.before:
-        PushMatrix
-        Rotate:
-            angle: 180
-            axis: (root.axis_x, root.axis_y, root.axis_z)
-            origin: root.center
-    canvas.after:
-        PopMatrix
-
-<Category>:
-    font_name: values.font_category
-    font_size: self.size[1] * values.font_category_size
-    canvas.before:
-        Rectangle:
-            pos: self.pos
-            size: self.size
-            source: strings.file_category_background
-""")
+Builder.load_file(strings.file_kv_puzzleboard)
     
 class PuzzleWithCategory(BoxLayout, Fullscreenable):
     """BoxLayout containing the puzzleboard and category strip."""
     
     def __init__(self, queue=None, **kwargs):
         """Create the layout."""
-        super(PuzzleWithCategory, self).__init__(
-            orientation='vertical', **kwargs)
-        
-        category = Category()
-        
-        self.add_widget(SavableSplitter(
-            'category_splitter',
-            category,
-            sizable_from='bottom'))
-        
-        self.add_widget(SplitterSurround(
-            'puzzleboard',
-            PuzzleLayout(category, queue=queue)))
-
-class SplitterSurround(BoxLayout):
-    """
-    A Layout surrounding its contents with SavableSplitters
-    on all four sides.
-    """
-    
-    def __init__(self, name, widget, **kwargs):
-        """
-        Create the layout.
-        `name` is a prefix appended to the Splitters' names.
-        `widget` is a widget to be placed in the layout.
-        """
-        
-        super(SplitterSurround, self).__init__(
-            orientation='vertical', **kwargs)
-        
-        self.add_widget(SavableSplitter(
-            name + '_top_splitter',
-            Widget(),
-            sizable_from='bottom'))
-        
-        middle = BoxLayout(orientation='horizontal')
-        middle.add_widget(SavableSplitter(
-            name + '_left_splitter',
-            Widget(),
-            sizable_from='right'))
-        middle.add_widget(widget)
-        middle.add_widget(SavableSplitter(
-            name + '_right_splitter',
-            Widget(),
-            sizable_from='left'))
-        self.add_widget(middle)
-        
-        self.add_widget(SavableSplitter(
-            name + '_bottom_splitter',
-            Widget(),
-            sizable_from='top'))
-
-class SavableSplitter(Splitter):
-    """A Splitter that remembers its size hint."""
-    
-    def __init__(self, name, widget, **kwargs):
-        """
-        Create the Splitter.
-        `name` is the string that will be used as a key
-        by `data_caching.update_variables()`.
-        `widget` is the widget that will be assigned
-        to this Splitter.
-        """
-        
-        super(SavableSplitter, self).__init__(**kwargs)
-        
-        self.min_size = 0
-        self.strip_size = values.splitter_size
-        
-        # get saved location
-        if self.sizable_from in ['top', 'bottom']:
-            self.size_hint_y = data_caching.get_variables().get(name)
-            axis = 1
-        else:
-            self.size_hint_x = data_caching.get_variables().get(name)
-            axis = 0
-        
-        # when the splitter is released, save its location
-        self.bind(
-            on_release=lambda i: data_caching.update_variables({name:
-                self.size[axis] / self.parent.size[axis]}))
-        
-        self.add_widget(widget)
-
-class Category(Label):
-    """Strip displaying the category."""
-    pass
+        super(PuzzleWithCategory, self).__init__(**kwargs)
+        self.puzzle_layout = PuzzleLayout(self.category, queue)
 
 class PuzzleLayout(GridLayout):
     """GridLayout containing all Panels."""
-    panel_size = ListProperty([]) # [width, height] from an Image object
+    
     category_label = ObjectProperty(None)
     queue = ObjectProperty(None)
     tossup_running = False
     
-    def __init__(self, category_label, rows=6, cols=16, queue=None, **kwargs):
+    def __init__(self, category_label=None, queue=None, **kwargs):
         """Create the layout and bind the keyboard."""
-        super(PuzzleLayout, self).__init__(rows=rows, cols=cols, **kwargs)
+        super(PuzzleLayout, self).__init__(**kwargs)
+        
         self.category_label = category_label
         self.queue = queue
         
-        for i in range(rows):
-            for j in range(cols):
-                top_left = (1, 1)
-                top_right = (1, cols-2)
-                bottom_left = (rows-2, 1)
-                bottom_right = (rows-2, cols-2)
-                corners = [top_left, top_right,
-                           bottom_left, bottom_right]
+        for i in range(self.rows):
+            for j in range(self.cols):
+                top_left = (0, 0)
+                top_right = (0, self.cols-1)
+                bottom_left = (self.rows-1, 0)
+                bottom_right = (self.rows-1, self.cols-1)
+                corners = [top_left, top_right, bottom_left, bottom_right]
                 
                 if (i, j) in corners:
                     source_image = strings.file_panel_corner
@@ -190,20 +63,12 @@ class PuzzleLayout(GridLayout):
                     else:
                         widget = Image(source=source_image)
                     self.add_widget(widget)
-                elif (
-                        i in (0, rows-1)
-                        or j in (0, cols-1)):
-                    # create blank widgets for the borders.
-                    # there are hidden widgets along the top, bottom,
-                    # left, and right, that are resized to push the panels
-                    # into the proper alignment
-                    widget = Widget()
-                    self.add_widget(widget)
                 else:
                     # create panels
                     panel = Panel()
                     self.add_widget(panel)
-                    self.panel_size = panel.layout.source_image.texture.size
+                    self.panel_ratio = panel.layout.source_image.image_ratio
+        
         bind_keyboard(self)
         
         if self.queue:
@@ -235,44 +100,6 @@ class PuzzleLayout(GridLayout):
         except:
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
-    
-    def do_layout(self, *args):
-        super(PuzzleLayout, self).do_layout(*args)
-        width = self.panel_size[0] * (self.cols - 2)
-        height = self.panel_size[1] * (self.rows - 2)
-        ratio = width / height
-        
-        w, h = self.size # current layout size
-        if w / h > ratio:
-            # too wide
-            for i, x in enumerate(list(self.children)):
-                # remove first and last row
-                if i < self.cols or (len(self.children) - i) <= self.cols:
-                    x.size_hint_y = None
-                    x.height = 0
-                # space out first and last column
-                if (i % self.cols) in (0, self.cols-1):
-                    x.size_hint_x = None
-                    board_width = h * ratio
-                    extra_width = w - board_width
-                    x.width = extra_width / 2
-                else:
-                    x.size_hint_x = 1
-        elif w / h < ratio:
-            # too tall
-            for i, x in enumerate(list(self.children)):
-                # remove first and last column
-                if (i % self.cols) in (0, self.cols-1):
-                    x.size_hint_x = None
-                    x.width = 0
-                # space out first and last row
-                if i < self.cols or (len(self.children) - i) <= self.cols:
-                    x.size_hint_y = None
-                    board_height = w / ratio
-                    extra_height = h - board_height
-                    x.height = extra_height / 2
-                else:
-                    x.size_hint_y = 1
     
     def check_all_by_list(self, letters, bonus_round=False):
         """
@@ -558,8 +385,6 @@ class PuzzleLayout(GridLayout):
 
 class LetterLayout(AnchorLayout):
     """Defines the layout of a Panel object."""
-    source_image = ObjectProperty(None) # an Image object
-    text_label = ObjectProperty(None) # a Label object
     
     def blue(self, td=None):
         """Turn this panel blue."""
