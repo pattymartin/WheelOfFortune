@@ -1,6 +1,8 @@
+from kivy.animation import Animation
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.lang import Builder
+from kivy.properties import BooleanProperty
 from kivy.uix.modalview import ModalView
 from kivy.uix.screenmanager import ScreenManager
 from kivy.uix.textinput import TextInput
@@ -89,7 +91,87 @@ class TabCyclable(TextInput):
                 window, keycode, text, modifiers)
             return False
 
-class FinalSpinTimer(ScreenManager):
+class Hideable(Widget):
+    """
+    A Widget with an attribute `visible`.
+    When `visible` is changed, the widget will animate itself
+    to be hidden or shown appropriately.
+    """
+    
+    visible = BooleanProperty(True)
+    horizontal = BooleanProperty(True)
+    
+    def __init__(self, **kwargs):
+        """Create the widget"""
+        super(Hideable, self).__init__(**kwargs)
+        
+        self.start_size_hint = self.size_hint[:]
+        self.start_size = self.size[:]
+    
+    def on_visible(self, instance, value):
+        """
+        Hide or show the widget,
+        depending on whether `visible`
+        is True or False.
+        """
+        
+        Animation.cancel_all(self)
+        if value:
+            self.show()
+        else:
+            self.hide()
+    
+    def show(self):
+        """
+        Return the widget to its original size.
+        """
+        self.opacity = 1
+        if self.horizontal:
+            if self.start_size_hint[0]:
+                after = {'size_hint_x': self.start_size_hint[0]}
+            else:
+                after = {'width': self.start_size[0]}
+        else:
+            if self.start_size_hint[1]:
+                after = {'size_hint_y': self.start_size_hint[1]}
+            else:
+                after = {'height': self.start_size[1]}
+        
+        Animation(**after, d=0.5).start(self)
+    
+    def hide(self):
+        """
+        Hide the widget.
+        """
+        
+        def make_invisible(obj, value):
+            """
+            Set the object's opacity and size to 0.
+            """
+            
+            if self.horizontal:
+                self.width = 0
+            else:
+                self.height = 0
+            
+            self.opacity = 0
+        
+        if self.horizontal:
+            if self.start_size_hint[0]:
+                after = {'size_hint_x': 0}
+            else:
+                after = {'width': 0}
+        else:
+            if self.start_size_hint[1]:
+                after = {'size_hint_y': 0}
+            else:
+                after = {'height': 0}
+        
+        animation = Animation(**after, d=0.5)
+        animation.bind(on_complete=make_invisible)
+        animation.start(self)
+
+class FinalSpinTimer(ScreenManager, Hideable):
     """
     A ScreenManager with a timer,
     which changes buttons based on the state of the timer.

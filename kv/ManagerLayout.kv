@@ -123,10 +123,9 @@
 									on_release: 
 										root.solve_clue(True)
 										select_layout_manager.clue_solved = True
-					Button:
+					HideableButton:
 						id: clear_button
 						visible: True if root.puzzle_string else False
-						on_visible: root.show_hide(self, visible=self.visible)
 						size_hint_x: 0
 						width: 0
 						opacity: 0
@@ -139,10 +138,9 @@
 							root.game \
 							and root.game[0]['round_type'] == strings.round_type_speedup) \
 							else False
-						on_visible: root.show_hide(self, visible=self.visible)
 						size_hint_x: 0
 						width: 0
-					Button:
+					HideableButton:
 						id: tossup_button
 						visible:
 							True if ( \
@@ -153,7 +151,6 @@
 							strings.round_type_triple_tossup, \
 							strings.round_type_triple_tossup_final]) \
 							else False
-						on_visible: root.show_hide(self, visible=self.visible)
 						text: strings.mgr_btn_tossup
 						size_hint_x: 0
 						width: 0
@@ -349,6 +346,7 @@
 							on_release: root.clear_puzzle()
 <Button>:
     halign: 'center'
+<HideableButton@Button+Hideable>:
 <CancelButton@Button>:
 	AnchorLayout:
 		size_hint: None, None

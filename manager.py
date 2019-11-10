@@ -3,7 +3,6 @@ import multiprocessing
 from kivy.config import Config
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 
-from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
@@ -1018,48 +1017,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                     pass
             
             self.dropdown.ignore_on_text = False
-    
-    def show_hide(self, widget, horizontal=True, visible=None):
-        """
-        Toggle a widget's visibility by setting
-        its size_hint_x to 0 or 1.
-        Or, if `horizontal` is False,
-        alter the size_hint_y instead.
-        If `visible` is set to True or False,
-        show or hide the widget respectively,
-        instead of toggling.
-        """
-        
-        Animation.cancel_all(widget)
-        
-        def make_invisible(a, w):
-            """
-            Set the widget's opacity and width to 0.
-            """
-            
-            if horizontal:
-                widget.width = 0
-            else:
-                widget.height = 0
-            widget.opacity = 0
-        
-        attr = 'size_hint_x' if horizontal else 'size_hint_y'
-        
-        if visible is None:
-            # 1 if already hidden, 0 if shown
-            val = 0 if getattr(widget, attr) else 1
-        else:
-            val = 1 if visible else 0
-        
-        # animate widget until attr == val
-        animation = Animation(**{attr: val}, d=0.5)
-        
-        if not val:
-            animation.bind(on_complete=make_invisible)
-        else:
-            widget.opacity = 1
-        
-        animation.start(widget)
     
     def exit_app(self):
         """
