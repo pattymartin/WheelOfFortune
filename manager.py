@@ -715,7 +715,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                         strings.round_type_tossup,
                         strings.round_type_triple_tossup_final]:
                     self.play_sound(strings.file_sound_solve_tossup)
-                    self.add_total(int(self.game[0]['round_reward']))
                 else:
                     # not a tossup or bonus round,
                     # increase score if less than minimum prize
@@ -726,6 +725,8 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                         self.play_sound(strings.file_sound_solve_clue)
                     else:
                         self.play_sound(strings.file_sound_solve)
+                
+                self.add_total(int(self.game[0]['round_reward']))
         self.puzzle_queue.a.put(('reveal', None))
         self.stop_all_flashing()
         
