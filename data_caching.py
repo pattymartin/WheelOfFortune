@@ -42,7 +42,7 @@ def add_puzzle(name, puzzle_dict):
     
     puzzles = read_puzzles()
     
-    def write_puzzle(instance=None):
+    def write_puzzle():
         """
         Add `puzzle_dict` to `puzzles`
         and write `puzzles` to the settings file.
@@ -76,7 +76,7 @@ def add_puzzles(puzzles):
         else:
             not_duplicates.update({name: puzzle})
     
-    def overwrite(instance):
+    def overwrite():
         """
         Write all puzzles, overwriting duplicates.
         """
@@ -84,7 +84,7 @@ def add_puzzles(puzzles):
         existing_puzzles.update(puzzles)
         update_variables({'puzzles': existing_puzzles})
     
-    def no_overwrite(instance=None):
+    def no_overwrite():
         """
         Write all puzzles, but ignore duplicates.
         """
@@ -169,7 +169,7 @@ def export_puzzles_by_name(filename, puzzle_names):
     if not puzzle_names:
         prompts.YesNoPrompt(
                 strings.label_no_export_selected,
-                lambda i: export_puzzles(filename, read_puzzles()),
+                lambda: export_puzzles(filename, read_puzzles()),
                 None,
                 title=strings.title_no_export_selected
             ).open()
@@ -188,7 +188,7 @@ def export_puzzles(filename, puzzles):
     if not '.' in filename:
         filename += '.txt'
     
-    def write(instance=None):
+    def write():
         """
         Write the puzzles to the file `filename`.
         """
@@ -260,7 +260,7 @@ def export_game(filename, game):
     if not '.' in filename:
         filename += '.txt'
     
-    def write(instance=None):
+    def write():
         """
         Write the game to the file.
         """

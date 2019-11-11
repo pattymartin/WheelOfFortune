@@ -101,18 +101,6 @@ class LoadGamePrompt(Popup):
             psl.round_type_spinner.bind(text=lambda i, v: self.update_values())
             psl.reward_input.bind(text=lambda i, v: self.update_values())
             self.puzzle_layout.add_widget(psl)
-        
-        add_round_button_layout = BoxLayout(
-            orientation='horizontal', size_hint_y=None, height=30)
-        add_round_button_layout.add_widget(Button(
-            text='-', size_hint_x=0.125, on_release=self.remove_round))
-        add_round_button_layout.add_widget(Button(
-            text='+', size_hint_x=0.125, on_release=self.add_round))
-        add_round_button_layout.add_widget(Button(
-            text=strings.button_clear_puzzles, size_hint_x=1.75,
-            on_release=self.clear_puzzles))
-        add_round_button_layout.add_widget(Widget(size_hint_x=2))
-        self.puzzle_layout.add_widget(add_round_button_layout)
     
     def puzzles_selected(self, puzzles):
         """
@@ -122,7 +110,7 @@ class LoadGamePrompt(Popup):
         self.puzzles.extend(puzzles)
         self.fill_puzzle_layout()
     
-    def clear_puzzles(self, instance):
+    def clear_puzzles(self):
         """
         Remove all puzzles from the puzzle layout.
         """
@@ -130,7 +118,7 @@ class LoadGamePrompt(Popup):
         self.puzzles = []
         self.fill_puzzle_layout()
     
-    def add_round(self, instance):
+    def add_round(self):
         """
         Add another row to the puzzle layout.
         """
@@ -139,7 +127,7 @@ class LoadGamePrompt(Popup):
         self.rewards.append('0')
         self.fill_puzzle_layout()
     
-    def remove_round(self, instance):
+    def remove_round(self):
         """
         Remove the last row from the puzzle layout.
         """
@@ -286,168 +274,135 @@ class LoadPuzzlePrompt(Popup):
     with the keys 'category', 'clue', and 'puzzle'.
     """
     
+    selected_names = []
+    all_puzzles = {}
+    
     def __init__(self, callback, **kwargs):
         """Create the Popup."""
-        super(LoadPuzzlePrompt, self).__init__(
-            title=strings.title_select_puzzle, **kwargs)
+        super(LoadPuzzlePrompt, self).__init__(**kwargs)
         
         self.callback = callback
-        self.create_layout()
+        self.fill_puzzle_layout()
     
-    def create_layout(self, instance=None):
-        content = BoxLayout(orientation='vertical')
-        self.toggle_buttons = []
+    def fill_puzzle_layout(self, instance=None):
+        """
+        Fill in the layout with existing puzzles.
+        """
+        
+        self.puzzle_layout.clear_widgets()
         self.selected_names = []
         
-        content.add_widget(self._options_box())
+        self.all_puzzles = data_caching.read_puzzles()
+        for name in self.all_puzzles.keys():
+            button = PuzzleButton(
+                name, self.puzzle_selected, self.fill_puzzle_layout)
+            self.puzzle_layout.add_widget(button)
         
-        content.add_widget(Widget(size_hint_y=0.02))
+    def input_save(self):
+        """
+        Check which buttons are selected,
+        then run `callback` on the first puzzle selected.
+        """
         
-        puzzle_layout = BoxLayout(orientation='vertical', size_hint_y=None)
-        puzzle_layout.bind(minimum_height=puzzle_layout.setter('height'))
-        puzzles = data_caching.read_puzzles()
-        for name in puzzles.keys():
-            puzzle_layout.add_widget(self._puzzle_button(name))
-        puzzle_layout.add_widget(Widget())
-        puzzle_scroll = ScrollView()
-        puzzle_scroll.add_widget(puzzle_layout)
-        content.add_widget(puzzle_scroll)
+        selected_puzzles = [
+            self.all_puzzles[name] for name in self.selected_names]
+        if selected_puzzles:
+            self.callback(selected_puzzles)
         
-        content.add_widget(Widget(size_hint_y=0.02))
+        self.dismiss()
         
-        button_layout = BoxLayout(orientation='horizontal')
-        button_layout.size_hint_y = 0.25
-        button_close = Button(text=strings.button_close)
-        button_confirm = Button(text=strings.button_confirm)
-        button_layout.add_widget(button_close)
-        button_layout.add_widget(button_confirm)
-        content.add_widget(button_layout)
+    def import_puzzles(self):
+        """
+        Prompt the user to load puzzles from a file.
+        """
         
-        def input_save(instance):
-            """
-            Check which buttons are selected,
-            then run `callback` on the first puzzle selected.
-            """
-            
-            selected_puzzles = [puzzles[name] for name in self.selected_names]
-            if selected_puzzles:
-                self.callback(selected_puzzles)
-            
-            self.dismiss()
-        
-        button_close.bind(on_release=self.dismiss)
-        button_confirm.bind(on_release=input_save)
-        
-        self.content = content
+        prompt = FileChooserPrompt(data_caching.import_puzzles)
+        prompt.bind(on_dismiss=self.fill_puzzle_layout)
+        prompt.open()
     
-    def _options_box(self):
+    def export_puzzles(self):
         """
-        Create a layout containing buttons
-        for puzzle management.
+        Prompt the user to save selected puzzles to a file.
         """
         
-        def prompt_delete_all(instance):
-            """
-            Prompt the user to delete all puzzles.
-            """
-            YesNoPrompt(
-                    strings.label_delete_all_puzzles,
-                    confirm_delete,
-                    None,
-                    title=strings.title_delete_all_puzzles
-                ).open()
+        FileSaverPrompt(
+                data_caching.export_puzzles_by_name, self.selected_names
+            ).open()
+    
+    def prompt_delete_all(self):
+        """
+        Prompt the user to delete all puzzles.
+        """
         
-        def confirm_delete(instance):
+        def confirm_delete():
             """
             Delete all puzzles.
             """
             data_caching.delete_all_puzzles()
             #reload layout to reflect deletion
-            self.create_layout()
+            self.fill_puzzle_layout()
         
-        def load_button_click(instance):
+        YesNoPrompt(
+                strings.label_delete_all_puzzles,
+                confirm_delete,
+                None,
+                title=strings.title_delete_all_puzzles
+            ).open()
+    
+    def puzzle_selected(self, name):
+        """
+        Add `name` to `self.selected_names`,
+        or remove if it is already there.
+        """
+        
+        if name in self.selected_names:
+            self.selected_names.remove(name)
+        else:
+            self.selected_names.append(name)
+
+class PuzzleButton(BoxLayout):
+    """
+    A layout containing a ToggleButton to select a puzzle,
+    and a button to delete the puzzle.
+    """
+    
+    def __init__(self, name, selection_callback, deletion_callback, **kwargs):
+        """
+        Create the layout.
+        `name` is the name of the puzzle,
+        used as the text for the ToggleButton.
+        When the ToggleButton is toggled,
+        `name` will be passed to `selection_callback`.
+        `deletion_callback` will be called if the puzzle
+        is deleted.
+        """
+        
+        super(PuzzleButton, self).__init__(**kwargs)
+        self.toggle_button.text = name
+        self.selection_cb = selection_callback
+        self.deleted_cb = deletion_callback
+    
+    def prompt_delete_puzzle(self):
+        """
+        Prompt the user to delete the puzzle
+        with the name matching this layout's ToggleButton.
+        """
+        
+        def confirm_delete():
             """
-            Prompt the user to load puzzles from a file.
+            Delete the puzzle.
             """
             
-            prompt = FileChooserPrompt(data_caching.import_puzzles)
-            prompt.bind(on_dismiss=self.create_layout)
-            prompt.open()
+            data_caching.delete_puzzle(self.toggle_button.text)
+            self.deleted_cb()
         
-        layout = BoxLayout(orientation='horizontal')
-        
-        btn_load = Button(text=strings.button_load)
-        btn_load.bind(on_release=load_button_click)
-        layout.add_widget(btn_load)
-        
-        btn_save = Button(text=strings.button_export)
-        btn_save.bind(on_release=lambda i: FileSaverPrompt(
-                data_caching.export_puzzles_by_name, self.selected_names
-            ).open())
-        layout.add_widget(btn_save)
-        
-        btn_delete_all = Button(text=strings.button_delete_all)
-        btn_delete_all.bind(on_release=prompt_delete_all)
-        layout.add_widget(btn_delete_all)
-        
-        layout.size_hint_y = 0.25
-        
-        return layout
-    
-    def _puzzle_button(self, name):  
-        """
-        Create a ToggleButton with text `name`,
-        and a button to delete the puzzle.
-        """
-        
-        def prompt_delete_puzzle(instance):
-            """
-            Prompt the user to delete the puzzle
-            with the name `name`.
-            """
-            YesNoPrompt(
-                    strings.label_delete_puzzle.format(
-                        name),
-                    confirm_delete,
-                    None,
-                    title=strings.title_delete_puzzle
-                ).open()
-        
-        def confirm_delete(instance):
-            """
-            Delete the puzzle with the name `name`.
-            """
-            data_caching.delete_puzzle(name)
-            # reload layout to reflect deletion
-            self.create_layout()
-        
-        def select_name(instance):
-            """
-            Add `name` to `self.selected_names`,
-            or remove if it is already there.
-            """
-            if name in self.selected_names:
-                self.selected_names.remove(name)
-            else:
-                self.selected_names.append(name)
-        
-        layout = BoxLayout(orientation='horizontal')
-        
-        toggle_button = ToggleButton(text=name)
-        self.toggle_buttons.append(toggle_button)
-        toggle_button.bind(on_press=select_name)
-        layout.add_widget(toggle_button)
-        
-        delete_button = Button(text='X')
-        delete_button.size_hint_x = 0.1
-        delete_button.bind(
-            on_release=prompt_delete_puzzle)
-        layout.add_widget(delete_button)
-        
-        layout.size_hint_y = None
-        layout.height = 50
-        
-        return layout
+        YesNoPrompt(
+                strings.label_delete_puzzle.format(
+                    self.toggle_button.text),
+                confirm_delete,
+                None,
+                title=strings.title_delete_puzzle
+            ).open()
 
 class YesNoPrompt(Popup):
     """
@@ -460,9 +415,9 @@ class YesNoPrompt(Popup):
     def __init__(self, text, yes_callback, no_callback, **kwargs):
         """Create the Popup."""
         super(YesNoPrompt, self).__init__(**kwargs)
-        self.label_text = text
-        self.button_no.bind(on_release=_wrap_with_dismiss(no_callback, self))
-        self.button_yes.bind(on_release=_wrap_with_dismiss(yes_callback, self))
+        self.scroll_label.label_text = text
+        self.no_callback = no_callback
+        self.yes_callback = yes_callback
 
 class ChooseLetterPrompt(Popup):
     """

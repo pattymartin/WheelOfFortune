@@ -68,6 +68,12 @@ hotkey_defaults = [
     hotkey_default_buy_vowel,
     hotkey_default_bank_score]
 
+used_letters_layout = [
+    'BCDFGHJ',
+    'KLMNPQR',
+    'STVWXYZ',
+    ' AEIOU ']
+
 speedup_timeout = 4
 splitter_size = '5pt'
 

@@ -45,7 +45,7 @@ class Fullscreenable(Widget):
         If a right click is detected,
         open a context menu
         with the option to make the app fullscreen.
-        Otherwise, pass the touch to `super(ManagerLayout, self)`.
+        Otherwise, let the layout handle the touch.
         """
         
         if touch.button == 'right':

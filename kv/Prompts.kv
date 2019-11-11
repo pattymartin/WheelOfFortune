@@ -81,10 +81,32 @@
 						text: '[b]{}[/b]'.format(strings.label_reward)
 						markup: True
 				BoxLayout:
-					id: puzzle_layout
 					orientation: 'vertical'
 					size_hint_y: None
 					height: self.minimum_height
+					BoxLayout:
+						id: puzzle_layout
+						orientation: 'vertical'
+						size_hint_y: None
+						height: self.minimum_height
+					BoxLayout:
+						orientation: 'horizontal'
+						size_hint_y: None
+						height: 30
+						Button:
+							text: '-'
+							size_hint_x: 0.125
+							on_release: root.remove_round()
+						Button:
+							text: '+'
+							size_hint_x: 0.125
+							on_release: root.add_round()
+						Button:
+							text: strings.button_clear_puzzles
+							size_hint_x: 1.75
+							on_release: root.clear_puzzles()
+						Widget:
+							size_hint_x: 2
 		Widget:
 			size_hint_y: None
 			height: 5
@@ -97,6 +119,59 @@
 			Button:
 				text: strings.button_confirm
 				on_release: root.confirm()
+<LoadPuzzlePrompt>:
+	puzzle_layout: puzzle_layout
+	title: strings.title_select_puzzle
+	BoxLayout:
+		orientation: 'vertical'
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Button:
+				text: strings.button_load
+				on_release: root.import_puzzles()
+			Button:
+				text: strings.button_export
+				on_release: root.export_puzzles()
+			Button:
+				text: strings.button_delete_all
+				on_release: root.prompt_delete_all()
+		Widget:
+			size_hint_y: 0.02
+		ScrollView:
+			BoxLayout:
+				orientation: 'vertical'
+				size_hint_y: None
+				height: self.minimum_height
+				BoxLayout:
+					id: puzzle_layout
+					orientation: 'vertical'
+					size_hint_y: None
+					height: self.minimum_height
+				Widget:
+		Widget:
+			size_hint_y: 0.02
+		BoxLayout:
+			orientation: 'horizontal'
+			size_hint_y: 0.25
+			Button:
+				text: strings.button_close
+				on_release: root.dismiss()
+			Button:
+				text: strings.button_confirm
+				on_release: root.input_save()
+<PuzzleButton>:
+	toggle_button: toggle_button
+	orientation: 'horizontal'
+	size_hint_y: None
+	height: 50
+	ToggleButton:
+		id: toggle_button
+		on_press: root.selection_cb(self.text)
+	Button:
+		text: 'X'
+		size_hint_x: 0.1
+		on_release: root.prompt_delete_puzzle()
 <PuzzleSelectionLayout>:
 	number: ''
 	puzzle: ''
@@ -415,23 +490,26 @@
     select_callback: None
     on_selection: self.select_callback() if self.select_callback else None
 <YesNoPrompt>
-	label_text: ''
-    id: yes_no_prompt
-    button_no: button_no
-    button_yes: button_yes
+	scroll_label: scroll_label
     BoxLayout:
         orientation: 'vertical'
         ScrollableLabel:
-            label_text: root.label_text
+			id: scroll_label
         BoxLayout:
             orientation: 'horizontal'
             size_hint_y: 0.25
             Button:
                 id: button_no
                 text: strings.button_no
+				on_release:
+					if root.no_callback: root.no_callback()
+					root.dismiss()
             Button:
                 id: button_yes
                 text: strings.button_yes
+				on_release:
+					if root.yes_callback: root.yes_callback()
+					root.dismiss()
 <FileChooserPrompt>:
 	chooser: chooser
 	title: strings.button_load

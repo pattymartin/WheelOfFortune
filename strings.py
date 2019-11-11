@@ -186,6 +186,8 @@ file_kv_prompts = os.path.join(dir_kv,
     r'Prompts.kv')
 file_kv_puzzleboard = os.path.join(dir_kv,
     r'Puzzleboard.kv')
+file_kv_score = os.path.join(dir_kv,
+    r'Score.kv')
 file_kv_used_letters = os.path.join(dir_kv,
     r'UsedLetters.kv')
 

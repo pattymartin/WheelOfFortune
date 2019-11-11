@@ -1,0 +1,47 @@
+#:import strings strings
+#:import values values
+<ScoreLayout>:
+    flash_visible: False
+    size: self.parent.size if self.parent else (100, 100)
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: root.bg_color
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: root.name
+            font_name: values.font_score
+            font_size: self.size[1] * values.font_score_name_size
+        Label:
+            text: strings.currency_format.format(root.score)
+            font_name: values.font_score
+            font_size: self.size[1] * values.font_score_size
+        Label:
+            text: strings.currency_format.format(root.total)
+            font_name: values.font_score
+            font_size: self.size[1] * values.font_score_total_size
+    Label:
+        id: left_bar
+        pos_hint: {'x': 0}
+        size_hint_x: 0.15
+        opacity: 1 if root.flash_visible else 0
+        canvas:
+            Color:
+                rgba: 1, 1, 1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+    Label:
+        id: right_bar
+        pos_hint: {'right': 1}
+        size_hint_x: left_bar.size_hint_x
+        opacity: left_bar.opacity
+        canvas:
+            Color:
+                rgba: 1, 1, 1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size

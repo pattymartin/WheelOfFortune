@@ -106,31 +106,30 @@ class LetterboardLayout(GridLayout):
     
     unavailable = ListProperty([])
     
-    def __init__(self, callback=None, unavailable=[], queue=None,
-                 rows=4, cols=7, **kwargs):
-        """Create the layout."""
-        super(LetterboardLayout, self).__init__(rows=rows, cols=cols, **kwargs)
+    def __init__(self, callback=None, unavailable=[], **kwargs):
+        """
+        Create the layout.
+        If a letter is clicked, its text will be sent to
+        `callback`.
+        `unavailable` is a list of letters to be
+        excluded from the layout.
+        """
+        super(LetterboardLayout, self).__init__(
+            rows=len(values.used_letters_layout),
+            cols=max(len(row) for row in values.used_letters_layout),
+            **kwargs)
         self.callback = callback
         self.unavailable = unavailable
         
-        vowels = 'aeiou'
-        consonants = [c for c in strings.alphabet if not c in vowels]
-        
-        def add_letter(letter):
-            """
-            Add a LetterboardLetter containing the specified `letter`.
-            """
-            
-            self.add_widget(LetterboardLetter(text=letter.upper()))
-        
-        for c in consonants:
-            add_letter(c)
-        
-        self.add_widget(Widget())
-        for v in vowels:
-            add_letter(v)
-        
-        self.add_widget(Widget())
+        for row in values.used_letters_layout:
+            for letter in row:
+                if letter.isspace():
+                    self.add_widget(Widget())
+                else:
+                    self.add_widget(LetterboardLetter(text=letter))
+            # if rows are not all the same length, fill in with empty space
+            for i in range(self.cols-len(row)):
+                self.add_widget(Widget())
 
 class LetterboardLetter(ButtonBehavior, Label):
     """
