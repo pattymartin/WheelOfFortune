@@ -76,6 +76,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.speedup_consonants_remaining = True
         self.consonants_remaining = True
         self.vowels_remaining = True
+        self.tiebreaker_started = False
         self.tie_resolved = False
     
         self.load_settings()
@@ -423,6 +424,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             Load a puzzle dict as a tiebreaker toss-up.
             """
             
+            self.tiebreaker_started = True
             round = {
                 'round_type': strings.round_type_tossup,
                 'round_reward': 0,
@@ -705,7 +707,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         
         if player_solved:
             if self.game:
-                self.tie_resolved = True
+                if self.tiebreaker_started:
+                    self.tie_resolved = True
+                    self.tiebreaker_started = False
                 round_type = self.game[0]['round_type']
                 if round_type == strings.round_type_bonus:
                     self.play_sound(strings.file_sound_solve_bonus)
