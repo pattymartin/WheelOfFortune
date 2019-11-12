@@ -14,7 +14,7 @@ from kivy.uix.widget import Widget
 import prompts
 import strings
 import values
-from my_widgets import bind_keyboard, Fullscreenable
+from my_widgets import Fullscreenable, KeyboardBindable
 
 Builder.load_file(strings.file_kv_puzzleboard)
 
@@ -28,7 +28,7 @@ class PuzzleWithCategory(BoxLayout, Fullscreenable):
         self.puzzle_layout = PuzzleLayout(self.category, q)
 
 
-class PuzzleLayout(GridLayout):
+class PuzzleLayout(GridLayout, KeyboardBindable):
     """GridLayout containing all Panels."""
 
     category_label = ObjectProperty(None)
@@ -55,7 +55,7 @@ class PuzzleLayout(GridLayout):
                     self.add_widget(panel)
                     self.reference_layout = panel.layout
 
-        bind_keyboard(self)
+        self.get_keyboard()
 
         if self.queue:
             Clock.schedule_once(self.check_queue, values.queue_start)
@@ -203,7 +203,7 @@ class PuzzleLayout(GridLayout):
                 # empty widget
                 pass
         prompt = prompts.SavePuzzlePrompt(
-            puzzle, on_dismiss=lambda instance: bind_keyboard(self))
+            puzzle, on_dismiss=lambda instance: self.get_keyboard())
         prompt.open()
 
     def choose_puzzle(self):
@@ -267,7 +267,7 @@ class PuzzleLayout(GridLayout):
             except AttributeError:
                 # empty widget
                 pass
-        bind_keyboard(self)
+        self.get_keyboard()
 
     def start_tossup(self):
         """
@@ -352,11 +352,6 @@ class PuzzleLayout(GridLayout):
         """
         self.tossup_running = False
 
-    def _keyboard_closed(self):
-        """Remove keyboard binding when the keyboard is closed."""
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
-
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
         """Reveal the puzzle when the Enter key is pressed."""
         letter = keycode[1]
@@ -429,7 +424,7 @@ class LetterLayout(AnchorLayout):
             return False
 
 
-class Panel(Button):
+class Panel(Button, KeyboardBindable):
     """A single panel that may contain a letter."""
 
     layout = ObjectProperty(None)  # a LetterLayout object
@@ -454,12 +449,7 @@ class Panel(Button):
                 # empty widget
                 pass
         self.layout.show_letter()
-        bind_keyboard(self)
-
-    def _keyboard_closed(self):
-        """Remove keyboard binding when the keyboard is closed."""
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
+        self.get_keyboard()
 
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
         """
@@ -499,7 +489,7 @@ class Panel(Button):
             # entry finished, hide all letters
             # and bind keyboard to main PuzzleLayout
             self.hide_all()
-            bind_keyboard(self.parent)
+            self.parent.get_keyboard()
         elif letter == 'spacebar':
             # move to next panel
             self.select_next()

@@ -14,12 +14,35 @@ import values
 Builder.load_file(strings.file_kv_my_widgets)
 
 
-def bind_keyboard(widget):
-    """Provide keyboard focus to a widget"""
+class KeyboardBindable(Widget):
+    """
+    A widget that can attempt to obtain keyboard focus with the function
+    `get_keyboard()`.
+    Classes that inherit from this class should override the method
+    `_on_keyboard_down` to define what should happen when a key is
+    pressed.
+    """
 
-    widget._keyboard = Window.request_keyboard(
-        widget._keyboard_closed, widget)
-    widget._keyboard.bind(on_key_down=widget._on_keyboard_down)
+    _keyboard = None
+
+    def get_keyboard(self):
+        """Get keyboard focus."""
+        self._keyboard = Window.request_keyboard(
+            self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_keyboard_down)
+
+    def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
+        """
+        Override this method to define what should happen when a key is
+        pressed.
+        """
+
+        pass
+
+    def _keyboard_closed(self):
+        """Remove keyboard binding when the keyboard is closed."""
+        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard = None
 
 
 class FullscreenButton(ModalView):

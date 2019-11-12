@@ -19,7 +19,7 @@ import score
 import strings
 import used_letters
 import values
-from my_widgets import bind_keyboard, Fullscreenable
+from my_widgets import Fullscreenable, KeyboardBindable
 
 Builder.load_file(strings.file_kv_manager)
 
@@ -46,7 +46,7 @@ class PlayerButton(ButtonBehavior, score.ScoreLayout):
     pass
 
 
-class ManagerLayout(BoxLayout, Fullscreenable):
+class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     """
     The root layout for the ManagerApp.
     """
@@ -92,7 +92,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         self.tossup_button.disabled = False
 
         self.text_input_clicked = False
-        self.bind_keyboard_self()
+        self.get_keyboard()
 
         if self.puzzle_queue:
             Clock.schedule_once(self.check_queue, values.queue_start)
@@ -119,7 +119,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         filter_children(self)
 
         if not self.text_input_clicked:
-            self.bind_keyboard_self()
+            self.get_keyboard()
 
         return super(ManagerLayout, self).on_touch_down(touch)
 
@@ -228,15 +228,6 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 self.buy_vowel()
             elif combination == self.hotkeys.get('bank_score'):
                 self.bank_score()
-
-    def _keyboard_closed(self):
-        """Remove keyboard binding when the keyboard is closed."""
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
-
-    def bind_keyboard_self(self, _instance=None):
-        """Bind the keyboard to self."""
-        bind_keyboard(self)
 
     def check_queue(self, _dt):
         """
@@ -588,7 +579,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
 
         prompts.LoadGamePrompt(
             self.load_game,
-            on_dismiss=self.bind_keyboard_self
+            on_dismiss=lambda i: self.get_keyboard()
         ).open()
 
     def load_game(self, game):
@@ -774,9 +765,9 @@ class ManagerLayout(BoxLayout, Fullscreenable):
         popup = prompts.ChooseLetterPrompt(
             self.guessed_letter,
             self.unavailable_letters,
-            on_dismiss=self.bind_keyboard_self)
+            on_dismiss=lambda i: self.get_keyboard())
         popup.open()
-        bind_keyboard(popup)
+        popup.get_keyboard()
 
     def guessed_letter(self, letter):
         """
@@ -936,7 +927,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
 
         popup = prompts.ManagerSettingsPrompt()
         popup.bind(on_dismiss=self.load_settings)
-        popup.bind(on_dismiss=self.bind_keyboard_self)
+        popup.bind(on_dismiss=lambda i: self.get_keyboard())
         popup.open()
 
     def load_settings(self, _instance=None):

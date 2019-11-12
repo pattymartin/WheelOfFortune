@@ -183,7 +183,7 @@
 								multiline: False
 								on_text_validate:
 									root.update_name(self.text)
-									root.bind_keyboard_self()
+									root.get_keyboard()
 								prev_widget: custom_value
 								next_widget: score_edit
 							Button:
@@ -199,7 +199,7 @@
 								hint_text: strings.input_adjust_score
 								multiline: False
 								on_text_validate:
-									root.bind_keyboard_self()
+									root.get_keyboard()
 								prev_widget: name_input
 								next_widget: custom_value
 							Button:
@@ -224,7 +224,7 @@
 									disabled: dropdown.disabled
 									multiline: False
 									on_text_validate:
-										root.bind_keyboard_self()
+										root.get_keyboard()
 									prev_widget: score_edit
 									next_widget: name_input
 								BoxLayout:

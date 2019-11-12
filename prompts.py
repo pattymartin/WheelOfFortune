@@ -10,7 +10,7 @@ from kivy.uix.popup import Popup
 import data_caching
 import strings
 import values
-from my_widgets import bind_keyboard
+from my_widgets import KeyboardBindable
 
 Builder.load_file(strings.file_kv_prompts)
 
@@ -420,7 +420,7 @@ class YesNoPrompt(Popup):
         self.yes_callback = yes_callback
 
 
-class ChooseLetterPrompt(Popup):
+class ChooseLetterPrompt(Popup, KeyboardBindable):
     """
     A Popup asking the user to choose a letter.
     """
@@ -447,11 +447,6 @@ class ChooseLetterPrompt(Popup):
         if letter.lower() in self.unavailable_letters:
             return
         self.letter_chosen(letter)
-
-    def _keyboard_closed(self):
-        """Remove keyboard binding when the keyboard is closed."""
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
 
 
 class ManagerSettingsPrompt(Popup):
@@ -566,7 +561,7 @@ class EditHotkeysPrompt(Popup):
             self.dismiss()
 
 
-class RecordHotkeyLabel(ButtonBehavior, Label):
+class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
     """
     A Label which, when clicked, will record
     a key combination, and set its text to indicate
@@ -599,7 +594,7 @@ class RecordHotkeyLabel(ButtonBehavior, Label):
         Bind keyboard to self, and start the timer.
         """
 
-        bind_keyboard(self)
+        self.get_keyboard()
 
         # get current text, set back to this if out of time
         self.initial_text = self.text
@@ -653,11 +648,6 @@ class RecordHotkeyLabel(ButtonBehavior, Label):
             self.text = '+'.join(mods + [key]).title()
             keyboard.release()
         return True
-
-    def _keyboard_closed(self):
-        """Remove keyboard binding when the keyboard is closed."""
-        self._keyboard.unbind(on_key_down=self._on_keyboard_down)
-        self._keyboard = None
 
 
 class FileChooserPrompt(Popup):
