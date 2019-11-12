@@ -141,12 +141,12 @@ class PuzzleLayout(GridLayout):
                 # empty widget
                 pass
         
-        vowels = 'aeiou'
-        consonants = [c for c in strings.alphabet if not c in vowels]
         no_more_vowels = matches and not any(
-            letter.lower() in vowels for letter in remaining_letters)
+            letter.lower() in strings.vowels
+            for letter in remaining_letters)
         no_more_consonants = matches and not any(
-            letter.lower() in consonants for letter in remaining_letters)
+            letter.lower() in strings.consonants
+            for letter in remaining_letters)
         if self.queue and len(letters) == 1:
             self.queue.b.put(('matches', (letters[0], matches)))
             Clock.schedule_once(

@@ -22,7 +22,7 @@
 	visible:
 		(self.text.lower() not in self.parent.unavailable) \
 		if self.parent else True
-	vowel: self.text.lower() in 'aeiou'
+	vowel: self.text.lower() in strings.vowels
 	opacity: 1 if self.visible else 0
 	disabled: not self.visible
 	font_name: values.font_panel

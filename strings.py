@@ -1,6 +1,8 @@
 import os
 
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
+vowels = 'aeiou'
+consonants = ''.join([c for c in alphabet if not c in vowels])
 
 bonus_round_letters = 'RSTLNE'
 

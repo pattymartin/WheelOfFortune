@@ -136,7 +136,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
                 and letter in strings.alphabet
                 and self.selected_player != 0
                 and (self.get_value() is not None
-                    or letter in 'aeiou')
+                    or letter in strings.vowels)
                 and self.game
                 and self.game[0]['round_type'] not in [
                     strings.round_type_tossup,
@@ -862,7 +862,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.play_sound(strings.file_sound_no_more_consonants)
             
             self.unavailable_letters.extend([
-                c for c in strings.alphabet if not c in 'aeiou'
+                c for c in strings.alphabet if not c in strings.vowels
                 and not c in self.unavailable_letters])
             self.letters_q.put(('no_more_consonants', None, None))
     
@@ -879,7 +879,7 @@ class ManagerLayout(BoxLayout, Fullscreenable):
             self.play_sound(strings.file_sound_no_more_vowels)
         
             self.unavailable_letters.extend([
-                c for c in strings.alphabet if c in 'aeiou'
+                c for c in strings.alphabet if c in strings.vowels
                 and not c in self.unavailable_letters])
             self.letters_q.put(('no_more_vowels', None, None))
     

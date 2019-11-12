@@ -87,12 +87,12 @@ class LettersWithScore(BoxLayout, Fullscreenable):
                 self.scores[color].flash_visible = False
             elif command == 'no_more_consonants':
                 self.letterboard.unavailable.extend([
-                    c for c in strings.alphabet if not c in 'aeiou'
-                    and not c in self.letterboard.unavailable])
+                    c for c in strings.consonants
+                    if c not in self.letterboard.unavailable])
             elif command == 'no_more_vowels':
                 self.letterboard.unavailable.extend([
-                    c for c in strings.alphabet if c in 'aeiou'
-                    and not c in self.letterboard.unavailable])
+                    c for c in strings.vowels
+                    if not c in self.letterboard.unavailable])
             elif command == 'exit':
                 App.get_running_app().stop()
         except:
