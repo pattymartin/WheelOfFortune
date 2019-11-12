@@ -74,12 +74,18 @@ hotkey_defaults = [
     hotkey_default_buy_vowel,
     hotkey_default_bank_score]
 
-interval_blue = 0.5 # seconds between panels turning blue
-interval_load = 0.05 # seconds between letters loading
-interval_reveal = 0.9 # seconds between panels being revealed
-interval_score_flash = 0.5 # seconds between player score flashes
-interval_solve_reveal = 0.01 # seconds between letters being revealed on solve
-interval_tossup = 0.924 # seconds between letters being revealed in a toss-up
+# seconds between panels turning blue
+interval_blue = 0.5
+# seconds between letters loading
+interval_load = 0.05
+# seconds between panels being revealed
+interval_reveal = 0.9
+# seconds between player score flashes
+interval_score_flash = 0.5
+# seconds between letters being revealed on solve
+interval_solve_reveal = 0.01
+# seconds between letters being revealed in a toss-up
+interval_tossup = 0.924
 
 opacity_adjustment = 0.25
 opacity_interval = 0.001
@@ -87,10 +93,13 @@ opacity_interval = 0.001
 queue_start = 5
 queue_interval = 0
 
-speedup_timeout = 4 # seconds the player has to solve the puzzle in speedup
+# seconds the player has to solve the puzzle in speedup
+speedup_timeout = 4
 splitter_size = '5pt'
-time_show_matches = 5 # seconds correct letter matches will display in manager
-timer_accuracy = 0.1 # seconds between final spin timer updates
+# seconds correct letter matches will display in manager
+time_show_matches = 5
+# seconds between final spin timer updates
+timer_accuracy = 0.1
 
 used_letters_layout = [
     'BCDFGHJ',

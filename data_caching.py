@@ -2,29 +2,33 @@ import json
 import os
 from collections import OrderedDict
 
-import prompts, strings
+import prompts
+import strings
+
 
 def update_variables(new_values):
     """
     Update the dict stored in the file `strings.file_settings`
     with the specified dict `new_values`.
     """
-    vars = get_variables()
-    vars.update(new_values)
+    variables = get_variables()
+    variables.update(new_values)
     with open(strings.file_settings, 'w') as f:
-        json.dump(vars, f)
+        json.dump(variables, f)
+
 
 def get_variables():
     """
     Get the JSON dict stored in the file `strings.file_settings`.
     Returns an empty dict if the file does not exist.
     """
-    
+
     try:
         with open(strings.file_settings) as f:
             return json.load(f)
     except FileNotFoundError:
         return {}
+
 
 def read_puzzles():
     """
@@ -33,15 +37,16 @@ def read_puzzles():
     """
     return get_variables().get('puzzles', {})
 
+
 def add_puzzle(name, puzzle_dict):
     """
     Add a puzzle to the settings file.
     Creates a confirmation prompt if a puzzle
     with the given name already exists.
     """
-    
+
     puzzles = read_puzzles()
-    
+
     def write_puzzle():
         """
         Add `puzzle_dict` to `puzzles`
@@ -49,16 +54,17 @@ def add_puzzle(name, puzzle_dict):
         """
         puzzles[name] = puzzle_dict
         update_variables({'puzzles': puzzles})
-        
+
     if name in puzzles.keys():
         prompts.YesNoPrompt(
-                strings.label_name_exists.format(name),
-                write_puzzle,
-                None,
-                title=strings.title_name_exists
-            ).open()
+            strings.label_name_exists.format(name),
+            write_puzzle,
+            None,
+            title=strings.title_name_exists
+        ).open()
     else:
         write_puzzle()
+
 
 def add_puzzles(puzzles):
     """
@@ -66,7 +72,7 @@ def add_puzzles(puzzles):
     Creates a confirmation prompt if any duplicates are detected.
     `puzzles` is a dict containing puzzles.
     """
-    
+
     existing_puzzles = read_puzzles()
     duplicates = {}
     not_duplicates = {}
@@ -75,32 +81,33 @@ def add_puzzles(puzzles):
             duplicates.update({name: puzzle})
         else:
             not_duplicates.update({name: puzzle})
-    
+
     def overwrite():
         """
         Write all puzzles, overwriting duplicates.
         """
-        
+
         existing_puzzles.update(puzzles)
         update_variables({'puzzles': existing_puzzles})
-    
+
     def no_overwrite():
         """
         Write all puzzles, but ignore duplicates.
         """
-        
+
         existing_puzzles.update(not_duplicates)
         update_variables({'puzzles': existing_puzzles})
-    
+
     if duplicates:
         prompts.YesNoPrompt(
-                strings.label_names_exist.format('\n'.join(duplicates)),
-                overwrite,
-                no_overwrite,
-                title=strings.title_names_exist
-            ).open()
+            strings.label_names_exist.format('\n'.join(duplicates)),
+            overwrite,
+            no_overwrite,
+            title=strings.title_names_exist
+        ).open()
     else:
         no_overwrite()
+
 
 def import_puzzles(file_list):
     """
@@ -109,7 +116,7 @@ def import_puzzles(file_list):
     of the form:
     {puzzle} {category} ({clue})
     """
-    
+
     unable_to_import = []
     all_found_puzzles = {}
     all_duplicate_names = []
@@ -127,7 +134,7 @@ def import_puzzles(file_list):
                             clue = fields[2].strip()
                         except IndexError:
                             clue = ''
-                        
+
                         name = ' '.join(puzzle.split())
                         if not (name in all_found_puzzles
                                 or name in found_puzzles):
@@ -138,9 +145,9 @@ def import_puzzles(file_list):
                                     'clue': clue}
                             })
                         else:
-                            if not name in duplicate_names:
+                            if name not in duplicate_names:
                                 duplicate_names.append(name)
-                
+
                 # only add any puzzles if no errors encountered above
                 all_found_puzzles.update(found_puzzles)
                 all_duplicate_names += duplicate_names
@@ -149,45 +156,47 @@ def import_puzzles(file_list):
     add_puzzles(all_found_puzzles)
     if unable_to_import:
         prompts.InfoPrompt(
-                title=strings.title_import_error,
-                text=strings.label_import_error.format(
-                    '\r\n'.join(unable_to_import))
-            ).open()
+            title=strings.title_import_error,
+            text=strings.label_import_error.format(
+                '\r\n'.join(unable_to_import))
+        ).open()
     if all_duplicate_names:
         prompts.InfoPrompt(
-                title=strings.title_duplicates,
-                text=strings.label_import_duplicates.format(
-                    '\r\n'.join(all_duplicate_names))
-            ).open()
+            title=strings.title_duplicates,
+            text=strings.label_import_duplicates.format(
+                '\r\n'.join(all_duplicate_names))
+        ).open()
+
 
 def export_puzzles_by_name(filename, puzzle_names):
     """
     Export puzzles with names in `puzzle_names`
     to the file `filename`.
     """
-    
+
     if not puzzle_names:
         prompts.YesNoPrompt(
-                strings.label_no_export_selected,
-                lambda: export_puzzles(filename, read_puzzles()),
-                None,
-                title=strings.title_no_export_selected
-            ).open()
+            strings.label_no_export_selected,
+            lambda: export_puzzles(filename, read_puzzles()),
+            None,
+            title=strings.title_no_export_selected
+        ).open()
     else:
         puzzles = read_puzzles()
         export_puzzles(
             filename,
             OrderedDict((name, puzzles[name]) for name in puzzle_names))
 
+
 def export_puzzles(filename, puzzles):
     """
     Export `puzzles` to the file `filename`.
     `puzzles` should be a puzzles dict.
     """
-    
-    if not '.' in filename:
+
+    if '.' not in filename:
         filename += '.txt'
-    
+
     def write():
         """
         Write the puzzles to the file `filename`.
@@ -198,16 +207,17 @@ def export_puzzles(filename, puzzles):
                     puzzle['puzzle'],
                     puzzle['category'],
                     puzzle['clue']))
-    
+
     if os.path.exists(filename):
         prompts.YesNoPrompt(
-                strings.label_file_exists.format(filename),
-                write,
-                None,
-                title=strings.title_file_exists
-            ).open()
+            strings.label_file_exists.format(filename),
+            write,
+            None,
+            title=strings.title_file_exists
+        ).open()
     else:
         write()
+
 
 def import_game(filename):
     """
@@ -219,15 +229,15 @@ def import_game(filename):
     of the form:
     {round_type} {round_reward} {puzzle} {category} ({clue})
     """
-    
+
     game = []
-    
+
     try:
         with open(filename) as f:
             for line in f.readlines():
                 if line:
                     fields = line.split('\t')
-                    
+
                     round_type = fields[0].strip()
                     round_reward = fields[1].strip()
                     puzzle = fields[2].ljust(52)[:52].upper()
@@ -236,7 +246,7 @@ def import_game(filename):
                         clue = fields[4].strip()
                     except IndexError:
                         clue = ''
-                    
+
                     game.append({
                         'round_type': round_type,
                         'round_reward': round_reward,
@@ -246,25 +256,26 @@ def import_game(filename):
                             'clue': clue}})
     except:
         prompts.InfoPrompt(
-                title=strings.title_import_error,
-                text=strings.label_import_error.format(filename)
-            ).open()
-    
+            title=strings.title_import_error,
+            text=strings.label_import_error.format(filename)
+        ).open()
+
     return game
+
 
 def export_game(filename, game):
     """
     Export `game` to the file `filename`.
     """
-    
-    if not '.' in filename:
+
+    if '.' not in filename:
         filename += '.txt'
-    
+
     def write():
         """
         Write the game to the file.
         """
-        
+
         with open(filename, 'w') as f:
             for puzzle in game:
                 f.write('{}\t{}\t{}\t{}\t{}\n'.format(
@@ -273,16 +284,17 @@ def export_game(filename, game):
                     puzzle['puzzle']['puzzle'],
                     puzzle['puzzle']['category'],
                     puzzle['puzzle']['clue']))
-    
+
     if os.path.exists(filename):
         prompts.YesNoPrompt(
-                strings.label_file_exists.format(filename),
-                write,
-                None,
-                title=strings.title_file_exists
-            ).open()
+            strings.label_file_exists.format(filename),
+            write,
+            None,
+            title=strings.title_file_exists
+        ).open()
     else:
         write()
+
 
 def delete_puzzle(name):
     """
@@ -292,11 +304,13 @@ def delete_puzzle(name):
     puzzles.pop(name, None)
     update_variables({'puzzles': puzzles})
 
+
 def delete_all_puzzles():
     """
     Delete all puzzles.
     """
     update_variables({'puzzles': {}})
+
 
 def get_hotkeys():
     """
@@ -304,15 +318,17 @@ def get_hotkeys():
     Returns an empty dict if the file does not exist,
     or if there are no hotkeys saved.
     """
-    
+
     return get_variables().get('hotkeys', {})
+
 
 def write_hotkeys(hotkeys):
     """
     Save a dict of hotkeys to the settings file.
     """
-    
+
     update_variables({'hotkeys': hotkeys})
+
 
 def str_to_int(s, default_value=0):
     """

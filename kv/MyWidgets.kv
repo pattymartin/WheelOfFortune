@@ -4,10 +4,8 @@
         text: strings.button_fullscreen
         on_release: root.toggle_fullscreen()
 <FinalSpinTimer>:
-	running: False
 	seconds_left: 0
 	start_time: 0
-	final_spin_started: False
 	curr:
 		# simply setting `current` here caused strange behavior
 		None if not self.has_screen('timeout') \

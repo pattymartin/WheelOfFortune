@@ -2,7 +2,7 @@ import os
 
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
 vowels = 'aeiou'
-consonants = ''.join([c for c in alphabet if not c in vowels])
+consonants = ''.join([c for c in alphabet if c not in vowels])
 
 bonus_round_letters = 'RSTLNE'
 
@@ -138,58 +138,84 @@ round_type_tossup = 'Toss-Up'
 round_type_triple_tossup = 'Triple Toss-Up 1-2'
 round_type_triple_tossup_final = 'Triple Toss-Up 3'
 
-dir_assets = os.path.join(os.path.dirname(__file__),
+dir_assets = os.path.join(
+    os.path.dirname(__file__),
     r'assets')
-file_alert_icon = os.path.join(dir_assets,
+file_alert_icon = os.path.join(
+    dir_assets,
     r'alert.png')
-file_cancel_icon = os.path.join(dir_assets,
+file_cancel_icon = os.path.join(
+    dir_assets,
     r'cancel.png')
-file_panel = os.path.join(dir_assets,
+file_panel = os.path.join(
+    dir_assets,
     r'panel.png')
-file_category_background = os.path.join(dir_assets,
+file_category_background = os.path.join(
+    dir_assets,
     r'category_background.png')
-file_settings_icon = os.path.join(dir_assets,
+file_settings_icon = os.path.join(
+    dir_assets,
     r'settings.png')
-file_sound_bankrupt = os.path.join(dir_assets,
+file_sound_bankrupt = os.path.join(
+    dir_assets,
     r'bankrupt.mp3')
-file_sound_buzz = os.path.join(dir_assets,
+file_sound_buzz = os.path.join(
+    dir_assets,
     r'buzz.wav')
-file_sound_clue_correct = os.path.join(dir_assets,
+file_sound_clue_correct = os.path.join(
+    dir_assets,
     r'clue_correct.wav')
-file_sound_ding = os.path.join(dir_assets,
+file_sound_ding = os.path.join(
+    dir_assets,
     r'ding.wav')
-file_sound_no_more_consonants = os.path.join(dir_assets,
+file_sound_no_more_consonants = os.path.join(
+    dir_assets,
     r'no_more_consonants.wav')
-file_sound_no_more_vowels = os.path.join(dir_assets,
+file_sound_no_more_vowels = os.path.join(
+    dir_assets,
     r'no_more_vowels.wav')
-file_sound_reveal_puzzle = os.path.join(dir_assets,
+file_sound_reveal_puzzle = os.path.join(
+    dir_assets,
     r'puzzle_reveal.wav')
-file_sound_reveal_tossup = os.path.join(dir_assets,
+file_sound_reveal_tossup = os.path.join(
+    dir_assets,
     r'tossup_reveal.wav')
-file_sound_solve = os.path.join(dir_assets,
+file_sound_solve = os.path.join(
+    dir_assets,
     r'solve.wav')
-file_sound_solve_bonus = os.path.join(dir_assets,
+file_sound_solve_bonus = os.path.join(
+    dir_assets,
     r'bonus_round_solve.wav')
-file_sound_solve_clue = os.path.join(dir_assets,
+file_sound_solve_clue = os.path.join(
+    dir_assets,
     r'clue_solve.wav')
-file_sound_solve_tossup = os.path.join(dir_assets,
+file_sound_solve_tossup = os.path.join(
+    dir_assets,
     r'tossup_solve.wav')
-file_sound_solve_triple_tossup = os.path.join(dir_assets,
+file_sound_solve_triple_tossup = os.path.join(
+    dir_assets,
     r'triple_tossup_1-2_solve.wav')
 
-dir_kv = os.path.join(os.path.dirname(__file__),
+dir_kv = os.path.join(
+    os.path.dirname(__file__),
     r'kv')
-file_kv_manager = os.path.join(dir_kv,
+file_kv_manager = os.path.join(
+    dir_kv,
     r'ManagerLayout.kv')
-file_kv_my_widgets = os.path.join(dir_kv,
+file_kv_my_widgets = os.path.join(
+    dir_kv,
     r'MyWidgets.kv')
-file_kv_prompts = os.path.join(dir_kv,
+file_kv_prompts = os.path.join(
+    dir_kv,
     r'Prompts.kv')
-file_kv_puzzleboard = os.path.join(dir_kv,
+file_kv_puzzleboard = os.path.join(
+    dir_kv,
     r'Puzzleboard.kv')
-file_kv_score = os.path.join(dir_kv,
+file_kv_score = os.path.join(
+    dir_kv,
     r'Score.kv')
-file_kv_used_letters = os.path.join(dir_kv,
+file_kv_used_letters = os.path.join(
+    dir_kv,
     r'UsedLetters.kv')
 
 file_settings = r'settings.json'

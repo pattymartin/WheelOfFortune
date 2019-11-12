@@ -1,9 +1,11 @@
 #:import data_caching data_caching
+#:import LetterboardLayout used_letters.LetterboardLayout
 #:import NoTransition kivy.uix.screenmanager.NoTransition
 #:import os os
 #:import strings strings
 #:import values values
 <SavePuzzlePrompt>
+    cat_label: cat_label
 	cat_input: cat_input
 	clue_input: clue_input
 	title: strings.title_save_puzzle
@@ -13,6 +15,7 @@
 			orientation: 'horizontal'
 			size_hint_y: 0.25
 			Label:
+			    id: cat_label
 				text: strings.label_category
 				size_hint_x: None
 				valign: 'center'
@@ -177,8 +180,8 @@
 	puzzle: ''
 	round_type: ''
 	reward: ''
+	selection_callback: None
 	screen_manager: screen_manager
-	button_select: button_select
 	round_type_spinner: round_type_spinner
 	reward_input: reward_input
 	orientation: 'horizontal'
@@ -189,6 +192,13 @@
 		size_hint_x: 0.25
 	ScreenManager:
 		id: screen_manager
+		curr:
+		    None if not self.has_screen('button') \
+		    else 'button' if root.selection_callback \
+		    else 'label'
+        on_curr:
+            if self.curr != self.current: \
+            self.current = self.curr
 		transition: NoTransition()
 		size_hint_x: 1.75
 		Screen:
@@ -199,8 +209,8 @@
 		Screen:
 			name: 'button'
 			Button:
-				id: button_select
 				text: strings.button_select_puzzles
+				on_release: root.select_clicked()
 	Spinner:
 		id: round_type_spinner
 		text: root.round_type
@@ -485,6 +495,7 @@
 	halign: 'left'
 	valign: 'center'
 	padding_x: 5
+	on_release: self.start_listening()
 <FileChooserIconView>
     # on_selection doesn't seem to work in python
     select_callback: None
@@ -510,6 +521,14 @@
 				on_release:
 					if root.yes_callback: root.yes_callback()
 					root.dismiss()
+<ChooseLetterPrompt>:
+    title: strings.title_choose_letter
+    on_dismiss:
+        if self._keyboard: \
+        self._keyboard.release()
+    LetterboardLayout:
+        callback: root.letter_chosen
+        unavailable: root.unavailable_letters
 <FileChooserPrompt>:
 	chooser: chooser
 	title: strings.button_load

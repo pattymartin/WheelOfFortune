@@ -1,3 +1,5 @@
+import queue
+
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
@@ -8,18 +10,20 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 
-import score, strings, values
+import strings
+import values
 from my_widgets import Fullscreenable
 
 Builder.load_file(strings.file_kv_used_letters)
+
 
 class LettersWithScore(BoxLayout, Fullscreenable):
     """
     A layout containing three ScoreLayouts
     and a LetterboardLayout.
     """
-    
-    def __init__(self, queue=None, **kwargs):
+
+    def __init__(self, q=None, **kwargs):
         """
         Create the layout.
         `queue` is a Queue from multiprocessing,
@@ -57,12 +61,12 @@ class LettersWithScore(BoxLayout, Fullscreenable):
             close the current App.
         """
         super(LettersWithScore, self).__init__(**kwargs)
-        
-        self.queue = queue
+
+        self.queue = q
         if self.queue:
             Clock.schedule_once(self.check_queue, values.queue_start)
-    
-    def check_queue(self, instance):
+
+    def check_queue(self, _dt):
         """
         Check the queue for incoming commands to execute.
         """
@@ -92,21 +96,22 @@ class LettersWithScore(BoxLayout, Fullscreenable):
             elif command == 'no_more_vowels':
                 self.letterboard.unavailable.extend([
                     c for c in strings.vowels
-                    if not c in self.letterboard.unavailable])
+                    if c not in self.letterboard.unavailable])
             elif command == 'exit':
                 App.get_running_app().stop()
-        except:
+        except queue.Empty:
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
+
 
 class LetterboardLayout(GridLayout):
     """
     A layout showing available letters.
     """
-    
+
     unavailable = ListProperty([])
-    
-    def __init__(self, callback=None, unavailable=[], **kwargs):
+
+    def __init__(self, callback=None, unavailable=None, **kwargs):
         """
         Create the layout.
         If a letter is clicked, its text will be sent to
@@ -114,13 +119,15 @@ class LetterboardLayout(GridLayout):
         `unavailable` is a list of letters to be
         excluded from the layout.
         """
+
         super(LetterboardLayout, self).__init__(
             rows=len(values.used_letters_layout),
             cols=max(len(row) for row in values.used_letters_layout),
             **kwargs)
         self.callback = callback
-        self.unavailable = unavailable
-        
+        self.unavailable = (
+            unavailable if unavailable is not None else [])
+
         for row in values.used_letters_layout:
             for letter in row:
                 if letter.isspace():
@@ -128,12 +135,13 @@ class LetterboardLayout(GridLayout):
                 else:
                     self.add_widget(LetterboardLetter(text=letter))
             # if rows are not all the same length, fill in with empty space
-            for i in range(self.cols-len(row)):
+            for i in range(self.cols - len(row)):
                 self.add_widget(Widget())
+
 
 class LetterboardLetter(ButtonBehavior, Label):
     """
     A single letter on the LetterboardLayout.
     """
-    
+
     pass
