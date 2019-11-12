@@ -127,7 +127,7 @@ def import_puzzles(file_list):
                 found_puzzles = {}
                 duplicate_names = []
                 for line in f.readlines():
-                    if line:
+                    if line.strip():
                         fields = line.split('\t')
                         puzzle = fields[0].ljust(52)[:52].upper()
                         category = fields[1].strip()
@@ -137,8 +137,9 @@ def import_puzzles(file_list):
                             clue = ''
 
                         name = ' '.join(puzzle.split())
-                        if not (name in all_found_puzzles
-                                or name in found_puzzles):
+                        if (
+                                name not in all_found_puzzles
+                                and name not in found_puzzles):
                             found_puzzles.update({
                                 name: {
                                     'puzzle': puzzle,
@@ -152,7 +153,7 @@ def import_puzzles(file_list):
                 # only add any puzzles if no errors encountered above
                 all_found_puzzles.update(found_puzzles)
                 all_duplicate_names += duplicate_names
-        except:
+        except (EnvironmentError, UnicodeDecodeError, IndexError):
             unable_to_import.append(puzzle_file)
     add_puzzles(all_found_puzzles)
     if unable_to_import:
@@ -236,7 +237,7 @@ def import_game(filename):
     try:
         with open(filename) as f:
             for line in f.readlines():
-                if line:
+                if line.strip():
                     fields = line.split('\t')
 
                     round_type = fields[0].strip()
@@ -255,7 +256,7 @@ def import_game(filename):
                             'puzzle': puzzle,
                             'category': category,
                             'clue': clue}})
-    except:
+    except (EnvironmentError, UnicodeDecodeError, IndexError):
         prompts.InfoPrompt(
             title=strings.title_import_error,
             text=strings.label_import_error.format(filename)
