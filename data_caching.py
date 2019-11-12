@@ -159,7 +159,7 @@ def import_puzzles(file_list):
     if unable_to_import:
         prompts.InfoPrompt(
             title=strings.title_import_error,
-            text=strings.label_import_error.format(
+            text=strings.label_import_puzzle_error.format(
                 '\r\n'.join(unable_to_import))
         ).open()
     if all_duplicate_names:
@@ -259,7 +259,7 @@ def import_game(filename):
     except (EnvironmentError, UnicodeDecodeError, IndexError):
         prompts.InfoPrompt(
             title=strings.title_import_error,
-            text=strings.label_import_error.format(filename)
+            text=strings.label_import_game_error.format(filename)
         ).open()
 
     return game

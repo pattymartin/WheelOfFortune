@@ -77,7 +77,12 @@ label_import_duplicates = (
     '(puzzles with the same text, but different spacing,\n'
     'are considered to be duplicates).\n\n'
     '{}')
-label_import_error = (
+label_import_game_error = (
+    'The following file could not be imported:\n'
+    '{}\n\n'
+    'Files must consist of tab-separated values, with the form:\n'
+    '{{round_type}} {{round_reward}} {{puzzle}} {{category}} ({{clue}})')
+label_import_puzzle_error = (
     'The following file(s) could not be imported:\n'
     '{}\n\n'
     'Files must consist of tab-separated values, with the form:\n'
