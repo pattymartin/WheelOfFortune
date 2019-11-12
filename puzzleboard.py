@@ -123,15 +123,15 @@ class PuzzleLayout(GridLayout):
                         # schedule panel to turn blue
                         Clock.schedule_once(
                             layout.blue,
-                            values.blue_interval * matches)
+                            values.interval_blue * matches)
                         # schedule "ding" sound
                         Clock.schedule_once(
                             lambda i: self.queue.b.put(('ding', None)),
-                            values.blue_interval * matches)
+                            values.interval_blue * matches)
                         # schedule panel to be revealed
                         Clock.schedule_once(
                             layout.show_letter,
-                            values.reveal_interval * (matches + 1))
+                            values.interval_reveal * (matches + 1))
                         matches += 1
                     else:
                         l = layout.text_label.text
@@ -151,17 +151,17 @@ class PuzzleLayout(GridLayout):
             self.queue.b.put(('matches', (letters[0], matches)))
             Clock.schedule_once(
                 lambda i: self.queue.b.put(('reveal_finished', None)),
-                values.reveal_interval * matches)
+                values.interval_reveal * matches)
             if no_more_vowels:
                 # indicate no more vowels in the middle of letter reveals
                 Clock.schedule_once(
                     lambda i: self.queue.b.put(('no_more_vowels', None)),
-                    values.reveal_interval * matches / 2)
+                    values.interval_reveal * matches / 2)
             if no_more_consonants:
                 # indicate no more consonants after all letters revealed
                 Clock.schedule_once(
                     lambda i: self.queue.b.put(('no_more_consonants', None)),
-                    values.reveal_interval * matches)
+                    values.interval_reveal * matches)
     
     def check_all(self, letter):
         """Check all Panels for a given letter and reveal matches."""
@@ -184,7 +184,7 @@ class PuzzleLayout(GridLayout):
                     # schedule panel reveal
                     Clock.schedule_once(
                         layout.show_letter,
-                        values.solve_reveal_interval * matches)
+                        values.interval_solve_reveal * matches)
                     matches += 1
             except AttributeError:
                 # empty widget
@@ -260,7 +260,7 @@ class PuzzleLayout(GridLayout):
                     # schedule panel to turn white
                     Clock.schedule_once(
                         layout.hide,
-                        values.load_interval * letters)
+                        values.interval_load * letters)
                     letters += 1
             except AttributeError:
                 # empty widget
@@ -299,7 +299,7 @@ class PuzzleLayout(GridLayout):
             # schedule to start revealing letters
             Clock.schedule_once(
                 lambda i: self.tossup_random_letter(next_letter),
-                values.tossup_interval)
+                values.interval_tossup)
         else:
             # no more letters on board, end tossup
             self.queue.b.put(('tossup_timeout', None))
@@ -337,7 +337,7 @@ class PuzzleLayout(GridLayout):
         if letter:
             Clock.schedule_once(
                 lambda i: self.tossup_random_letter(letter),
-                values.tossup_interval)
+                values.interval_tossup)
         else:
             # no more letters, end tossup
             self.queue.b.put(('tossup_timeout', None))

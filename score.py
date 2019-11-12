@@ -63,9 +63,9 @@ class ScoreLayout(RelativeLayout, Fullscreenable):
             if self.flashing:
                 self.flash_visible = True
                 Clock.schedule_once(
-                    flash_off, values.score_flash_interval)
+                    flash_off, values.interval_score_flash)
                 Clock.schedule_once(
-                    flash_on, values.score_flash_interval * 2)
+                    flash_on, values.interval_score_flash * 2)
         
         self.flashing = True
         flash_on()

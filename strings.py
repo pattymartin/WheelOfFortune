@@ -73,6 +73,17 @@ label_hotkey_solve = 'Solve/Next puzzle:'
 label_hotkey_start_tossup = 'Toss-Up/Final Spin:'
 label_hotkey_timer_reset = 'Reset timer:'
 label_hotkey_timer_start = 'Start timer:'
+label_import_duplicates = (
+    'The puzzles below were encountered more than once.\n'
+    'Only the first instance of each puzzle is recorded\n'
+    '(puzzles with the same text, but different spacing,\n'
+    'are considered to be duplicates).\n\n'
+    '{}')
+label_import_error = (
+    'The following file(s) could not be imported:\n'
+    '{}\n\n'
+    'Files must consist of tab-separated values, with the form:\n'
+    '{{puzzle}} {{category}} ({{clue}})')
 label_matches = '{matches} "{letter}"s'
 label_min_win = 'Round Prize\nMinimum'
 label_name = 'Name'
@@ -126,18 +137,6 @@ round_type_standard = 'Standard'
 round_type_tossup = 'Toss-Up'
 round_type_triple_tossup = 'Triple Toss-Up 1-2'
 round_type_triple_tossup_final = 'Triple Toss-Up 3'
-
-label_import_duplicates = (
-    'The puzzles below were encountered more than once.\n'
-    'Only the first instance of each puzzle is recorded\n'
-    '(puzzles with the same text, but different spacing,\n'
-    'are considered to be duplicates).\n\n'
-    '{}')
-label_import_error = (
-    'The following file(s) could not be imported:\n'
-    '{}\n\n'
-    'Files must consist of tab-separated values, with the form:\n'
-    '{{puzzle}} {{category}} ({{clue}})')
 
 dir_assets = os.path.join(os.path.dirname(__file__),
     r'assets')
