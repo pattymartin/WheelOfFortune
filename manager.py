@@ -21,7 +21,7 @@ import used_letters
 import values
 from my_widgets import Fullscreenable, KeyboardBindable
 
-Builder.load_file(strings.file_kv_manager)
+Builder.load_file(values.file_kv_manager)
 
 
 class CommQueue:
@@ -211,7 +211,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                 self.solve_clue(False)
                 self.select_layout_manager.clue_solved = True
             else:
-                self.play_sound(strings.file_sound_buzz)
+                self.play_sound(values.file_sound_buzz)
         elif not (
                 self.game
                 and self.game[0]['round_type'] in [
@@ -244,7 +244,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                 self.show_puzzle()
             elif command == 'ding':
                 if not self.timer.final_spin_started:
-                    self.play_sound(strings.file_sound_ding)
+                    self.play_sound(values.file_sound_ding)
             elif command == 'matches':
                 self.correct_letter(args)
             elif command == 'tossup_timeout':
@@ -603,9 +603,9 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                     strings.round_type_tossup,
                     strings.round_type_triple_tossup,
                     strings.round_type_triple_tossup_final]:
-                self.play_sound(strings.file_sound_reveal_tossup)
+                self.play_sound(values.file_sound_reveal_tossup)
             else:
-                self.play_sound(strings.file_sound_reveal_puzzle)
+                self.play_sound(values.file_sound_reveal_puzzle)
 
         if self.tossup_running:
             self.tossup()
@@ -714,13 +714,13 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                     self.tiebreaker_started = False
                 round_type = self.game[0]['round_type']
                 if round_type == strings.round_type_bonus:
-                    self.play_sound(strings.file_sound_solve_bonus)
+                    self.play_sound(values.file_sound_solve_bonus)
                 elif round_type == strings.round_type_triple_tossup:
-                    self.play_sound(strings.file_sound_solve_triple_tossup)
+                    self.play_sound(values.file_sound_solve_triple_tossup)
                 elif round_type in [
                         strings.round_type_tossup,
                         strings.round_type_triple_tossup_final]:
-                    self.play_sound(strings.file_sound_solve_tossup)
+                    self.play_sound(values.file_sound_solve_tossup)
                 else:
                     # not a tossup or bonus round,
                     # increase score if less than minimum prize
@@ -728,9 +728,9 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                         self.set_score(self.min_win)
 
                     if self.game[0]['puzzle']['clue']:
-                        self.play_sound(strings.file_sound_solve_clue)
+                        self.play_sound(values.file_sound_solve_clue)
                     else:
-                        self.play_sound(strings.file_sound_solve)
+                        self.play_sound(values.file_sound_solve)
 
                 self.add_total(int(self.game[0]['round_reward']))
         self.puzzle_queue.a.put(('reveal', None))
@@ -749,9 +749,9 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
         if player_solved:
             self.add_score(self.clue_solve_reward)
-            self.play_sound(strings.file_sound_clue_correct)
+            self.play_sound(values.file_sound_clue_correct)
         else:
-            self.play_sound(strings.file_sound_buzz)
+            self.play_sound(values.file_sound_buzz)
 
     def guess_letter(self):
         """
@@ -830,7 +830,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         letter, self.matches = match
 
         if not self.matches and not self.timer.final_spin_started:
-            self.play_sound(strings.file_sound_buzz)
+            self.play_sound(values.file_sound_buzz)
 
         # show number of matches in puzzle_label
         self.puzzle_label.text = strings.label_matches.format(
@@ -861,7 +861,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         if self.consonants_remaining:
             self.consonants_remaining = False
 
-            self.play_sound(strings.file_sound_no_more_consonants)
+            self.play_sound(values.file_sound_no_more_consonants)
 
             self.unavailable_letters.extend([
                 c for c in strings.consonants
@@ -878,7 +878,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         if self.vowels_remaining:
             self.vowels_remaining = False
 
-            self.play_sound(strings.file_sound_no_more_vowels)
+            self.play_sound(values.file_sound_no_more_vowels)
 
             self.unavailable_letters.extend([
                 c for c in strings.vowels
@@ -899,7 +899,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
 
         if self.selected_player:
-            self.play_sound(strings.file_sound_bankrupt)
+            self.play_sound(values.file_sound_bankrupt)
             self.set_score(0)
 
     def bank_score(self):
@@ -991,7 +991,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
 
         if self.timer.final_spin_started:
-            self.play_sound(strings.file_sound_buzz)
+            self.play_sound(values.file_sound_buzz)
 
     def update_dropdown(self):
         """

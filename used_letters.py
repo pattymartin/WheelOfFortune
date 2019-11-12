@@ -14,7 +14,7 @@ import strings
 import values
 from my_widgets import Fullscreenable
 
-Builder.load_file(strings.file_kv_used_letters)
+Builder.load_file(values.file_kv_used_letters)
 
 
 class LettersWithScore(BoxLayout, Fullscreenable):

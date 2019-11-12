@@ -12,7 +12,7 @@ import strings
 import values
 from my_widgets import KeyboardBindable
 
-Builder.load_file(strings.file_kv_prompts)
+Builder.load_file(values.file_kv_prompts)
 
 
 class SavePuzzlePrompt(Popup):

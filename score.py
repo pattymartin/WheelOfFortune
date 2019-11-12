@@ -7,11 +7,10 @@ from kivy.properties import (
     BooleanProperty, NumericProperty, ObjectProperty, StringProperty)
 from kivy.uix.relativelayout import RelativeLayout
 
-import strings
 import values
 from my_widgets import Fullscreenable
 
-Builder.load_file(strings.file_kv_score)
+Builder.load_file(values.file_kv_score)
 
 
 class ScoreLayout(RelativeLayout, Fullscreenable):

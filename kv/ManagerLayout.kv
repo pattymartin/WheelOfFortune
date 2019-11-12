@@ -97,7 +97,7 @@
 							BoxLayout:
 								orientation: 'horizontal'
 								CancelButton:
-									on_release: root.play_sound(strings.file_sound_buzz)
+									on_release: root.play_sound(values.file_sound_buzz)
 								Button:
 									text: strings.mgr_btn_reveal
 									on_release: root.reveal_puzzle()
@@ -352,7 +352,7 @@
 		size_hint: None, None
 		size: self.parent.size
 		Image:
-			source: strings.file_cancel_icon
+			source: values.file_cancel_icon
 			size_hint_y: None
 			height: self.parent.height * 0.5
 <SettingsButton@ButtonBehavior+Label>:
@@ -364,4 +364,4 @@
         Rectangle:
             pos: self.pos
             size: self.size
-            source: strings.file_settings_icon
+            source: values.file_settings_icon

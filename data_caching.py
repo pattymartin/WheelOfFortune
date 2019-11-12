@@ -4,27 +4,28 @@ from collections import OrderedDict
 
 import prompts
 import strings
+import values
 
 
 def update_variables(new_values):
     """
-    Update the dict stored in the file `strings.file_settings`
+    Update the dict stored in the file `values.file_settings`
     with the specified dict `new_values`.
     """
     variables = get_variables()
     variables.update(new_values)
-    with open(strings.file_settings, 'w') as f:
+    with open(values.file_settings, 'w') as f:
         json.dump(variables, f)
 
 
 def get_variables():
     """
-    Get the JSON dict stored in the file `strings.file_settings`.
+    Get the JSON dict stored in the file `values.file_settings`.
     Returns an empty dict if the file does not exist.
     """
 
     try:
-        with open(strings.file_settings) as f:
+        with open(values.file_settings) as f:
             return json.load(f)
     except FileNotFoundError:
         return {}

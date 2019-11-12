@@ -1,5 +1,4 @@
 #:import data_caching data_caching
-#:import strings strings
 #:import values values
 <PuzzleWithCategory>:
 	puzzle_layout: None
@@ -35,7 +34,7 @@
 				rectangle: self.x, self.y, self.width, self.height
 		Image:
 			id: src_im
-			source: strings.file_panel
+			source: values.file_panel
 		Label:
 			size: src_im.size
 			opacity: 1 if ll.white_state else 0
@@ -96,7 +95,7 @@
 		Rectangle:
 			pos: self.pos
 			size: self.size
-			source: strings.file_category_background
+			source: values.file_category_background
 
 <SavableSplitter@Splitter>:
 	name: ''

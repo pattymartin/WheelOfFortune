@@ -8,10 +8,9 @@ from kivy.uix.screenmanager import ScreenManager
 from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
-import strings
 import values
 
-Builder.load_file(strings.file_kv_my_widgets)
+Builder.load_file(values.file_kv_my_widgets)
 
 
 class KeyboardBindable(Widget):

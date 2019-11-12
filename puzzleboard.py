@@ -16,7 +16,7 @@ import strings
 import values
 from my_widgets import Fullscreenable, KeyboardBindable
 
-Builder.load_file(strings.file_kv_puzzleboard)
+Builder.load_file(values.file_kv_puzzleboard)
 
 
 class PuzzleWithCategory(BoxLayout, Fullscreenable):
