@@ -277,7 +277,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             self.puzzle_label.text = self.puzzle_string
             if self.puzzle_clue:
                 self.puzzle_label.text += (
-                        '\n' + strings.mgr_label_clue + self.puzzle_clue)
+                        '\n' + strings.label_manager_clue + self.puzzle_clue)
         else:
             self.puzzle_label.text = ''
 
@@ -849,7 +849,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             self.add_score(self.matches * value)
         self.custom_value.text = ''
         if not self.timer.final_spin_started:
-            self.dropdown.text = strings.mgr_select_value
+            self.dropdown.text = strings.dropdown_select_value
 
     def no_more_consonants(self):
         """

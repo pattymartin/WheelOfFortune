@@ -99,7 +99,7 @@
 								CancelButton:
 									on_release: root.play_sound(values.file_sound_buzz)
 								Button:
-									text: strings.mgr_btn_reveal
+									text: strings.button_solve
 									on_release: root.reveal_puzzle()
 						Screen:
 							name: 'solve?'
@@ -108,7 +108,7 @@
 								CancelButton:
 									on_release: root.reveal_puzzle(False)
 								Button:
-									text: strings.mgr_btn_reveal
+									text: strings.button_solve
 									on_release: root.reveal_puzzle()
 						Screen:
 							name: 'clue'
@@ -129,7 +129,7 @@
 						size_hint_x: 0
 						width: 0
 						opacity: 0
-						text: strings.mgr_btn_clear
+						text: strings.button_clear
 						on_release: root.clear_puzzle()
 					FinalSpinTimer:
 						id: timer
@@ -151,7 +151,7 @@
 							strings.round_type_triple_tossup, \
 							strings.round_type_triple_tossup_final]) \
 							else False
-						text: strings.mgr_btn_tossup
+						text: strings.button_tossup
 						size_hint_x: 0
 						width: 0
 						opacity: 0
@@ -248,7 +248,7 @@
 											(	strings.round_type_triple_tossup_final), \
 											(	strings.round_type_bonus)] \
 											else False
-										text: strings.mgr_select_value
+										text: strings.dropdown_select_value
 										on_final_spin_started: root.update_dropdown()
 										on_text: root.update_dropdown()
 							Button:
@@ -266,16 +266,16 @@
 						cols: 2
 						disabled: dropdown.disabled
 						Button:
-							text: strings.mgr_btn_lose_turn
+							text: strings.button_lose_turn
 							on_release: root.lose_turn()
 						Button:
-							text: strings.mgr_btn_bankrupt
+							text: strings.button_bankrupt
 							on_release: root.bankrupt()
 						Button:
 							text: strings.button_buy_vowel
 							on_release: root.buy_vowel()
 						Button:
-							text: strings.mgr_btn_bank
+							text: strings.button_bank
 							on_release: root.bank_score()
 		Screen:
 			name: 'bonus_round'
@@ -337,12 +337,12 @@
 							CancelButton:
 								on_release: root.reveal_puzzle(False)
 							Button:
-								text: strings.mgr_btn_reveal
+								text: strings.button_solve
 								on_release: root.reveal_puzzle()
 					Screen:
 						name: 'clear'
 						Button:
-							text: strings.mgr_btn_clear
+							text: strings.button_clear
 							on_release: root.clear_puzzle()
 <Button>:
     halign: 'center'
