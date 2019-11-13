@@ -1,145 +1,146 @@
 #:import data_caching data_caching
 #:import values values
+
 <PuzzleWithCategory>:
-	puzzle_layout: None
-	category: category
-	orientation: 'vertical'
-	SavableSplitter:
-		name: 'category_splitter'
-		sizable_from: 'bottom'
-		Category:
-			id: category
-	SplitterSurround:
-		name: 'puzzleboard'
-		widget: root.puzzle_layout
+    puzzle_layout: None
+    category: category
+    orientation: 'vertical'
+    SavableSplitter:
+        name: 'category_splitter'
+        sizable_from: 'bottom'
+        Category:
+            id: category
+    SplitterSurround:
+        name: 'puzzleboard'
+        widget: root.puzzle_layout
 
 <Panel>:
     letter_layout: letter_layout
     text_label: txt
-	background_normal: ''
-	background_color: (0, 0, 0, 1)
-	on_release: self.click()
-	AnchorLayout:
-	    id: letter_layout
-		source_image: src_im
-		pos: self.parent.pos
-		size: self.parent.size
-		padding: self.width * 0.15
-		canvas:
-			Color:
-				rgba: (109/255, 228/255, 184/255, 1)
-			Line:
-				cap: 'square'
-				width: self.width * 0.015
-				rectangle: self.x, self.y, self.width, self.height
-		Image:
-			id: src_im
-			source: values.file_panel
-		Label:
-			size: src_im.size
-			opacity: 1 if root.white_state else 0
-			canvas.after:
-				Color:
-					rgba: 1, 1, 1, 1
-				Rectangle:
-					size: self.size
-					pos: self.pos
-		Label:
-			id: todo_delete_id
-			size: src_im.size
-			opacity: 1 if root.blue_state else 0
-			canvas.after:
-				Color:
-					rgba: 0, 0, 1, 1
-				Rectangle:
-					size: self.size
-					pos: self.pos
-		Label:
-			id: txt
-			font_name: values.font_panel
-			font_size: root.size[0] * values.font_panel_size
-			bold: True
-			halign: 'center'
-			valign: 'center'
+    background_normal: ''
+    background_color: (0, 0, 0, 1)
+    on_release: self.click()
+    AnchorLayout:
+        id: letter_layout
+        source_image: src_im
+        pos: self.parent.pos
+        size: self.parent.size
+        padding: self.width * 0.15
+        canvas:
+            Color:
+                rgba: (109/255, 228/255, 184/255, 1)
+            Line:
+                cap: 'square'
+                width: self.width * 0.015
+                rectangle: self.x, self.y, self.width, self.height
+        Image:
+            id: src_im
+            source: values.file_panel
+        Label:
+            size: src_im.size
+            opacity: 1 if root.white_state else 0
+            canvas.after:
+                Color:
+                    rgba: 1, 1, 1, 1
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+        Label:
+            id: todo_delete_id
+            size: src_im.size
+            opacity: 1 if root.blue_state else 0
+            canvas.after:
+                Color:
+                    rgba: 0, 0, 1, 1
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+        Label:
+            id: txt
+            font_name: values.font_panel
+            font_size: root.size[0] * values.font_panel_size
+            bold: True
+            halign: 'center'
+            valign: 'center'
 
 <PuzzleLayout>:
-	rows: 4
-	cols: 14
-	reference_layout: None
-	panel_aspect_ratio:
-		(self.reference_layout.source_image.norm_image_size[0] \
-		+ (self.reference_layout.padding[0] * 2)) \
-		/ (self.reference_layout.source_image.norm_image_size[1] \
-		+ (self.reference_layout.padding[0] * 2)) \
-		if self.reference_layout \
-		else 1
-	parent_aspect_ratio:
-		(self.parent.width / self.parent.height) if self.parent else 1
-	aspect_ratio: self.panel_aspect_ratio * self.cols / self.rows
-	size_hint: None, None
+    rows: 4
+    cols: 14
+    reference_layout: None
+    panel_aspect_ratio:
+        (self.reference_layout.source_image.norm_image_size[0] \
+        + (self.reference_layout.padding[0] * 2)) \
+        / (self.reference_layout.source_image.norm_image_size[1] \
+        + (self.reference_layout.padding[0] * 2)) \
+        if self.reference_layout \
+        else 1
+    parent_aspect_ratio:
+        (self.parent.width / self.parent.height) if self.parent else 1
+    aspect_ratio: self.panel_aspect_ratio * self.cols / self.rows
+    size_hint: None, None
     height:
         (self.width / self.aspect_ratio) \
         if self.aspect_ratio > self.parent_aspect_ratio \
         else self.parent.height if self.parent \
-		else 0
+        else 0
     width:
         (self.height * self.aspect_ratio) \
         if self.aspect_ratio < self.parent_aspect_ratio \
         else self.parent.width if self.parent \
-		else 0
+        else 0
 
 <Category@Label>:
-	font_name: values.font_category
-	font_size: self.size[1] * values.font_category_size
-	canvas.before:
-		Rectangle:
-			pos: self.pos
-			size: self.size
-			source: values.file_category_background
+    font_name: values.font_category
+    font_size: self.size[1] * values.font_category_size
+    canvas.before:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: values.file_category_background
 
 <SavableSplitter@Splitter>:
-	name: ''
-	min_size: 0
-	strip_size: values.splitter_size
-	axis: 1 if self.sizable_from in ['top', 'bottom'] else 0
-	size_hint_y:
-		data_caching.get_variables().get(self.name) \
-		if self.name and self.axis \
-		else 1
-	size_hint_x:
-		data_caching.get_variables().get(self.name) \
-		if self.name and not self.axis \
-		else 1
-	on_release:
-		if self.name: \
-		data_caching.update_variables(\
-		{	self.name: self.size[self.axis] / self.parent.size[self.axis]})
+    name: ''
+    min_size: 0
+    strip_size: values.splitter_size
+    axis: 1 if self.sizable_from in ['top', 'bottom'] else 0
+    size_hint_y:
+        data_caching.get_variables().get(self.name) \
+        if self.name and self.axis \
+        else 1
+    size_hint_x:
+        data_caching.get_variables().get(self.name) \
+        if self.name and not self.axis \
+        else 1
+    on_release:
+        if self.name: \
+        data_caching.update_variables(\
+        {	self.name: self.size[self.axis] / self.parent.size[self.axis]})
 
 <SplitterSurround@BoxLayout>:
-	name: ''
-	widget: None
-	on_widget:
-		if self.widget: \
-		center_layout.clear_widgets(); \
-		center_layout.add_widget(self.widget)
-	orientation: 'vertical'
-	SavableSplitter:
-		name: root.name + '_top_splitter' if root.name else ''
-		sizable_from: 'bottom'
-		Widget:
-	BoxLayout:
-		orientation: 'horizontal'
-		SavableSplitter:
-			name: root.name + '_left_splitter' if root.name else ''
-			sizable_from: 'right'
-			Widget:
-		AnchorLayout:
-			id: center_layout
-		SavableSplitter:
-			name: root.name + '_right_splitter' if root.name else ''
-			sizable_from: 'left'
-			Widget:
-	SavableSplitter:
-		name: root.name + '_bottom_splitter' if root.name else ''
-		sizable_from: 'top'
-		Widget:
+    name: ''
+    widget: None
+    on_widget:
+        if self.widget: \
+        center_layout.clear_widgets(); \
+        center_layout.add_widget(self.widget)
+    orientation: 'vertical'
+    SavableSplitter:
+        name: root.name + '_top_splitter' if root.name else ''
+        sizable_from: 'bottom'
+        Widget:
+    BoxLayout:
+        orientation: 'horizontal'
+        SavableSplitter:
+            name: root.name + '_left_splitter' if root.name else ''
+            sizable_from: 'right'
+            Widget:
+        AnchorLayout:
+            id: center_layout
+        SavableSplitter:
+            name: root.name + '_right_splitter' if root.name else ''
+            sizable_from: 'left'
+            Widget:
+    SavableSplitter:
+        name: root.name + '_bottom_splitter' if root.name else ''
+        sizable_from: 'top'
+        Widget:
