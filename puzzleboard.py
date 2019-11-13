@@ -5,7 +5,6 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.properties import BooleanProperty
-from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
@@ -50,7 +49,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                     # create panels
                     panel = Panel()
                     self.add_widget(panel)
-                    self.reference_layout = panel.layout
+                    self.reference_layout = panel.letter_layout
 
         self.get_keyboard()
 
@@ -115,13 +114,13 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
         for i in indices:
             try:
-                layout = self.children[i].layout
-                if layout.hidden():
-                    if any(layout.check_letter(letter) for letter in letters):
+                panel = self.children[i]
+                if panel.hidden():
+                    if any(panel.check_letter(letter) for letter in letters):
                         # match found
                         # schedule panel to turn blue
                         Clock.schedule_once(
-                            layout.blue,
+                            panel.blue,
                             values.interval_blue * matches)
                         # schedule "ding" sound
                         Clock.schedule_once(
@@ -129,11 +128,11 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                             values.interval_blue * matches)
                         # schedule panel to be revealed
                         Clock.schedule_once(
-                            layout.show_letter,
+                            panel.show_letter,
                             values.interval_reveal * (matches + 1))
                         matches += 1
                     else:
-                        panel_text = layout.text_label.text
+                        panel_text = panel.text_label.text
                         if panel_text:
                             remaining_letters.append(panel_text)
             except AttributeError:
@@ -178,11 +177,11 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         matches = 0
         for i in indices:
             try:
-                layout = self.children[i].layout
-                if layout.hidden() and layout.text_label.text:
+                panel = self.children[i]
+                if panel.hidden() and panel.text_label.text:
                     # schedule panel reveal
                     Clock.schedule_once(
-                        layout.show_letter,
+                        panel.show_letter,
                         values.interval_solve_reveal * matches)
                     matches += 1
             except AttributeError:
@@ -194,7 +193,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         puzzle = ''
         for widget in self.children[::-1]:
             try:
-                letter = widget.layout.text_label.text
+                letter = widget.text_label.text
                 puzzle += letter if letter else ' '
             except AttributeError:
                 # empty widget
@@ -234,11 +233,10 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         # set letters
         for widget in self.children[::-1]:
             try:
-                layout = widget.layout
-                letter = puzzle_string.pop(0)
-                layout.text_label.color = [0, 0, 0, 0]
-                layout.text_label.text = '' if letter == ' ' else letter
-                layout.green()
+                widget.text_label.color = [0, 0, 0, 0]
+                widget.text_label.text = puzzle_string[0].strip()
+                widget.green()
+                puzzle_string.pop(0)
             except AttributeError:
                 # empty widget
                 pass
@@ -255,11 +253,11 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         letters = 0
         for i in indices:
             try:
-                layout = self.children[i].layout
-                if layout.text_label.text:
+                panel = self.children[i]
+                if panel.text_label.text:
                     # schedule panel to turn white
                     Clock.schedule_once(
-                        layout.hide,
+                        panel.hide,
                         values.interval_load * letters)
                     letters += 1
             except AttributeError:
@@ -285,10 +283,10 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         # look for the bottom-rightmost letter
         for i in indices:
             try:
-                layout = self.children[i].layout
-                if layout.text_label.text:
+                panel = self.children[i]
+                if panel.text_label.text:
                     # letter found, reveal
-                    layout.show_letter()
+                    panel.show_letter()
                     break
             except AttributeError:
                 # empty widget
@@ -307,7 +305,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
     def get_random_letter(self):
         """
-        Randomly select a LetterLayout
+        Randomly select a Panel
         containing hidden text.
         If none are found, return None.
         """
@@ -316,8 +314,8 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
             self.children, len(self.children))
         for child in shuffled_children:
             try:
-                if child.layout.hidden() and child.layout.text_label.text:
-                    return child.layout
+                if child.hidden() and child.text_label.text:
+                    return child
             except AttributeError:
                 # empty widget
                 pass
@@ -364,8 +362,8 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
             self.check_all(letter)
 
 
-class LetterLayout(AnchorLayout):
-    """Defines the layout of a Panel object."""
+class Panel(Button, KeyboardBindable):
+    """A single panel that may contain a letter."""
     blue_state = BooleanProperty(False)
     white_state = BooleanProperty(False)
 
@@ -416,14 +414,7 @@ class LetterLayout(AnchorLayout):
         Check whether this panel's letter is the same as the given letter.
         """
 
-        if self.text_label.text.lower() == letter.lower():
-            return True
-        else:
-            return False
-
-
-class Panel(Button, KeyboardBindable):
-    """A single panel that may contain a letter."""
+        return self.text_label.text.lower() == letter.lower()
 
     def click(self):
         """
@@ -435,12 +426,12 @@ class Panel(Button, KeyboardBindable):
         # turn widgets green if they don't have text
         for widget in self.parent.children:
             try:
-                if not widget.layout.text_label.text:
-                    widget.layout.hide()
+                if not widget.text_label.text:
+                    widget.hide()
             except AttributeError:
                 # empty widget
                 pass
-        self.layout.show_letter()
+        self.show_letter()
         self.get_keyboard()
 
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
@@ -467,15 +458,15 @@ class Panel(Button, KeyboardBindable):
                 self.parent.choose_puzzle()
         elif 'shift' in modifiers and letter in shifts.keys():
             # shift is held, get shift symbol
-            self.layout.text_label.text = shifts[letter]
+            self.text_label.text = shifts[letter]
             self.select_next()
         elif letter in strings.alphabet + '1234567890-=[]\\;\',./':
             # set text and move to next panel
-            self.layout.text_label.text = letter.upper()
+            self.text_label.text = letter.upper()
             self.select_next()
         elif letter == 'backspace':
             # remove this panel's text, select previous panel
-            self.layout.text_label.text = ''
+            self.text_label.text = ''
             self.select_prev()
         elif letter == 'enter':
             # entry finished, hide all letters
@@ -489,8 +480,8 @@ class Panel(Button, KeyboardBindable):
     def select_next(self):
         """Select the next panel."""
         # hide panel if there's no text
-        if not self.layout.text_label.text:
-            self.layout.hide()
+        if not self.text_label.text:
+            self.hide()
         children = list(self.parent.children)
         # list of panels is in reverse order
         i = children.index(self) - 1
@@ -505,15 +496,15 @@ class Panel(Button, KeyboardBindable):
     def select_prev(self):
         """Select the previous panel and remove its text."""
         # hide panel if there's no text
-        if not self.layout.text_label.text:
-            self.layout.hide()
+        if not self.text_label.text:
+            self.hide()
         children = list(self.parent.children)
         # list of panels is in reverse order
         i = children.index(self) + 1
         while i < len(children):
             try:
                 children[i].click()
-                children[i].layout.text_label.text = ''
+                children[i].text_label.text = ''
                 break
             except AttributeError:
                 # empty panel
@@ -528,10 +519,9 @@ class Panel(Button, KeyboardBindable):
         Hide all panels in the parent PuzzleLayout.
         """
 
-        children = list(self.parent.children)
-        for c in children:
+        for panel in self.parent.children:
             try:
-                c.layout.hide()
+                panel.hide()
             except AttributeError:
                 # empty widget
                 pass

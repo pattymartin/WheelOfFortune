@@ -14,14 +14,14 @@
 		widget: root.puzzle_layout
 
 <Panel>:
-	layout: ll
+    letter_layout: letter_layout
+    text_label: txt
 	background_normal: ''
 	background_color: (0, 0, 0, 1)
 	on_release: self.click()
-	LetterLayout:
-		id: ll
+	AnchorLayout:
+	    id: letter_layout
 		source_image: src_im
-		text_label: txt
 		pos: self.parent.pos
 		size: self.parent.size
 		padding: self.width * 0.15
@@ -37,7 +37,7 @@
 			source: values.file_panel
 		Label:
 			size: src_im.size
-			opacity: 1 if ll.white_state else 0
+			opacity: 1 if root.white_state else 0
 			canvas.after:
 				Color:
 					rgba: 1, 1, 1, 1
@@ -47,7 +47,7 @@
 		Label:
 			id: todo_delete_id
 			size: src_im.size
-			opacity: 1 if ll.blue_state else 0
+			opacity: 1 if root.blue_state else 0
 			canvas.after:
 				Color:
 					rgba: 0, 0, 1, 1
