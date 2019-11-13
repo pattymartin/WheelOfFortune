@@ -149,13 +149,13 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                     strings.round_type_bonus]):
             self.guessed_letter(letter)
         elif combination == self.hotkeys.get('select_1'):
-            self.select_red()
+            self.select_player(1)
         elif combination == self.hotkeys.get('select_2'):
-            self.select_yellow()
+            self.select_player(2)
         elif combination == self.hotkeys.get('select_3'):
-            self.select_blue()
+            self.select_player(3)
         elif combination == self.hotkeys.get('select_next'):
-            self.select_next_player()
+            self.select_player((self.selected_player % 3) + 1)
         elif combination == self.hotkeys.get('increase_score'):
             self.increase_score()
         elif combination == self.hotkeys.get('select_puzzle'):
@@ -235,7 +235,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                 if self.puzzle_string:
                     self.tie_resolved = False
                 self.puzzle_clue = args['clue']
-                self.show_puzzle()
+                self.display_puzzle()
             elif command == 'ding':
                 if not self.timer.final_spin_started:
                     self.play_sound(values.file_sound_ding)
@@ -260,7 +260,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             pass
         Clock.schedule_once(self.check_queue, values.queue_interval)
 
-    def show_puzzle(self, _dt=None):
+    def display_puzzle(self, _dt=None):
         """
         Show the current puzzle
         (and clue, if any)
@@ -275,124 +275,46 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         else:
             self.puzzle_label.text = ''
 
-    def check_eligible(self, player):
-        """
-        Before selecting a player,
-        use this method to make sure that this player
-        is eligible to take a turn.
-        A player is ineligible during a toss-up if:
-            the player already took a turn in this toss-up
-            or
-            another player is currently guessing
-        """
-
-        # True if the player already rang in on this toss-up
-        already_rang = (player in self.tossup_players_done)
-
-        # True if a tossup has been started but is currently paused.
-        # This means another player has already rung in.
-        not_my_turn = (self.tossup_players_done and not self.tossup_running)
-
-        if already_rang or not_my_turn:
-            return False
-        return True
-
-    def select_red(self):
-        """
-        Change the colors of TextInput boxes
-        to indicate that the red player has been selected.
-        """
-
-        player = 1
-
-        if self.check_eligible(player):
-            self.selected_player = player
-            self.selection_color(values.color_light_red)
-            if self.btn_red.name:
-                self.name_input.text = self.btn_red.name
-            self.stop_all_flashing()
-            self.red_q.put(('flash', None))
-            self.letters_q.put(('flash', 'red', None))
-            if self.tossup_running:
-                self.tossup(player=self.selected_player)
-            if (self.timer.final_spin_started
-                    and not self.speedup_consonants_remaining):
-                self.no_more_consonants()
-
-    def select_yellow(self):
-        """
-        Change the colors of TextInput boxes
-        to indicate that the yellow player has been selected.
-        """
-
-        player = 2
-
-        if self.check_eligible(player):
-            self.selected_player = player
-            self.selection_color(values.color_light_yellow)
-            if self.btn_ylw.name:
-                self.name_input.text = self.btn_ylw.name
-            self.stop_all_flashing()
-            self.ylw_q.put(('flash', None))
-            self.letters_q.put(('flash', 'yellow', None))
-            if self.tossup_running:
-                self.tossup(player=self.selected_player)
-            if (self.timer.final_spin_started
-                    and not self.speedup_consonants_remaining):
-                self.no_more_consonants()
-
-    def select_blue(self):
-        """
-        Change the colors of TextInput boxes
-        to indicate that the blue player has been selected.
-        """
-
-        player = 3
-
-        if self.check_eligible(player):
-            self.selected_player = player
-            self.selection_color(values.color_light_blue)
-            if self.btn_blu.name:
-                self.name_input.text = self.btn_blu.name
-            self.stop_all_flashing()
-            self.blu_q.put(('flash', None))
-            self.letters_q.put(('flash', 'blue', None))
-            if self.tossup_running:
-                self.tossup(player=self.selected_player)
-            if (self.timer.final_spin_started
-                    and not self.speedup_consonants_remaining):
-                self.no_more_consonants()
-
-    def deselect_player(self):
-        """
-        Deselect the selected player.
-        """
-
-        self.selected_player = 0
-        self.selection_color(values.color_white)
-        self.name_input.text = ''
-        self.stop_all_flashing()
-
     def select_player(self, player_number):
         """
         Select the player indicated by `player_number`.
+        If `player_number` is not 1, 2, or 3, deselect all players.
+        If the player is ineligible to take a turn, do nothing.
         """
 
         if player_number == 1:
-            self.select_red()
+            color, button, q = 'red', self.btn_red, self.red_q
         elif player_number == 2:
-            self.select_yellow()
+            color, button, q = 'yellow', self.btn_ylw, self.ylw_q
         elif player_number == 3:
-            self.select_blue()
+            color, button, q = 'blue', self.btn_blu, self.blu_q
         else:
-            self.deselect_player()
+            # deselect
+            self.selected_player = 0
+            self.name_input.text = ''
+            self.stop_all_flashing()
+            return
 
-    def select_next_player(self):
-        """
-        Select the next player.
-        """
+        # True if the player already rang in on this toss-up
+        already_rang = (player_number in self.tossup_players_done)
+        # True if a tossup has been started but is currently paused.
+        # This means another player has already rung in.
+        not_my_turn = (self.tossup_players_done and not self.tossup_running)
+        if already_rang or not_my_turn:
+            # player is ineligible
+            return
 
-        self.select_player((self.selected_player % 3) + 1)
+        self.selected_player = player_number
+        self.name_input.text = button.name
+        self.stop_all_flashing()
+        q.put(('flash', None))
+        self.letters_q.put(('flash', color, None))
+        if self.tossup_running:
+            self.tossup(player=self.selected_player)
+        if (
+                self.timer.final_spin_started
+                and not self.speedup_consonants_remaining):
+            self.no_more_consonants()
 
     def select_winner(self):
         """
@@ -450,15 +372,6 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                 self.load_puzzle(self.game[0]['puzzle'])
         else:
             winner_chosen(winning_players[0])
-
-    def selection_color(self, color):
-        """
-        Change the color of TextInput boxes to the specified `color`.
-        """
-
-        self.name_input.background_color = color
-        self.score_edit.background_color = color
-        self.custom_value.background_color = color
 
     def update_name(self, text):
         """
@@ -564,7 +477,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             self.set_score(0)
             self.set_total(0)
 
-        self.deselect_player()
+        self.select_player(0)
 
     def choose_puzzle(self):
         """
@@ -667,18 +580,14 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             self.puzzle_queue.a.put(('pause_tossup', None))
             self.tossup_button.disabled = False
 
-            if player == 1:
-                self.select_red()
-            elif player == 2:
-                self.select_yellow()
-            elif player == 3:
-                self.select_blue()
+            if player in [1, 2, 3]:
+                self.select_player(player)
         else:
             if set(self.tossup_players_done) == {1, 2, 3}:
                 return
             self.tossup_button.disabled = True
             self.puzzle_queue.a.put(('tossup', None))
-            self.deselect_player()
+            self.select_player(0)
 
         self.tossup_running = not self.tossup_running
 
@@ -830,7 +739,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         self.puzzle_label.text = strings.label_matches.format(
             letter=letter.upper(), matches=self.matches)
         # schedule to show the puzzle again
-        Clock.schedule_once(self.show_puzzle, values.time_show_matches)
+        Clock.schedule_once(self.display_puzzle, values.time_show_matches)
 
     def increase_score(self):
         """
@@ -885,7 +794,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         move to next player.
         """
 
-        self.select_next_player()
+        self.select_player((self.selected_player % 3) + 1)
 
     def bankrupt(self):
         """

@@ -162,15 +162,15 @@
                     PlayerButton:
                         id: btn_red
                         bg_color: values.color_red
-                        on_release: root.select_red()
+                        on_release: root.select_player(1)
                     PlayerButton:
                         id: btn_ylw
                         bg_color: values.color_yellow
-                        on_release: root.select_yellow()
+                        on_release: root.select_player(2)
                     PlayerButton:
                         id: btn_blu
                         bg_color: values.color_blue
-                        on_release: root.select_blue()
+                        on_release: root.select_player(3)
                 BoxLayout:
                     orientation: 'horizontal'
                     BoxLayout:
@@ -180,6 +180,11 @@
                             size_hint_y: 0.5
                             TabCyclable:
                                 id: name_input
+                                background_color:
+                                    values.color_light_red if root.selected_player == 1 \
+                                    else values.color_light_yellow if root.selected_player == 2\
+                                    else values.color_light_blue if root.selected_player == 3 \
+                                    else values.color_white
                                 hint_text: strings.input_name
                                 multiline: False
                                 on_text_validate:
@@ -197,6 +202,11 @@
                             size_hint_y: 0.5
                             TabCyclable:
                                 id: score_edit
+                                background_color:
+                                    values.color_light_red if root.selected_player == 1 \
+                                    else values.color_light_yellow if root.selected_player == 2\
+                                    else values.color_light_blue if root.selected_player == 3 \
+                                    else values.color_white
                                 hint_text: strings.input_adjust_score
                                 multiline: False
                                 on_text_validate:
@@ -221,6 +231,11 @@
                                 orientation: 'vertical'
                                 TabCyclable:
                                     id: custom_value
+                                    background_color:
+                                        values.color_light_red if root.selected_player == 1 \
+                                        else values.color_light_yellow if root.selected_player == 2\
+                                        else values.color_light_blue if root.selected_player == 3 \
+                                        else values.color_white
                                     hint_text: strings.input_custom
                                     disabled: dropdown.disabled
                                     multiline: False
