@@ -4,7 +4,7 @@ import random
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
-from kivy.properties import BooleanProperty, ObjectProperty
+from kivy.properties import BooleanProperty
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -31,16 +31,13 @@ class PuzzleWithCategory(BoxLayout, Fullscreenable):
 class PuzzleLayout(GridLayout, KeyboardBindable):
     """GridLayout containing all Panels."""
 
-    category_label = ObjectProperty(None)
-    queue = ObjectProperty(None)
-    tossup_running = False
-
     def __init__(self, category_label=None, q=None, **kwargs):
         """Create the layout and bind the keyboard."""
         super(PuzzleLayout, self).__init__(**kwargs)
 
         self.category_label = category_label
         self.queue = q
+        self.tossup_running = False
 
         for i in range(self.rows):
             for j in range(self.cols):
@@ -228,7 +225,8 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         self.tossup_running = False
         puzzle_string = list(puzzle['puzzle'])
 
-        self.category_label.text = puzzle['category'].upper()
+        if self.category_label:
+            self.category_label.text = puzzle['category'].upper()
 
         if self.queue:
             self.queue.b.put(('puzzle_loaded', puzzle))
@@ -426,12 +424,6 @@ class LetterLayout(AnchorLayout):
 
 class Panel(Button, KeyboardBindable):
     """A single panel that may contain a letter."""
-
-    layout = ObjectProperty(None)  # a LetterLayout object
-
-    def __init__(self, **kwargs):
-        """Create the Panel and bind the click function."""
-        super(Panel, self).__init__(**kwargs)
 
     def click(self):
         """

@@ -123,18 +123,20 @@ class Hideable(Widget):
     """
     A Widget with an attribute `visible`.
     When `visible` is changed, the widget will animate itself
-    to be hidden or shown appropriately.
+    to be hidden or shown appropriately,
+    by changing its width if `horizontal` is True,
+    or its height otherwise.
     """
 
     visible = BooleanProperty(True)
-    horizontal = BooleanProperty(True)
 
-    def __init__(self, **kwargs):
+    def __init__(self, horizontal=True, **kwargs):
         """Create the widget"""
         super(Hideable, self).__init__(**kwargs)
 
         self.start_size_hint = self.size_hint[:]
         self.start_size = self.size[:]
+        self.horizontal = horizontal
 
     def on_visible(self, _instance, value):
         """

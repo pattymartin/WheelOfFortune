@@ -4,7 +4,7 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.properties import (
-    BooleanProperty, NumericProperty, ObjectProperty, StringProperty)
+    BooleanProperty, ListProperty, NumericProperty, StringProperty)
 from kivy.uix.relativelayout import RelativeLayout
 
 import values
@@ -15,7 +15,7 @@ Builder.load_file(values.file_kv_score)
 
 class ScoreLayout(RelativeLayout, Fullscreenable):
     """A layout displaying a player's score."""
-    bg_color = ObjectProperty(values.color_red)
+    bg_color = ListProperty(values.color_red)
     name = StringProperty('')
     score = NumericProperty(0)
     total = NumericProperty(0)

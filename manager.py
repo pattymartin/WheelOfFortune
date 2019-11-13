@@ -6,8 +6,7 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.lang import Builder
 from kivy.properties import (
-    BooleanProperty, ListProperty, NumericProperty,
-    ObjectProperty, StringProperty)
+    BooleanProperty, ListProperty, NumericProperty, StringProperty)
 from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
@@ -53,16 +52,11 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     game = ListProperty([])
     puzzle_string = StringProperty('')
-    seconds_left = NumericProperty(0)
     revealed = BooleanProperty(True)
     tossup_players_done = ListProperty([])
     final_spin_bonus = NumericProperty(0)
     selected_player = NumericProperty(0)
     matches = NumericProperty(0)
-
-    btn_red = ObjectProperty(None)
-    btn_ylw = ObjectProperty(None)
-    btn_blu = ObjectProperty(None)
 
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
         """Create the layout."""
