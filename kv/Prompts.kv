@@ -255,7 +255,9 @@
 			TabCyclable:
 				id: vowel_input
 				text: str(root.cash_values.get('vowel_price', ''))
-				hint_text: strings.input_vowel_price
+				hint_text:
+				    strings.input_vowel_price.format(\
+				    (   values.default_vowel_price))
 				multiline: False
 				prev_widget: timer_input
 				next_widget: min_input
@@ -270,7 +272,7 @@
 			TabCyclable:
 				id: min_input
 				text: str(root.cash_values.get('min_win', ''))
-				hint_text: strings.input_min_win
+				hint_text: strings.input_min_win.format(values.default_min_win)
 				multiline: False
 				prev_widget: vowel_input
 				next_widget: clue_reward_input
@@ -285,7 +287,9 @@
 			TabCyclable:
 				id: clue_reward_input
 				text: str(root.cash_values.get('clue_solve_reward', ''))
-				hint_text: strings.input_clue_solve_reward
+				hint_text:
+				    strings.input_clue_solve_reward.format(\
+				    (   values.default_clue_solve_reward))
 				multiline: False
 				prev_widget: min_input
 				next_widget: final_spin_bonus_input
@@ -300,7 +304,9 @@
 			TabCyclable:
 				id: final_spin_bonus_input
 				text: str(root.cash_values.get('final_spin_bonus', ''))
-				hint_text: strings.input_final_spin_bonus
+				hint_text:
+				    strings.input_final_spin_bonus.format(\
+				    (   values.default_final_spin_bonus))
 				multiline: False
 				prev_widget: clue_reward_input
 				next_widget: wedges_input

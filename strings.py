@@ -46,8 +46,12 @@ dropdown_select_value = 'Select cash value'
 
 input_adjust_score = 'Adjust score'
 input_cash_values = 'Enter numbers separated by any whitespace'
+input_clue_solve_reward = 'Enter a number (default {})'.format(currency_format)
 input_custom = 'Enter custom cash value'
+input_final_spin_bonus = 'Enter a number (default {})'.format(currency_format)
+input_min_win = 'Enter a number (default {})'.format(currency_format)
 input_name = 'Edit player name'
+input_vowel_price = 'Enter a number (default {})'.format(currency_format)
 
 label_category = 'Category'
 label_clue = 'Clue'
@@ -139,15 +143,3 @@ round_type_standard = 'Standard'
 round_type_tossup = 'Toss-Up'
 round_type_triple_tossup = 'Triple Toss-Up 1-2'
 round_type_triple_tossup_final = 'Triple Toss-Up 3'
-
-# circular import, can't import at top
-import values
-
-input_clue_solve_reward = 'Enter a number (default {})'.format(
-    currency_format.format(values.default_clue_solve_reward))
-input_final_spin_bonus = 'Enter a number (default {})'.format(
-    currency_format.format(values.default_final_spin_bonus))
-input_min_win = 'Enter a number (default {})'.format(
-    currency_format.format(values.default_min_win))
-input_vowel_price = 'Enter a number (default {})'.format(
-    currency_format.format(values.default_vowel_price))
