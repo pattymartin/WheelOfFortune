@@ -134,56 +134,72 @@ font_score_name_size = 0.5
 font_score_size = 1
 font_score_total_size = 0.5
 
-hotkey_default_bank_score = '='
-hotkey_default_bankrupt = '0'
-hotkey_default_buy_vowel = '-'
-hotkey_default_buzzer = '8'
-hotkey_default_clear_puzzle = 'backspace'
-hotkey_default_increase_score = 'enter'
-hotkey_default_lose_turn = '9'
-hotkey_default_select_1 = '1'
-hotkey_default_select_2 = '2'
-hotkey_default_select_3 = '3'
-hotkey_default_select_next = 'spacebar'
-hotkey_default_select_puzzle = 'ctrl+o'
-hotkey_default_solve = 'right'
-hotkey_default_start_tossup = '4'
-hotkey_default_timer_reset = 'shift+`'
-hotkey_default_timer_start = '`'
-hotkey_defaults = [
-    hotkey_default_select_1,
-    hotkey_default_select_2,
-    hotkey_default_select_3,
-    hotkey_default_select_next,
-    hotkey_default_increase_score,
-    hotkey_default_select_puzzle,
-    hotkey_default_clear_puzzle,
-    hotkey_default_solve,
-    hotkey_default_timer_start,
-    hotkey_default_timer_reset,
-    hotkey_default_start_tossup,
-    hotkey_default_buzzer,
-    hotkey_default_lose_turn,
-    hotkey_default_bankrupt,
-    hotkey_default_buy_vowel,
-    hotkey_default_bank_score]
-hotkey_names = [
-    'select_1',
-    'select_2',
-    'select_3',
-    'select_next',
-    'increase_score',
-    'select_puzzle',
-    'clear_puzzle',
-    'solve',
-    'timer_start',
-    'timer_reset',
-    'start_tossup',
-    'buzzer',
-    'lose_turn',
-    'bankrupt',
-    'buy_vowel',
-    'bank_score']
+hotkeys = [
+    {
+        'name': 'select_1',
+        'default': '1',
+        'description': strings.label_hotkey_select_1},
+    {
+        'name': 'select_2',
+        'default': '2',
+        'description': strings.label_hotkey_select_2},
+    {
+        'name': 'select_3',
+        'default': '3',
+        'description': strings.label_hotkey_select_3},
+    {
+        'name': 'select_next',
+        'default': 'spacebar',
+        'description': strings.label_hotkey_select_next},
+    {
+        'name': 'increase_score',
+        'default': 'enter',
+        'description': strings.label_hotkey_increase_score},
+    {
+        'name': 'select_puzzle',
+        'default': 'ctrl+o',
+        'description': strings.label_hotkey_select_puzzle},
+    {
+        'name': 'clear_puzzle',
+        'default': 'backspace',
+        'description': strings.label_hotkey_clear_puzzle},
+    {
+        'name': 'solve',
+        'default': 'right',
+        'description': strings.label_hotkey_solve},
+    {
+        'name': 'timer_start',
+        'default': '`',
+        'description': strings.label_hotkey_timer_start},
+    {
+        'name': 'timer_reset',
+        'default': 'shift+`',
+        'description': strings.label_hotkey_timer_reset},
+    {
+        'name': 'start_tossup',
+        'default': '4',
+        'description': strings.label_hotkey_start_tossup},
+    {
+        'name': 'buzzer',
+        'default': '8',
+        'description': strings.label_hotkey_buzzer},
+    {
+        'name': 'lose_turn',
+        'default': '9',
+        'description': strings.label_hotkey_lose_turn},
+    {
+        'name': 'bankrupt',
+        'default': '0',
+        'description': strings.label_hotkey_bankrupt},
+    {
+        'name': 'buy_vowel',
+        'default': '-',
+        'description': strings.label_hotkey_buy_vowel},
+    {
+        'name': 'bank_score',
+        'default': '=',
+        'description': strings.label_hotkey_bank_score},
+]
 
 # seconds between panels turning blue
 interval_blue = 0.5

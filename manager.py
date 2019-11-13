@@ -970,9 +970,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                                 for value in settings.get('cash_values', [])]
 
         self.hotkeys = {
-            name: settings.get(name, default).lower()
-            for name, default
-            in zip(values.hotkey_names, values.hotkey_defaults)}
+            hotkey['name']:
+                settings.get('hotkeys', {}).get(
+                    hotkey['name'], hotkey['default']).lower()
+            for hotkey in values.hotkeys}
 
     @staticmethod
     def play_sound(filename):

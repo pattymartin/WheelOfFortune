@@ -510,55 +510,72 @@ class EditHotkeysPrompt(Popup):
 
         super(EditHotkeysPrompt, self).__init__(**kwargs)
 
-        self.hotkey_layouts = [
-            self.hotkey_select_1, self.hotkey_select_2,
-            self.hotkey_select_3, self.hotkey_select_next,
-            self.hotkey_increase_score, self.hotkey_select_puzzle,
-            self.hotkey_clear_puzzle, self.hotkey_solve,
-            self.hotkey_timer_start, self.hotkey_timer_reset,
-            self.hotkey_start_tossup, self.hotkey_buzzer,
-            self.hotkey_lose_turn, self.hotkey_bankrupt,
-            self.hotkey_buy_vowel, self.hotkey_bank_score]
-
+        self.problem_hotkeys = []
         existing_hotkeys = data_caching.get_hotkeys()
 
-        for name, layout, default in zip(
-                values.hotkey_names,
-                self.hotkey_layouts,
-                values.hotkey_defaults):
-            layout.hotkey_text_label.text = existing_hotkeys.get(
-                name, default).title()
+        for hotkey in values.hotkeys:
+            layout = HotkeyLayout(
+                hotkey['name'],
+                hotkey['description'],
+                hotkey_text=existing_hotkeys.get(
+                    hotkey['name'], hotkey['default']
+                ).title())
+            layout.bind(
+                hotkey_text=lambda i, v: self.check_for_problems())
+            self.hotkey_layout.add_widget(layout)
+
+    def check_for_problems(self):
+        """
+        Check the hotkeys entered to make sure that there are no
+        duplicates, and that none are set to the letters A-Z.
+        If any problems are found, display an alert icon next to
+        problematic hotkeys.
+        """
+
+        invalid_hotkeys = list(strings.alphabet)
+        self.problem_hotkeys = []
+
+        for layout in self.hotkey_layout.children[::-1]:
+            hotkey = layout.hotkey_text_label.text.lower()
+            if not hotkey:
+                continue
+            elif hotkey not in invalid_hotkeys:
+                invalid_hotkeys.append(hotkey)
+            else:
+                self.problem_hotkeys.append(hotkey)
+
+        for layout in self.hotkey_layout.children[::-1]:
+            hotkey = layout.hotkey_text_label.text.lower()
+            if hotkey and hotkey in self.problem_hotkeys:
+                layout.warning = True
+            else:
+                layout.warning = False
 
     def confirm(self):
         """
         Confirm the hotkeys defined by the user.
         """
 
-        hotkeys = {
-            name: layout.hotkey_text_label.text.lower()
-            for name, layout in zip(values.hotkey_names, self.hotkey_layouts)}
-
-        invalid_hotkeys = list(strings.alphabet)
-        problem_hotkeys = []
-
-        for value in hotkeys.values():
-            if not value:
-                continue
-            elif value not in invalid_hotkeys:
-                invalid_hotkeys.append(value)
-            else:
-                problem_hotkeys.append(value)
-
-        if problem_hotkeys:
-            for layout in self.hotkey_layouts:
-                h = layout.hotkey_text_label.text.lower()
-                if h and h in problem_hotkeys:
-                    layout.warning_icon.color = (1, 0, 0, 1)
-                else:
-                    layout.warning_icon.color = (1, 1, 1, 0)
-        else:
-            data_caching.write_hotkeys(hotkeys)
+        if not self.problem_hotkeys:
+            data_caching.write_hotkeys({
+                layout.name: layout.hotkey_text_label.text.lower()
+                for layout in self.hotkey_layout.children[::-1]})
             self.dismiss()
+
+
+class HotkeyLayout(BoxLayout):
+    """
+    A single row in the hotkeys layout of an EditHotkeysPrompt.
+    Contains a description of a hotkey, a RecordHotkeyLabel,
+    and a button to reset the hotkey to default.
+    """
+
+    def __init__(self, name, description, hotkey_text, **kwargs):
+        """Create the layout."""
+        super(HotkeyLayout, self).__init__(**kwargs)
+        self.name = name
+        self.description = description
+        self.hotkey_text_label.text = hotkey_text
 
 
 class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
@@ -580,14 +597,13 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
         self.hotkey_entered = False
         self.seconds_left = 0
 
-        self.defaults_dict = {
-            name: default
-            for name, default
-            in zip(values.hotkey_names, values.hotkey_defaults)}
-
     def default(self):
         """Set this hotkey to its default."""
-        self.text = self.defaults_dict.get(self.name, '').title()
+        for hotkey in values.hotkeys:
+            if hotkey['name'] == self.name:
+                self.text = hotkey['default'].title()
+                return
+        self.text = ''
 
     def start_listening(self):
         """
