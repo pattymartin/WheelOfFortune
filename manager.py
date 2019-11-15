@@ -102,7 +102,6 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         self.load_settings()
         self.tossup_button.disabled = False
 
-        self.text_input_clicked = False
         self.get_keyboard()
 
         if self.puzzle_queue:
@@ -119,29 +118,28 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         :return: None
         """
 
-        self.text_input_clicked = False
-
         def filter_children(widget):
             """
-            Check a widget's children for TextInput widgets that
+            Check a widget and its children for TextInput widgets that
             correspond with the position of the touch.
 
             :param widget: A Widget
             :type widget: kivy.uix.widget.Widget
-            :return: None
+            :return: True if a TextInput is found, otherwise False
+            :rtype: bool
             """
-            for child in widget.children:
-                if self.text_input_clicked:
-                    break
-                filter_children(child)
+
             if (
                     isinstance(widget, TextInput)
                     and widget.collide_point(*touch.pos)):
-                self.text_input_clicked = True
+                return True
+            else:
+                for child in widget.children:
+                    if filter_children(child):
+                        return True
+                return False
 
-        filter_children(self)
-
-        if not self.text_input_clicked:
+        if not filter_children(self):
             self.get_keyboard()
 
         return super(ManagerLayout, self).on_touch_down(touch)
