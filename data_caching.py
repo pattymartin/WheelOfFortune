@@ -88,8 +88,7 @@ def add_puzzle(name, puzzle_dict):
     if name in puzzles.keys():
         prompts.YesNoPrompt(
             strings.label_name_exists.format(name),
-            write_puzzle,
-            None,
+            yes_callback=write_puzzle,
             title=strings.title_name_exists
         ).open()
     else:
@@ -141,8 +140,8 @@ def add_puzzles(puzzles):
     if duplicates:
         prompts.YesNoPrompt(
             strings.label_names_exist.format('\n'.join(duplicates)),
-            overwrite,
-            no_overwrite,
+            yes_callback=overwrite,
+            no_callback=no_overwrite,
             title=strings.title_names_exist
         ).open()
     else:
@@ -215,8 +214,9 @@ def import_puzzles(file_list):
 
 def export_puzzles_by_name(filename, puzzle_names):
     """
-    Export puzzles with names in `puzzle_names`
-    to the file `filename`.
+    Export puzzles with names in `puzzle_names` to the file `filename`.
+    If `puzzle_names` is empty, ask the user if they would like to
+    export all files.
 
     :param filename: A filename
     :type filename: str
@@ -228,8 +228,7 @@ def export_puzzles_by_name(filename, puzzle_names):
     if not puzzle_names:
         prompts.YesNoPrompt(
             strings.label_no_export_selected,
-            lambda: export_puzzles(filename, read_puzzles()),
-            None,
+            yes_callback=lambda: export_puzzles(filename, read_puzzles()),
             title=strings.title_no_export_selected
         ).open()
     else:
@@ -273,8 +272,7 @@ def export_puzzles(filename, puzzles):
     if os.path.exists(filename):
         prompts.YesNoPrompt(
             strings.label_file_exists.format(filename),
-            write,
-            None,
+            yes_callback=write,
             title=strings.title_file_exists
         ).open()
     else:
@@ -368,8 +366,7 @@ def export_game(filename, game):
     if os.path.exists(filename):
         prompts.YesNoPrompt(
             strings.label_file_exists.format(filename),
-            write,
-            None,
+            yes_callback=write,
             title=strings.title_file_exists
         ).open()
     else:

@@ -212,7 +212,18 @@ class LoadGamePrompt(Popup):
         :return: None
         """
 
-        FileSaverPrompt(data_caching.export_game, self.create_game()).open()
+        def file_selected(filename):
+            """
+            Create a game list and write it to the selected file.
+
+            :param filename: The name of a file
+            :type filename: str
+            :return: None
+            """
+
+            data_caching.export_game(filename, self.create_game())
+
+        FileSaverPrompt(file_selected).open()
 
     def update_values(self):
         """
@@ -407,9 +418,18 @@ class LoadPuzzlePrompt(Popup):
         :return: None
         """
 
-        FileSaverPrompt(
-            data_caching.export_puzzles_by_name, self.selected_names
-        ).open()
+        def file_selected(filename):
+            """
+            Save the selected puzzles to the selected file.
+
+            :param filename: The name of a file
+            :type filename: str
+            :return: None
+            """
+
+            data_caching.export_puzzles_by_name(filename, self.selected_names)
+
+        FileSaverPrompt(file_selected).open()
 
     def prompt_delete_all(self):
         """
@@ -431,8 +451,7 @@ class LoadPuzzlePrompt(Popup):
 
         YesNoPrompt(
             strings.label_delete_all_puzzles,
-            confirm_delete,
-            None,
+            yes_callback=confirm_delete,
             title=strings.title_delete_all_puzzles
         ).open()
 
@@ -502,8 +521,7 @@ class PuzzleButton(BoxLayout):
         YesNoPrompt(
             strings.label_delete_puzzle.format(
                 self.toggle_button.text),
-            confirm_delete,
-            None,
+            yes_callback=confirm_delete,
             title=strings.title_delete_puzzle
         ).open()
 
@@ -897,22 +915,20 @@ class FileChooserPrompt(Popup):
 class FileSaverPrompt(Popup):
     """A Popup prompting the user to select a file to write to."""
 
-    def __init__(self, callback, *callback_args, **kwargs):
+    def __init__(self, callback, **kwargs):
         """
         Create the Popup.
 
         When a file is selected, the filename will be passed to
-        `callback`, along with any `*callback args`.
+        `callback`.
 
         :param callback: A function accepting a string filename
         :type callback: function
-        :param callback_args: Any additional arguments for `callback`
         :param kwargs: Additional keyword arguments for the Popup
         """
 
         super(FileSaverPrompt, self).__init__(**kwargs)
         self.callback = callback
-        self.args = callback_args
 
         self.chooser_path = data_caching.get_variables().get(
             'file_chooser_path', '')
@@ -921,8 +937,8 @@ class FileSaverPrompt(Popup):
 
     def input_save(self):
         """
-        Get text from the input box and pass the selected filename,
-        along with the additional arguments, to `callback`.
+        Get text from the input box and pass the selected filename to
+        `callback`.
 
         :return: None
         """
@@ -930,9 +946,7 @@ class FileSaverPrompt(Popup):
         filename = self.filename_input.text
 
         if filename:
-            self.callback(
-                os.path.join(self.chooser.path, filename),
-                *self.args)
+            self.callback(os.path.join(self.chooser.path, filename))
             data_caching.update_variables({
                 'file_chooser_path': self.chooser.path})
             self.dismiss()
