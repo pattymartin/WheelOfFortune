@@ -7,7 +7,6 @@ from kivy.core.audio import SoundLoader
 from kivy.lang import Builder
 from kivy.properties import (
     BooleanProperty, ListProperty, NumericProperty, StringProperty)
-from kivy.uix.behaviors.button import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.textinput import TextInput
 
@@ -25,7 +24,7 @@ Builder.load_file(values.file_kv_manager)
 
 class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     """
-    The root layout for the ManagerApp.
+    The root layout for the manager app.
     """
 
     game = ListProperty([])
@@ -90,6 +89,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
         if self.puzzle_queue_in:
             Clock.schedule_once(self.check_queue, values.queue_start)
+
+        App.get_running_app().bind(on_stop=self.exit_other_apps)
 
     def on_touch_down(self, touch):
         """
@@ -725,7 +726,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def stop_all_flashing(self):
         """
-        Tell all ScoreApps to stop flashing.
+        Make all of the scoreboards stop flashing.
 
         :return: None
         """
@@ -1115,20 +1116,13 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
             self.dropdown.ignore_on_text = False
 
-    def exit_app(self):
-        """
-        Tell all apps to stop, then stop this app.
-
-        :return: None
-        """
-
-        self.exit_other_apps()
-        App.get_running_app().stop()
-
-    def exit_other_apps(self):
+    def exit_other_apps(self, _instance=None):
         """
         Tell all other apps to stop.
 
+        :param _instance: App instance that called this method, defaults
+                          to None
+        :type _instance: kivy.app.App, optional
         :return: None
         """
 
@@ -1137,161 +1131,53 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         self.letters_q.put(('exit', None, None))
 
 
-class PlayerButton(ButtonBehavior, score.ScoreLayout):
+class BaseApp(App):
     """
-    A ScoreLayout which also serves as a button to select a player.
-    """
+    A Kivy App.
 
-    pass
-
-
-class ManagerApp(App):
-    """
-    An app to manage the PuzzleboardApp.
+    The layout provided to __init__ will be used as the root of the App.
     """
 
-    def __init__(self, *layout_args, **kwargs):
+    def __init__(self, layout_class, layout_args, **kwargs):
         """
-        Create the app.
-        Any `layout_args` will be used by
-        :meth:`ManagerLayout.__init__`,
-        while `kwargs` will used by :meth:`App.__init__`.
+        Create an App with an instance of `layout_class` as the root
+        layout.
 
-        :param layout_args: See arguments for
-                            :meth:`ManagerLayout.__init__`
-        :param kwargs: Keyword arguments for :meth:`App.__init__`
+        :param layout_class: A subclass of Widget (not an instance)
+        :type layout_class: type
+        :param layout_args: Arguments for initializing the layout
+        :type layout_args: tuple
+        :param kwargs: Additional keyword arguments for the App
         """
 
-        super(ManagerApp, self).__init__(**kwargs)
+        super(BaseApp, self).__init__(**kwargs)
+        self.layout = layout_class
         self.args = layout_args
 
     def build(self):
         """
-        Build the app.
+        Build the root layout of the app.
 
-        :return: The root layout of the app
-        :rtype: ManagerLayout
-        """
-        return ManagerLayout(*self.args)
-
-    def on_stop(self):
-        """
-        Close other apps when this app is closed.
-
-        :return: None
+        :return: The root layout
+        :rtype: kivy.uix.widget.Widget
         """
 
-        self.root.exit_other_apps()
+        return self.layout(*self.args)
 
 
-class PuzzleboardApp(App):
-    """An app displaying the puzzleboard."""
-
-    def __init__(self, q_in, q_out, **kwargs):
-        """
-        Create the App.
-
-        :param q_in: A Queue to receive information from the manager app
-        :type q_in: multiprocessing.Queue
-        :param q_out: A Queue to send information to the manager app
-        :type q_out: multiprocessing.Queue
-        :param kwargs: Additional keyword arguments for the app.
-        """
-
-        super(PuzzleboardApp, self).__init__(**kwargs)
-        self.queue_in = q_in
-        self.queue_out = q_out
-
-    def build(self):
-        """
-        Build the app.
-
-        :return: The root layout.
-        :rtype: puzzleboard.PuzzleWithCategory
-        """
-
-        return puzzleboard.PuzzleWithCategory(self.queue_in, self.queue_out)
-
-
-class ScoreApp(App):
+def launch_app(root_layout_class, args=(), new_window=True):
     """
-    An app showing a player's score.
-    """
-
-    def __init__(self, bg_color, q, **kwargs):
-        """
-        Create the app.
-        `bg_color` should be a tuple of rgba values between 0 and 1.
-        `q` is a :class:`multiprocessing.Queue` used to communicate
-        with the main app.
-
-        :param bg_color: The background color
-        :type bg_color: tuple
-        :param q: A Queue
-        :type q: multiprocessing.Queue
-        :param kwargs: Additional keyword arguments for the app
-        """
-
-        super(ScoreApp, self).__init__(**kwargs)
-        self.bg_color = bg_color
-        self.queue = q
-
-    def build(self):
-        """
-        Build the app.
-
-        :return: The root layout of the app
-        :rtype: score.ScoreLayout
-        """
-
-        return score.ScoreLayout(self.bg_color, q=self.queue)
-
-
-class LetterboardApp(App):
-    """
-    An app showing the available letters
-    and players' scores.
-    """
-
-    def __init__(self, q, **kwargs):
-        """
-        Create the app.
-        `q` is a :class:`multiprocessing.Queue` used to communicate
-        with the main app.
-
-        :param q: A Queue
-        :type q: multiprocessing.Queue
-        :param kwargs: Additional keyword arguments for the app
-        """
-
-        super(LetterboardApp, self).__init__(**kwargs)
-        self.queue = q
-
-    def build(self):
-        """
-        Build the app.
-
-        :return: The root layout of the app
-        :rtype: used_letters.LettersWithScore
-        """
-
-        return used_letters.LettersWithScore(q=self.queue)
-
-
-def launch_app(app, args=(), new_window=True):
-    """
-    Launch an App.
+    Create and launch a :class:`BaseApp`\\, using an instance of
+     `root_layout_class` as the root layout. Use the tuple `args` to
+     specify arguments for the initialization of the layout.
 
     If `new_window` is True, the app will be launched in a separate
     process.
 
-    `app` should be a subclass of App (not an instance), and `args` a
-    tuple of any arguments to use for the initialization of the app.
-
-    :param app: A subclass of App (not an instance)
-    :type app: type
-    :param args: Arguments for initializing the App
-    :type args: tuple
+    :param root_layout_class: A subclass of Widget (not an instance)
+    :type root_layout_class: type
+    :param args: Arguments for initializing the layout, defaults to ()
+    :type args: tuple, optional
     :param new_window: True if the app should be opened in a new
                        process, otherwise False, defaults to True
     :type new_window: bool, optional
@@ -1303,11 +1189,11 @@ def launch_app(app, args=(), new_window=True):
         # because the App instances cannot be pickled
         multiprocessing.Process(
             target=launch_app,
-            args=(app, args),
-            kwargs={'new_window': False}
+            args=(root_layout_class,),
+            kwargs={'args': args, 'new_window': False}
         ).start()
     else:
-        app(*args).run()
+        BaseApp(root_layout_class, args).run()
 
 
 if __name__ == '__main__':
@@ -1319,22 +1205,22 @@ if __name__ == '__main__':
     letters_queue = multiprocessing.Queue()
 
     launch_app(
-        PuzzleboardApp,
+        puzzleboard.PuzzleWithCategory,
         args=(puzzle_q1, puzzle_q2))
     launch_app(
-        ScoreApp,
+        score.ScoreLayout,
         args=(values.color_red, red_queue))
     launch_app(
-        ScoreApp,
+        score.ScoreLayout,
         args=(values.color_yellow, yellow_queue))
     launch_app(
-        ScoreApp,
+        score.ScoreLayout,
         args=(values.color_blue, blue_queue))
     launch_app(
-        LetterboardApp,
+        used_letters.LettersWithScore,
         args=(letters_queue,))
     launch_app(
-        ManagerApp,
+        ManagerLayout,
         args=(
             puzzle_q1, puzzle_q2, red_queue, yellow_queue, blue_queue,
             letters_queue),
