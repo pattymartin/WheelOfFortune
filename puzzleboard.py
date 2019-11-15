@@ -19,19 +19,38 @@ Builder.load_file(values.file_kv_puzzleboard)
 
 
 class PuzzleWithCategory(BoxLayout, Fullscreenable):
-    """BoxLayout containing the puzzleboard and category strip."""
+    """A BoxLayout containing the puzzleboard and category strip."""
 
     def __init__(self, q=None, **kwargs):
-        """Create the layout."""
+        """
+        Create the layout.
+
+        :param q: A CommQueue to communicate with the manager app,
+                  defaults to None
+        :type q: manager.CommQueue, optional
+        :param kwargs: Additional keyword arguments for the layout
+        """
+
         super(PuzzleWithCategory, self).__init__(**kwargs)
         self.puzzle_layout = PuzzleLayout(self.category, q)
 
 
 class PuzzleLayout(GridLayout, KeyboardBindable):
-    """GridLayout containing all Panels."""
+    """A GridLayout containing all :class:`Panel`\\s."""
 
     def __init__(self, category_label=None, q=None, **kwargs):
-        """Create the layout and bind the keyboard."""
+        """
+        Create the layout.
+
+        :param category_label: The Label displaying the category,
+                               defaults to None
+        :type category_label: kivy.uix.label.Label, optional
+        :param q: A CommQueue to communicate with the manager app,
+                  defaults to None
+        :type q: manager.CommQueue, optional
+        :param kwargs: Additional keyword arguments for the layout
+        """
+
         super(PuzzleLayout, self).__init__(**kwargs)
 
         self.category_label = category_label
@@ -59,7 +78,40 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
     def check_queue(self, _dt):
         """
         Check the queue for incoming commands to execute.
+
+        Each command in the queue should be a tuple of the form:
+
+        (command_string, args)
+
+        Available commands are:
+
+        'letter':
+            Check the layout for panels that match *args*.
+            *args* is a single-character string.
+        'bonus_round_letters':
+            Check the layout for panels that match any letter in *args*.
+            *args* is a list of single-character strings.
+        'load':
+            Load a puzzle onto the puzzleboard.
+            *args* is a puzzle string.
+        'tossup':
+            Start a tossup.
+            *args* is ignored.
+        'pause_tossup':
+            Pause a tossup.
+            *args* is ignored.
+        'reveal':
+            Reveal the entire puzzle.
+            *args* is ignored.
+        'exit':
+            Close the running app.
+            *args* is ignored.
+
+        :param _dt: The time elapsed between scheduling and calling
+        :type _dt: float
+        :return: None
         """
+
         try:
             command, args = self.queue.a.get(block=False)
             if command == 'letter':
@@ -85,8 +137,15 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
     def check_all_by_list(self, letters, bonus_round=False):
         """
-        Check all Panels for a list of letters
-        and reveal matches.
+        Check all Panels for a list of letters and reveal matching
+        Panels.
+
+        :param letters: A list of single-character strings
+        :type letters: list
+        :param bonus_round: True if the current round is the bonus
+                            round, otherwise False, defaults to False
+        :type bonus_round: bool, optional
+        :return: None
         """
 
         letters = [letter for letter in letters
@@ -162,12 +221,23 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                     values.interval_reveal * matches)
 
     def check_all(self, letter):
-        """Check all Panels for a given letter and reveal matches."""
+        """
+        Check all Panels for a given letter and reveal matches.
+
+        :param letter: A single-character string
+        :type letter: str
+        :return: None
+        """
 
         self.check_all_by_list([letter])
 
     def reveal_all(self):
-        """Reveal the entire puzzle."""
+        """
+        Reveal the entire puzzle.
+
+        :return: None
+        """
+
         # indices in order from top to bottom, left to right
         indices = [
                       i + (j * self.cols)
@@ -189,7 +259,12 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                 pass
 
     def save_puzzle(self):
-        """Prompt the user to save the puzzle."""
+        """
+        Prompt the user to save the puzzle.
+
+        :return: None
+        """
+
         puzzle = ''
         for widget in self.children[::-1]:
             try:
@@ -204,15 +279,25 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
     def choose_puzzle(self):
         """
-        Prompt the user to select a puzzle,
-        then load that puzzle.
+        Prompt the user to select a puzzle. When a puzzle is selected,
+        it will be loaded.
+
+        :return: None
         """
+
         prompts.LoadPuzzlePrompt(self.selected_puzzles).open()
 
     def selected_puzzles(self, puzzles):
         """
-        Get selected puzzles from a LoadPuzzlePrompt,
-        and load the first one.
+        Get selected puzzles from a LoadPuzzlePrompt, and load the first
+        one.
+
+        `puzzles` is a list of puzzle dicts.
+        See :func:`add_puzzle` for a description of puzzle dicts.
+
+        :param puzzles: A list of puzzle dicts
+        :type puzzles: list
+        :return: None
         """
 
         self.load_puzzle(puzzles[0])
@@ -220,7 +305,15 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
     def load_puzzle(self, puzzle):
         """
         Load a puzzle into the puzzleboard.
+
+        `puzzle` is a puzzle dict.
+        See :func:`add_puzzle` for a description of puzzle dicts.
+
+        :param puzzle: A puzzle dict
+        :type puzzle: dict
+        :return: None
         """
+
         self.tossup_running = False
         puzzle_string = list(puzzle['puzzle'])
 
@@ -267,10 +360,12 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
     def start_tossup(self):
         """
-        Start a tossup by revealing the
-        bottom-rightmost letter,
-        then revealing random letters.
+        Start a tossup by revealing the bottom-rightmost letter, then
+        revealing random letters.
+
+        :return: None
         """
+
         self.tossup_running = True
 
         # indices in order from bottom to top, right to left
@@ -305,9 +400,11 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
     def get_random_letter(self):
         """
-        Randomly select a Panel
-        containing hidden text.
-        If none are found, return None.
+        Randomly select a Panel containing hidden text. If none are
+        found, return None.
+
+        :return: A randomly selected Panel
+        :rtype: Panel
         """
 
         shuffled_children = random.sample(
@@ -323,9 +420,14 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
     def tossup_random_letter(self, letter):
         """
-        Reveal a random letter,
-        then schedule this method to run again.
+        Reveal a random letter, then schedule this method to run again.
+        Do nothing if the tossup has stopped.
+
+        :param letter: A Panel containing a hidden letter
+        :type letter: Panel
+        :return: None
         """
+
         if not self.tossup_running:
             return
 
@@ -345,11 +447,27 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
     def pause_tossup(self):
         """
         Pause a tossup.
+
+        :return: None
         """
+
         self.tossup_running = False
 
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
-        """Reveal the puzzle when the Enter key is pressed."""
+        """
+        Reveal the puzzle when the Enter key is pressed.
+
+        :param _keyboard: A Keyboard
+        :type _keyboard: kivy.core.window.Keyboard
+        :param keycode: An integer and a string representing the keycode
+        :type keycode: tuple
+        :param _text: The text of the pressed key
+        :type _text: str
+        :param modifiers: A list of modifiers
+        :type modifiers: list
+        :return: None
+        """
+
         letter = keycode[1]
         if 'ctrl' in modifiers:
             if letter == 's':
@@ -364,26 +482,53 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
 class Panel(Button, KeyboardBindable):
     """A single panel that may contain a letter."""
+
     blue_state = BooleanProperty(False)
     white_state = BooleanProperty(False)
 
     def blue(self, _dt=None):
-        """Turn this panel blue."""
+        """
+        Turn this panel blue.
+
+        :param _dt: The time elapsed between scheduling and calling,
+                    defaults to None
+        :type _dt: float, optional
+        :return: None
+        """
+
         self.blue_state = True
         self.white_state = False
 
     def white(self):
-        """Turn this panel white."""
+        """
+        Turn this panel white.
+
+        :return: None
+        """
+
         self.white_state = True
         self.blue_state = False
 
     def green(self):
-        """Turn this panel to show the WOF logo."""
+        """
+        Turn this panel to show the Wheel of Fortune logo.
+
+        :return: None
+        """
+
         self.blue_state = False
         self.white_state = False
 
     def show_letter(self, _dt=None):
-        """Turn the panel white and reveal the letter."""
+        """
+        Turn this panel white and reveal the letter.
+
+        :param _dt: The time elapsed between scheduling and calling,
+                    defaults to None
+        :type _dt: float, optional
+        :return: None
+        """
+
         self.white()
         opacity = self.text_label.color[3] + values.opacity_adjustment
         if opacity <= 1:
@@ -392,7 +537,15 @@ class Panel(Button, KeyboardBindable):
             Clock.schedule_once(self.show_letter, values.opacity_interval)
 
     def hide(self, _dt=None):
-        """Hide the letter on this panel."""
+        """
+        Hide the letter on this panel.
+
+        :param _dt: The time elapsed between scheduling and calling,
+                    defaults to None
+        :type _dt: float, optional
+        :return: None
+        """
+
         text = self.text_label.text.lower()
         if text:
             if text not in strings.alphabet:
@@ -406,12 +559,23 @@ class Panel(Button, KeyboardBindable):
         self.text_label.color = [0, 0, 0, 0]
 
     def hidden(self):
-        """Returns True if this panel's letter is currently hidden."""
+        """
+        Check whether this panel's letter is currently hidden.
+
+        :return: True if the letter is hidden, otherwise False
+        :rtype: bool
+        """
+
         return self.text_label.color == [0, 0, 0, 0]
 
     def check_letter(self, letter):
         """
-        Check whether this panel's letter is the same as the given letter.
+        Check whether this panel's letter matches a given letter.
+
+        :param letter: A single-character string
+        :type letter: str
+        :return: True if the letters match, otherwise False
+        :rtype: bool
         """
 
         return self.text_label.text.lower() == letter.lower()
@@ -419,8 +583,10 @@ class Panel(Button, KeyboardBindable):
     def click(self):
         """
         Show this panel's letter and set keyboard focus to this Panel.
-        Also turns all other panels green if they don't have letters.
+        Also turn all other panels green if they don't have letters.
         This function will be called when the Panel is clicked.
+
+        :return: None
         """
 
         # turn widgets green if they don't have text
@@ -437,8 +603,18 @@ class Panel(Button, KeyboardBindable):
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
         """
         Receive a pressed key, and put the letter in the text label.
-        Then, move focus to the next panel
-        (or previous if backspace is pressed).
+        Then, move focus to the next panel (or previous if backspace is
+        pressed).
+
+        :param _keyboard: A Keyboard
+        :type _keyboard: kivy.core.window.Keyboard
+        :param keycode: An integer and a string representing the keycode
+        :type keycode: tuple
+        :param _text: The text of the pressed key
+        :type _text: str
+        :param modifiers: A list of modifiers
+        :type modifiers: list
+        :return: None
         """
 
         letter = keycode[1]
@@ -478,7 +654,12 @@ class Panel(Button, KeyboardBindable):
             self.select_next()
 
     def select_next(self):
-        """Select the next panel."""
+        """
+        Select the next panel.
+
+        :return: None
+        """
+
         # hide panel if there's no text
         if not self.text_label.text:
             self.hide()
@@ -494,7 +675,12 @@ class Panel(Button, KeyboardBindable):
                 i -= 1
 
     def select_prev(self):
-        """Select the previous panel and remove its text."""
+        """
+        Select the previous panel and remove its text.
+
+        :return: None
+        """
+
         # hide panel if there's no text
         if not self.text_label.text:
             self.hide()
@@ -517,6 +703,8 @@ class Panel(Button, KeyboardBindable):
     def hide_all(self):
         """
         Hide all panels in the parent PuzzleLayout.
+
+        :return: None
         """
 
         for panel in self.parent.children:
@@ -535,12 +723,22 @@ class PuzzleboardApp(App):
     def __init__(self, q=None, **kwargs):
         """
         Create the App.
-        `queue` is a CommQueue instance from `manager`.
+
+        :param q: A Queue to communicate with the manager app,
+                  defaults to None
+        :type q: manager.CommQueue, optional
+        :param kwargs: Additional keyword arguments for the app.
         """
+
         super(PuzzleboardApp, self).__init__(**kwargs)
         self.queue = q
 
     def build(self):
-        """Build the app."""
+        """
+        Build the app.
+
+        :return: The root layout.
+        :rtype: PuzzleWithCategory
+        """
 
         return PuzzleWithCategory(self.queue)

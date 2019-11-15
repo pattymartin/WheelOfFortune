@@ -16,19 +16,25 @@ Builder.load_file(values.file_kv_prompts)
 
 
 class SavePuzzlePrompt(Popup):
-    """
-    A Popup prompting the user to save a puzzle.
-    """
+    """A Popup prompting the user to save a puzzle."""
 
     def __init__(self, puzzle, **kwargs):
-        """Create the Popup."""
+        """
+        Create the Popup.
+
+        :param puzzle: The puzzle as a string
+        :type puzzle: str
+        :param kwargs: Additional keyword arguments for the Popup
+        """
+
         super(SavePuzzlePrompt, self).__init__(**kwargs)
         self.puzzle = puzzle
 
     def input_save(self):
         """
-        Get text from the input fields,
-        and save the puzzle.
+        Get text from the input fields and save the puzzle.
+
+        :return: None
         """
 
         category = self.cat_input.text
@@ -46,20 +52,22 @@ class SavePuzzlePrompt(Popup):
 
 
 class LoadGamePrompt(Popup):
-    """
-    A Popup to prompt the user to create a game.
-    The selected game will then be passed to `callback`.
-    A 'game' is a list of dicts, each with the keys
-    'round_type', 'round_reward', and 'puzzle'.
-    
-    The value of 'round_type' is a string,
-    the value of 'round_reward' is an int,
-    and the value of 'puzzle' is a dict with the keys
-    'puzzle', 'category', and 'clue' (all string values).
-    """
+    """A Popup to prompt the user to create a game."""
 
     def __init__(self, callback, **kwargs):
-        """Create the Popup."""
+        """
+        Create the Popup.
+
+        When the game has been selected, it will be passed to `callback`
+        as a game list.
+        See :func:`data_caching.export_game` for a description of
+        game lists.
+
+        :param callback: A function that can accept a list of dicts
+        :type callback: function
+        :param kwargs: Additional keyword arguments for the Popup
+        """
+
         super(LoadGamePrompt, self).__init__(**kwargs)
         self.callback = callback
 
@@ -73,7 +81,9 @@ class LoadGamePrompt(Popup):
 
     def fill_puzzle_layout(self):
         """
-        Fill in the selected puzzles.
+        Fill the layout with the selected puzzles.
+
+        :return: None
         """
 
         self.puzzle_layout.clear_widgets()
@@ -103,7 +113,15 @@ class LoadGamePrompt(Popup):
 
     def puzzles_selected(self, puzzles):
         """
-        Indicate the selected puzzles in the layout.
+        Add selected puzzles to the layout.
+
+        `puzzles` is a list of puzzle dicts.
+        See :func:`data_caching.add_puzzle` for a description of
+        puzzle dicts.
+
+        :param puzzles: A list of puzzle dicts
+        :type puzzles: list
+        :return: None
         """
 
         self.puzzles.extend(puzzles)
@@ -112,6 +130,8 @@ class LoadGamePrompt(Popup):
     def clear_puzzles(self):
         """
         Remove all puzzles from the puzzle layout.
+
+        :return: None
         """
 
         self.puzzles = []
@@ -120,6 +140,8 @@ class LoadGamePrompt(Popup):
     def add_round(self):
         """
         Add another row to the puzzle layout.
+
+        :return: None
         """
 
         self.order.append(strings.round_type_standard)
@@ -129,6 +151,8 @@ class LoadGamePrompt(Popup):
     def remove_round(self):
         """
         Remove the last row from the puzzle layout.
+
+        :return: None
         """
 
         self.order.pop(-1)
@@ -137,7 +161,10 @@ class LoadGamePrompt(Popup):
 
     def import_game(self):
         """
-        Load a game from a file.
+        Prompt the user to select a file containing a game. When a file
+        is chosen, it will be displayed in the layout.
+
+        :return: None
         """
 
         FileChooserPrompt(
@@ -147,7 +174,15 @@ class LoadGamePrompt(Popup):
 
     def import_game_from_file(self, filenames):
         """
-        Import a game from the selected `filename`.
+        Import a game from a selected file. This function accepts a list
+        of filenames from a :class:`FileChooserPrompt` but only
+        uses the first item in the list.
+
+        The imported game will be displayed in the layout.
+
+        :param filenames: A list of filename strings
+        :type filenames: list
+        :return: None
         """
 
         if filenames:
@@ -171,16 +206,20 @@ class LoadGamePrompt(Popup):
 
     def export_game(self):
         """
-        Save the game to a file.
+        Prompt the user to select a file. The displayed game will be
+        saved to the selected file.
+
+        :return: None
         """
 
         FileSaverPrompt(data_caching.export_game, self.create_game()).open()
 
     def update_values(self):
         """
-        Update `order` and `values` to reflect
-        the values selected by the user.
-        This is called every time the user changes a value.
+        Update `order` and `values` to reflect the values selected by
+        the user. This is called every time the user changes a value.
+
+        :return: None
         """
 
         self.order = []
@@ -204,9 +243,12 @@ class LoadGamePrompt(Popup):
 
     def create_game(self):
         """
-        Create a game from the selected puzzles.
-        Returns a list of game dicts with the keys
-        'puzzle', 'round_type', and 'round_reward'.
+        Create a game list from the selected puzzles.
+        See :func:`data_caching.export_game` for a description of
+        game lists.
+
+        :return: A game list
+        :rtype: list
         """
 
         return [
@@ -219,7 +261,12 @@ class LoadGamePrompt(Popup):
 
     def confirm(self):
         """
-        Call `callback` on the selected puzzles.
+        Create a game list from the selected files and pass the list to
+        `callback`.
+        See :func:`data_caching.export_game` for a description of
+        game lists.
+
+        :return: None
         """
 
         data_caching.update_variables({
@@ -231,7 +278,7 @@ class LoadGamePrompt(Popup):
 
 class PuzzleSelectionLayout(BoxLayout):
     """
-    A Layout to define what a row in the LoadGamePrompt
+    A Layout to define what a row in the :class:`LoadGamePrompt`
     looks like.
     """
 
@@ -239,12 +286,25 @@ class PuzzleSelectionLayout(BoxLayout):
                  selection_callback, **kwargs):
         """
         Create the layout.
-        `number` is the index displayed at the left.
-        `puzzle` is the name of a puzzle.
-        `round_type` is the puzzle's `round_type`.
-        `reward` is the reward for solving the puzzle.
-        If a button in this layout is used to select new puzzles,
-        `selection_callback` will be called on the selected puzzles.
+
+        This layout contains a button to select puzzles to add to the
+        :class:`LoadGamePrompt` layout. When puzzles are selected,
+        they will be passed to `selection_callback` as a list of puzzle
+        dicts.
+        See :func:`data_caching.add_puzzle` for a description of
+        puzzle dicts.
+
+        :param number: The index displayed at the left of the layout
+        :type number: int
+        :param puzzle: The name of a puzzle
+        :type puzzle: str
+        :param round_type: The type of puzzle for this round
+        :type round_type: str
+        :param reward: The reward for solving the puzzle
+        :type reward: int
+        :param selection_callback: A function accepting a list
+        :type selection_callback: function
+        :param kwargs: Additional keyword arguments for the layout
         """
 
         super(PuzzleSelectionLayout, self).__init__(**kwargs)
@@ -256,8 +316,10 @@ class PuzzleSelectionLayout(BoxLayout):
 
     def select_clicked(self):
         """
-        Launch the LoadPuzzlePrompt,
-        using `selection_callback` as the callback.
+        Launch the LoadPuzzlePrompt, using `selection_callback` as the
+        callback.
+
+        :return: None
         """
 
         if self.selection_callback:
@@ -265,18 +327,25 @@ class PuzzleSelectionLayout(BoxLayout):
 
 
 class LoadPuzzlePrompt(Popup):
-    """
-    A Popup to prompt the user to select a puzzle by name.
-    The selected puzzle will then be passed to `callback`.
-    `callback` should be a function accepting a dict
-    with the keys 'category', 'clue', and 'puzzle'.
-    """
+    """A Popup to prompt the user to select puzzles by name."""
 
     selected_names = []
     all_puzzles = {}
 
     def __init__(self, callback, **kwargs):
-        """Create the Popup."""
+        """
+        Create the Popup.
+
+        When puzzles are selected, they will be passed to `callback` as
+        a list of puzzle dicts.
+        See :func:`data_caching.add_puzzle` for a description of
+        puzzle dicts.
+
+        :param callback: A function accepting a list of puzzle dicts
+        :type callback: function
+        :param kwargs: Additional keyword arguments for the Popup
+        """
+
         super(LoadPuzzlePrompt, self).__init__(**kwargs)
 
         self.callback = callback
@@ -285,6 +354,10 @@ class LoadPuzzlePrompt(Popup):
     def fill_puzzle_layout(self, _instance=None):
         """
         Fill in the layout with existing puzzles.
+
+        :param _instance: A Popup instance, defaults to None
+        :type _instance: kivy.uix.popup.Popup, optional
+        :return: None
         """
 
         self.puzzle_layout.clear_widgets()
@@ -298,8 +371,12 @@ class LoadPuzzlePrompt(Popup):
 
     def input_save(self):
         """
-        Check which buttons are selected,
-        then run `callback` on the first puzzle selected.
+        Get the selected puzzles, and pass them to `callback` as a list
+        of puzzle dicts.
+        See :func:`data_caching.add_puzzle` for a description of
+        puzzle dicts.
+
+        :return: None
         """
 
         selected_puzzles = [
@@ -311,7 +388,11 @@ class LoadPuzzlePrompt(Popup):
 
     def import_puzzles(self):
         """
-        Prompt the user to load puzzles from a file.
+        Prompt the user to select a file containing puzzles. When a file
+        is selected, the puzzles will be imported and displayed in the
+        layout.
+
+        :return: None
         """
 
         FileChooserPrompt(
@@ -320,7 +401,10 @@ class LoadPuzzlePrompt(Popup):
 
     def export_puzzles(self):
         """
-        Prompt the user to save selected puzzles to a file.
+        Prompt the user to select a file. The selected puzzles will be
+        saved to the selected file.
+
+        :return: None
         """
 
         FileSaverPrompt(
@@ -330,12 +414,17 @@ class LoadPuzzlePrompt(Popup):
     def prompt_delete_all(self):
         """
         Prompt the user to delete all puzzles.
+
+        :return: None
         """
 
         def confirm_delete():
             """
             Delete all puzzles.
+
+            :return: None
             """
+
             data_caching.delete_all_puzzles()
             # reload layout to reflect deletion
             self.fill_puzzle_layout()
@@ -349,8 +438,12 @@ class LoadPuzzlePrompt(Popup):
 
     def puzzle_selected(self, name):
         """
-        Add `name` to `self.selected_names`,
-        or remove if it is already there.
+        Add `name` to `self.selected_names`, or remove if it is already
+        there.
+
+        :param name: The name of a puzzle
+        :type name: str
+        :return: None
         """
 
         if name in self.selected_names:
@@ -361,19 +454,26 @@ class LoadPuzzlePrompt(Popup):
 
 class PuzzleButton(BoxLayout):
     """
-    A layout containing a ToggleButton to select a puzzle,
-    and a button to delete the puzzle.
+    A layout containing a ToggleButton to select a puzzle, and a button
+    to delete the puzzle.
     """
 
     def __init__(self, name, selection_callback, deletion_callback, **kwargs):
         """
         Create the layout.
-        `name` is the name of the puzzle,
-        used as the text for the ToggleButton.
-        When the ToggleButton is toggled,
-        `name` will be passed to `selection_callback`.
-        `deletion_callback` will be called if the puzzle
-        is deleted.
+
+        `name` will be passed to `selection_callback` when the
+        ToggleButton is toggled.
+        If the puzzle is deleted, `deletion_callback` will be called
+        afterwards.
+
+        :param name: The name of the puzzle
+        :type name: str
+        :param selection_callback: A function accepting a string
+        :type selection_callback: function
+        :param deletion_callback: A function with no arguments
+        :type deletion_callback: function
+        :param kwargs: Additional keyword arguments for the layout
         """
 
         super(PuzzleButton, self).__init__(**kwargs)
@@ -383,13 +483,17 @@ class PuzzleButton(BoxLayout):
 
     def prompt_delete_puzzle(self):
         """
-        Prompt the user to delete the puzzle
-        with the name matching this layout's ToggleButton.
+        Prompt the user to delete the puzzle whose name is displayed in
+        this layout.
+
+        :return: None
         """
 
         def confirm_delete():
             """
             Delete the puzzle.
+
+            :return: None
             """
 
             data_caching.delete_puzzle(self.toggle_button.text)
@@ -406,14 +510,25 @@ class PuzzleButton(BoxLayout):
 
 class YesNoPrompt(Popup):
     """
-    A Popup prompting the user with `text`,
-    with yes and no buttons.
-    Yes and no buttons are bound to `yes_callback` and `no_callback`
-    respectively.
+    A Popup prompting the user with text, with yes and no buttons.
     """
 
-    def __init__(self, text, yes_callback, no_callback, **kwargs):
-        """Create the Popup."""
+    def __init__(self, text, yes_callback=None, no_callback=None,
+                 **kwargs):
+        """
+        Create the Popup.
+
+        :param text: Text displayed in the Popup
+        :type text: str
+        :param yes_callback: Function called when 'yes' is clicked,
+                             defaults to None
+        :type yes_callback: function, optional
+        :param no_callback: Function called when 'no' is clicked,
+                            defaults to None
+        :type no_callback: function, optional
+        :param kwargs: Additional keyword arguments for the Popup
+        """
+
         super(YesNoPrompt, self).__init__(**kwargs)
         self.scroll_label.label_text = text
         self.no_callback = no_callback
@@ -421,12 +536,26 @@ class YesNoPrompt(Popup):
 
 
 class ChooseLetterPrompt(Popup, KeyboardBindable):
-    """
-    A Popup asking the user to choose a letter.
-    """
+    """A Popup asking the user to choose a letter."""
 
     def __init__(self, letter_callback, unavailable_letters=None, **kwargs):
-        """Create the Popup."""
+        """
+        Create the Popup.
+
+        When a letter is chosen, it will be passed to `letter_callback`
+        as a single-character string.
+
+        Letters in the list `unavailable_letters` will not be shown in
+        the layout.
+
+        :param letter_callback: A function accepting a string
+        :type letter_callback: function
+        :param unavailable_letters: A list of unavailable letters,
+                                    defaults to None
+        :type unavailable_letters: list, optional
+        :param kwargs: Additional keyword arguments for the Popup
+        """
+
         self.letter_callback = letter_callback
         self.unavailable_letters = (
             unavailable_letters if unavailable_letters is not None else [])
@@ -434,15 +563,31 @@ class ChooseLetterPrompt(Popup, KeyboardBindable):
 
     def letter_chosen(self, letter):
         """
-        Pass `letter` to `letter_callback`
-        and dismiss this Popup.
+        Pass `letter` to `letter_callback` and dismiss this Popup.
+
+        :param letter: A single-character string
+        :type letter: str
+        :return: None
         """
 
         self.letter_callback(letter)
         self.dismiss()
 
     def _on_keyboard_down(self, _keyboard, keycode, _text, _modifiers):
-        """If a letter is pressed, pass the letter to `letter_chosen`"""
+        """
+        If a letter is pressed, pass the letter to `letter_chosen`.
+
+        :param _keyboard: A Keyboard
+        :type _keyboard: kivy.core.window.Keyboard
+        :param keycode: An integer and a string representing the keycode
+        :type keycode: tuple
+        :param _text: The text of the pressed key
+        :type _text: str
+        :param _modifiers: A list of modifiers
+        :type _modifiers: list
+        :return: None
+        """
+
         letter = keycode[1]
         if letter.lower() in self.unavailable_letters:
             return
@@ -450,14 +595,13 @@ class ChooseLetterPrompt(Popup, KeyboardBindable):
 
 
 class ManagerSettingsPrompt(Popup):
-    """
-    A Popup with settings for the manager.
-    """
+    """A Popup with settings for the manager."""
 
     def input_save(self):
         """
-        Get the text from the input fields,
-        and save them.
+        Get values from the input fields and save them to settings.
+
+        :return: None
         """
 
         timer_minutes = data_caching.str_to_int(self.timer_input.text[:-2])
@@ -492,6 +636,8 @@ class ManagerSettingsPrompt(Popup):
     def edit_hotkeys():
         """
         Prompt the user to edit hotkeys.
+
+        :return: None
         """
 
         EditHotkeysPrompt(title=strings.title_edit_hotkeys).open()
@@ -499,13 +645,14 @@ class ManagerSettingsPrompt(Popup):
 
 class EditHotkeysPrompt(Popup):
     """
-    A Popup allowing the user to select hotkeys
-    for several app actions.
+    A Popup allowing the user to define hotkeys for several app actions.
     """
 
     def __init__(self, **kwargs):
         """
         Create the Popup.
+
+        :param kwargs: Keyword arguments for the Popup
         """
 
         super(EditHotkeysPrompt, self).__init__(**kwargs)
@@ -530,6 +677,8 @@ class EditHotkeysPrompt(Popup):
         duplicates, and that none are set to the letters A-Z.
         If any problems are found, display an alert icon next to
         problematic hotkeys.
+
+        :return: None
         """
 
         invalid_hotkeys = list(strings.alphabet)
@@ -554,6 +703,8 @@ class EditHotkeysPrompt(Popup):
     def confirm(self):
         """
         Confirm the hotkeys defined by the user.
+
+        :return: None
         """
 
         if not self.problem_hotkeys:
@@ -565,13 +716,25 @@ class EditHotkeysPrompt(Popup):
 
 class HotkeyLayout(BoxLayout):
     """
-    A single row in the hotkeys layout of an EditHotkeysPrompt.
-    Contains a description of a hotkey, a RecordHotkeyLabel,
-    and a button to reset the hotkey to default.
+    A single row in the hotkeys layout of an
+    :class:`EditHotkeysPrompt`. Contains a description of a hotkey, a
+    :class:`RecordHotkeyLabel`, and a button to reset the hotkey to
+    default.
     """
 
     def __init__(self, name, description, hotkey_text, **kwargs):
-        """Create the layout."""
+        """
+        Create the layout.
+
+        :param name: The name defining this hotkey in the settings
+        :type name: str
+        :param description: Text identifying the hotkey for the user
+        :type description: str
+        :param hotkey_text: Text representation of the keystroke
+        :type hotkey_text: str
+        :param kwargs: Additional keyword arguments for the layout
+        """
+
         super(HotkeyLayout, self).__init__(**kwargs)
         self.name = name
         self.description = description
@@ -580,17 +743,20 @@ class HotkeyLayout(BoxLayout):
 
 class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
     """
-    A Label which, when clicked, will record
-    a key combination, and set its text to indicate
-    the key combination.
-    
-    After being clicked, the label will wait
-    for a key combination, for a maximum time
-    defined by `values.edit_hotkey_timeout`.
+    A Label which, when clicked, will record a key combination, and set
+    its text to indicate the key combination.
+
+    After the label is clicked, it will wait for a key combination for a
+    maximum time defined by `values.edit_hotkey_timeout`.
     """
 
     def __init__(self, **kwargs):
-        """Create the label."""
+        """
+        Create the label.
+
+        :param kwargs: Keyword arguments for the label
+        """
+
         super(RecordHotkeyLabel, self).__init__(**kwargs)
 
         self.initial_text = ''
@@ -598,7 +764,12 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
         self.seconds_left = 0
 
     def default(self):
-        """Set this hotkey to its default."""
+        """
+        Set the hotkey to its default.
+
+        :return: None
+        """
+
         for hotkey in values.hotkeys:
             if hotkey['name'] == self.name:
                 self.text = hotkey['default'].title()
@@ -607,7 +778,9 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
 
     def start_listening(self):
         """
-        Bind keyboard to self, and start the timer.
+        Start waiting for the user to press a key.
+
+        :return: None
         """
 
         self.get_keyboard()
@@ -621,9 +794,13 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
 
     def clock_tick(self, _dt):
         """
-        Update text to indicate time left.
-        If time is up, revert to original text,
-        and release the keyboard.
+        Update text to indicate how much time is left. If time is up,
+        release the keyboard and change the label's text back to its
+        original value.
+
+        :param _dt: The time elapsed between scheduling and calling
+        :type _dt: float
+        :return: None
         """
 
         if not self.hotkey_entered:
@@ -639,9 +816,19 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
 
     def _on_keyboard_down(self, keyboard, keycode, _text, modifiers):
         """
-        Check the keys pressed.
-        Keep listening until a valid key combination
-        is detected.
+        Check the keys pressed. If a valid key combination is detected,
+        display the new hotkey and release the keyboard.
+
+        :param keyboard: A Keyboard
+        :type keyboard: kivy.core.window.Keyboard
+        :param keycode: An integer and a string representing the keycode
+        :type keycode: tuple
+        :param _text: The text of the pressed key
+        :type _text: str
+        :param modifiers: A list of modifiers
+        :type modifiers: list
+        :return: True, to indicate that the key is consumed
+        :rtype: bool
         """
 
         valid_modifiers = ['ctrl', 'alt', 'shift']
@@ -667,15 +854,21 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
 
 
 class FileChooserPrompt(Popup):
-    """
-    A Popup allowing the user to select files.
-    """
+    """A Popup allowing the user to select files."""
 
     def __init__(self, callback, multiselect=True, **kwargs):
         """
         Create the Popup.
-        File(s) selected will be passed to `callback`
-        as a list.
+
+        When files have been selected, a list of filenames will be
+        passed to `callback`.
+
+        :param callback: A function accepting a list of strings
+        :type callback: function
+        :param multiselect: True if the user can select multiple files,
+                            otherwise False, defaults to True
+        :type multiselect: bool, optional
+        :param kwargs: Additional keyword arguments for the Popup
         """
 
         self.callback = callback
@@ -691,6 +884,8 @@ class FileChooserPrompt(Popup):
     def confirm(self):
         """
         Pass the FileChooser's selection to `callback`.
+
+        :return: None
         """
 
         self.callback(self.chooser.selection)
@@ -700,21 +895,24 @@ class FileChooserPrompt(Popup):
 
 
 class FileSaverPrompt(Popup):
-    """
-    A Popup allowing the user to select a file
-    to write to.
-    """
+    """A Popup prompting the user to select a file to write to."""
 
-    def __init__(self, callback, *args, **kwargs):
+    def __init__(self, callback, *callback_args, **kwargs):
         """
         Create the Popup.
-        The selected file will be passed to `callback`,
-        along with any additional arguments specified.
+
+        When a file is selected, the filename will be passed to
+        `callback`, along with any `*callback args`.
+
+        :param callback: A function accepting a string filename
+        :type callback: function
+        :param callback_args: Any additional arguments for `callback`
+        :param kwargs: Additional keyword arguments for the Popup
         """
 
         super(FileSaverPrompt, self).__init__(**kwargs)
         self.callback = callback
-        self.args = args
+        self.args = callback_args
 
         self.chooser_path = data_caching.get_variables().get(
             'file_chooser_path', '')
@@ -723,9 +921,10 @@ class FileSaverPrompt(Popup):
 
     def input_save(self):
         """
-        Get text from the input box,
-        and call `callback` on the selected file,
-        along with the additional arguments.
+        Get text from the input box and pass the selected filename,
+        along with the additional arguments, to `callback`.
+
+        :return: None
         """
 
         filename = self.filename_input.text
@@ -742,31 +941,47 @@ class FileSaverPrompt(Popup):
 
 
 class InfoPrompt(Popup):
-    """
-    A simple Popup with text and one button to dismiss.
-    """
+    """A simple Popup with text and one button to dismiss."""
 
     def __init__(self, text, **kwargs):
-        """Create the popup."""
+        """
+        Create the Popup.
+
+        :param text: Text to display to the user
+        :type text: str
+        :param kwargs: Additional keyword arguments for the Popup
+        """
+
         super(InfoPrompt, self).__init__(**kwargs)
         self.label_text = text
 
 
 class TiebreakerPrompt(Popup):
-    """
-    A Popup prompting the user to select a puzzle
-    as a tiebreaker.
-    """
+    """A Popup prompting the user to select a puzzle as a tiebreaker."""
 
     def __init__(self, load_tiebreaker_cb, select_player_cb,
                  eligible_players, player_names, **kwargs):
         """
         Create the Popup.
+
         If a tiebreaker puzzle is selected, it will be passed
-        to `load_tiebreaker_cb`.
+        to `load_tiebreaker_cb` as a puzzle dict.
+        See :func:`data_caching.add_puzzle` for a description of
+        puzzle dicts.
+
         If a winner is manually selected instead,
         the number of the player will be passed to
         `select_player_cb`.
+
+        :param load_tiebreaker_cb: A function accepting a puzzle dict
+        :type load_tiebreaker_cb: function
+        :param select_player_cb: A function accepting an int
+        :type select_player_cb: function
+        :param eligible_players: A list of eligible player numbers
+        :type eligible_players: list
+        :param player_names: A list of all players' names
+        :type player_names: list
+        :param kwargs: Additional keyword arguments for the Popup
         """
 
         super(TiebreakerPrompt, self).__init__(**kwargs)
@@ -782,12 +997,18 @@ class TiebreakerPrompt(Popup):
     def select_puzzle(self):
         """
         Open a LoadPuzzlePrompt.
+
+        :return: None
         """
 
         def puzzles_chosen_callback(puzzles):
             """
-            Get the puzzles chosen by the LoadPuzzlePrompt,
-            and pass the first one to `self.load_tiebreaker_cb`.
+            Get the puzzles chosen in the LoadPuzzlePrompt and pass the
+            first one to `load_tiebreaker_cb`.
+
+            :param puzzles: A list of puzzle dicts
+            :type puzzles: dict
+            :return: None
             """
 
             self.load_tiebreaker_cb(puzzles[0])
@@ -798,8 +1019,12 @@ class TiebreakerPrompt(Popup):
 
     def dismiss_callback(self, _instance):
         """
-        Prevent the Popup from closing until
-        a choice has been made.
+        Prevent the Popup from closing until a choice has been made.
+
+        :param _instance: A TiebreakerPrompt instance
+        :type _instance: TiebreakerPrompt
+        :return: True if the Popup will be kept open, otherwise False
+        :rtype: bool
         """
 
         return not self.permission_to_dismiss

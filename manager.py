@@ -32,6 +32,7 @@ class CommQueue:
     """
 
     def __init__(self):
+        """Create queues `a` and `b`."""
         self.a = multiprocessing.Queue()
         self.b = multiprocessing.Queue()
 
@@ -59,7 +60,23 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     matches = NumericProperty(0)
 
     def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
-        """Create the layout."""
+        """
+        Create the layout.
+
+        :param puzzle_queue: Queue to use for the puzzleboard
+        :type puzzle_queue: CommQueue
+        :param red_q: Queue to use for the 1st scoreboard
+        :type red_q: multiprocessing.Queue
+        :param ylw_q: Queue to use for the 2nd scoreboard
+        :type ylw_q: multiprocessing.Queue
+        :param blu_q: Queue to use for the 3rd scoreboard
+        :type blu_q: multiprocessing.Queue
+        :param letters_q: Queue to use for the used letters board
+        :type letters_q: multiprocessing.Queue
+        :param kwargs: Additional keyword arguments for the layout
+        :return: None
+        """
+
         super(ManagerLayout, self).__init__(**kwargs)
 
         self.puzzle_queue = puzzle_queue
@@ -96,11 +113,23 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         Detect a click/touch.
         If a TextInput is clicked, focus the TextInput.
         Otherwise, bind the keyboard to self.
+
+        :param touch: A touch down event
+        :type touch: kivy.input.motionevent.MotionEvent
+        :return: None
         """
 
         self.text_input_clicked = False
 
         def filter_children(widget):
+            """
+            Check a widget's children for TextInput widgets that
+            correspond with the position of the touch.
+
+            :param widget: A Widget
+            :type widget: kivy.uix.widget.Widget
+            :return: None
+            """
             for child in widget.children:
                 if self.text_input_clicked:
                     break
@@ -119,12 +148,21 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
         """
-        Check the keys pressed.
+        Check keys entered on the keyboard.
         If tab is pressed, target the first TextInput.
-        If a letter is pressed with no modifiers,
-        guess a letter.
-        If a registered hotkey is detected,
-        perform the associated action.
+        If a letter is pressed with no modifiers, guess a letter.
+        If a registered hotkey is detected, perform the associated
+        action.
+
+        :param _keyboard: A Keyboard
+        :type _keyboard: kivy.core.window.Keyboard
+        :param keycode: An integer and a string representing the keycode
+        :type keycode: tuple
+        :param _text: The text of the pressed key
+        :type _text: str
+        :param modifiers: A list of modifiers
+        :type modifiers: list
+        :return: None
         """
 
         valid_hotkey_modifiers = ['ctrl', 'alt', 'shift']
@@ -225,7 +263,48 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def check_queue(self, _dt):
         """
-        Check the queue for incoming commands.
+        Check the queue for incoming commands to execute.
+
+        Each command in the queue should be a tuple of the form:
+
+        (command_string, args)
+
+        Available commands are:
+
+        'puzzle_loaded':
+            Display the puzzle in the layout.
+            *args* is a puzzle dict.
+            See :func:`data_caching.add_puzzle` for a description of
+            puzzle dicts.
+        'ding':
+            Play a 'ding' sound (as a panel turns blue). Does nothing if
+            it is currently the speed-up round.
+            *args* is ignored.
+        'matches':
+            Display the number of matches for a letter.
+            *args* is a tuple consisting of a single-character string
+            and the number of matches.
+        'tossup_timeout':
+            Indicate that time is up for solving a toss-up
+            *args* is ignored.
+        'reveal_finished':
+            Schedule a buzzer to play when a player runs out of time to
+            solve the puzzle in a speed-up round. Does nothing if it is
+            not the speed-up round. The amount of time before the buzzer
+            sound plays is defined by `values.speedup_timeout`.
+            *args* is ignored.
+        'no_more_consonants':
+            Play a sound indicating that no consonants remain. If it is
+            currently the speed-up round, this sound is postponed until
+            the next player's turn.
+            *args* is ignored.
+        'no_more_vowels':
+            Play a sound indicating that no vowels remain.
+            *args* is ignored.
+
+        :param _dt: The time elapsed between scheduling and calling
+        :type _dt: float
+        :return: None
         """
 
         try:
@@ -262,9 +341,13 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def display_puzzle(self, _dt=None):
         """
-        Show the current puzzle
-        (and clue, if any)
-        in the `puzzle_label`.
+        Show the current puzzle (and clue, if any) in the
+        `puzzle_label`.
+
+        :param _dt: The time elapsed between scheduling and calling,
+                    defaults to None
+        :type _dt: float, optional
+        :return: None
         """
 
         if self.puzzle_string:
@@ -280,6 +363,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         Select the player indicated by `player_number`.
         If `player_number` is not 1, 2, or 3, deselect all players.
         If the player is ineligible to take a turn, do nothing.
+
+        :param player_number: The number of the player
+        :type player_number: int
+        :return: None
         """
 
         if player_number == 1:
@@ -318,8 +405,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def select_winner(self):
         """
-        Select a player to proceed to the bonus round,
-        then set the layout to bonus round mode.
+        Select a player to proceed to the bonus round, then set the
+        layout to bonus round mode.
+
+        :return: None
         """
 
         max_score = 0
@@ -339,6 +428,14 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         def load_tiebreaker(puzzle):
             """
             Load a puzzle dict as a tiebreaker toss-up.
+
+            `puzzle` is a puzzle dict.
+            See :func:`data_caching.add_puzzle` for a description of
+            puzzle dicts.
+
+            :param puzzle: A puzzle dict
+            :type puzzle: dict
+            :return: None
             """
 
             self.tiebreaker_started = True
@@ -355,6 +452,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             """
             Declare player `i`
             as the winner.
+
+            :param i: The player number
+            :type i: int
+            :return: None
             """
 
             self.select_player(i)
@@ -376,6 +477,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def update_name(self, text):
         """
         Update the name of the selected player.
+
+        :param text: A name for the player
+        :type text: str
+        :return: None
         """
 
         if self.selected_player == 1:
@@ -394,6 +499,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def get_score(self):
         """
         Get the score of the selected player.
+        Returns 0 if no player is selected.
+
+        :return: The player's score
+        :rtype: int
         """
 
         if self.selected_player == 1:
@@ -407,6 +516,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def set_score(self, new_score):
         """
         Set the score of the selected player.
+
+        :param new_score: The new score
+        :type new_score: int
+        :return: None
         """
 
         if self.selected_player == 1:
@@ -424,7 +537,11 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def add_score(self, new_score):
         """
-        Add `score` to the selected player's score.
+        Add `new_score` to the selected player's score.
+
+        :param new_score: The number to be added
+        :type new_score: int
+        :return: None
         """
 
         self.set_score(self.get_score() + new_score)
@@ -432,6 +549,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def get_total(self):
         """
         Get the game total of the selected player.
+        Returns 0 if no player is selected.
+
+        :return: The player's total
+        :rtype: int
         """
 
         if self.selected_player == 1:
@@ -445,6 +566,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def set_total(self, total):
         """
         Set the game total of the selected player.
+
+        :param total: The player's new total
+        :type total: int
+        :return: None
         """
 
         if self.selected_player == 1:
@@ -463,6 +588,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def add_total(self, total):
         """
         Add `total` to the selected player's game total.
+
+        :param total: The number to be added
+        :type total: int
+        :return: None
         """
 
         self.set_total(self.get_total() + total)
@@ -470,6 +599,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def reset_scores(self):
         """
         Reset all players' scores and game totals.
+
+        :return: None
         """
 
         for i in range(1, 4):
@@ -482,6 +613,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def choose_puzzle(self):
         """
         Prompt the user to select a puzzle.
+
+        :return: None
         """
 
         prompts.LoadGamePrompt(
@@ -491,7 +624,12 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def load_game(self, game):
         """
-        Load the game selected by a LoadGamePrompt.
+        Load a game. See :func:`data_caching.export_game` for a
+        description of game lists.
+
+        :param game: A game list
+        :type game: list
+        :return: None
         """
 
         self.tie_resolved = False
@@ -502,7 +640,13 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def load_puzzle(self, puzzle):
         """
-        Tell the layout to load `puzzle`.
+        Load a puzzle dict.
+        See :func:`data_caching.add_puzzle` for a description of
+        puzzle dicts.
+
+        :param puzzle: A puzzle dict
+        :type puzzle: dict
+        :return: None
         """
 
         if puzzle['puzzle'].strip():
@@ -529,8 +673,9 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def next_puzzle(self):
         """
-        If there are still puzzles in the
-        list `game`, load the next one.
+        If there are still puzzles in the game list, load the next one.
+
+        :return: None
         """
 
         try:
@@ -556,6 +701,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def clear_puzzle(self):
         """
         Clear the puzzleboard.
+
+        :return: None
         """
 
         self.load_puzzle({
@@ -567,8 +714,11 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
         If there is no tossup in progress, start one.
         If there is a tossup in progress, pause it.
-        If `player` is 1, 2, or 3,
-        select that player.
+        If `player` is 1, 2, or 3, select that player.
+
+        :param player: A player's number, defaults to None
+        :type player: int, optional
+        :return: None
         """
 
         if player:
@@ -594,6 +744,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def stop_all_flashing(self):
         """
         Tell all ScoreApps to stop flashing.
+
+        :return: None
         """
 
         self.red_q.put(('stop_flash', None))
@@ -606,8 +758,13 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def reveal_puzzle(self, player_solved=True):
         """
         Tell the layout to reveal the puzzle.
-        If `player_solved` is False, do not play
-        the sounds indicating their success.
+        If `player_solved` is False, do not play the sounds indicating
+        their success.
+
+        :param player_solved: True if a player solved the puzzle,
+                              defaults to True
+        :type player_solved: bool, optional
+        :return: None
         """
 
         if player_solved:
@@ -643,11 +800,13 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def solve_clue(self, player_solved):
         """
-        If `player_solved` is True,
-        add `clue_solve_reward` to the
-        selected player's score, and play
-        the 'clue correct' sound.
+        If `player_solved` is True, add `clue_solve_reward` to the
+        selected player's score, and play the 'clue correct' sound.
         Otherwise, play the buzzer sound.
+
+        :param player_solved: True if the player solved the clue
+        :type player_solved: bool
+        :return: None
         """
 
         if player_solved:
@@ -659,6 +818,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def guess_letter(self):
         """
         Open a prompt to select a letter.
+
+        :return: None
         """
 
         if (
@@ -675,6 +836,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def guessed_letter(self, letter):
         """
         Pass the `letter` to the PuzzleLayout to check for matches.
+
+        :param letter: A string consisting of a single letter
+        :type letter: str
+        :return: None
         """
 
         self.unavailable_letters.append(letter.lower())
@@ -683,8 +848,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def buy_vowel(self):
         """
-        If the player can afford a vowel,
-        subtract `vowel_price` from their score.
+        If the player can afford a vowel, subtract `vowel_price` from
+        their score.
+
+        :return: None
         """
 
         if self.get_score() >= self.vowel_price:
@@ -694,6 +861,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
         Pass the list of selected letters to the puzzleboard,
         and remove them from the used letter board.
+
+        :param letters: A list of single-character strings
+        :type letters: list
+        :return: None
         """
 
         self.unavailable_letters.extend(letters)
@@ -703,8 +874,11 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def get_value(self):
         """
         Get the value indicated by the custom cash value input box.
-        If the box is empty, get the value
-        indicated by the cash value spinner.
+        If the box is empty, get the value indicated by the cash value
+        spinner.
+
+        :return: The value, or None if no value is selected
+        :rtype: int
         """
 
         custom_value = data_caching.str_to_int(self.custom_value.text, None)
@@ -726,8 +900,12 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
         Indicate the number of matches in the manager.
         If there are no matches, play the buzzer sound.
-        `match` is a tuple of the form (letter, number)
-        indicating the letter and the number of matches.
+        `match` is a tuple of the form (letter, number) indicating the
+        letter and the number of matches.
+
+        :param match: A letter and the number of matches
+        :type match: tuple
+        :return: None
         """
 
         letter, self.matches = match
@@ -743,21 +921,26 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def increase_score(self):
         """
-        Adjust the selected player's score based on
-        the number of matches.
+        Adjust the selected player's score based on the number of
+        matches.
+
+        :return: None
         """
 
         value = self.get_value()
         if value:
             self.add_score(self.matches * value)
-        self.custom_value.text = ''
+        # reset the values, unless it is the speed-up round
         if not self.timer.final_spin_started:
+            self.custom_value.text = ''
             self.dropdown.text = strings.dropdown_select_value
 
     def no_more_consonants(self):
         """
-        Play a sound indicating no more consonants,
-        and remove consonants from letterboard.
+        Play a sound indicating no more consonants, and remove
+        consonants from the used letters board.
+
+        :return: None
         """
 
         # only do this once per round
@@ -773,8 +956,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def no_more_vowels(self):
         """
-        Play a sound indicating no more vowels,
-        and remove vowels from letterboard.
+        Play a sound indicating no more vowels, and remove vowels from
+        the used letters board.
+
+        :return: None
         """
 
         # only do this once per round
@@ -790,8 +975,9 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def lose_turn(self):
         """
-        Player has lost a turn;
-        move to next player.
+        Player has lost a turn; move to next player.
+
+        :return: None
         """
 
         self.select_player((self.selected_player % 3) + 1)
@@ -799,6 +985,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def bankrupt(self):
         """
         Bankrupt the selected player.
+
+        :return: None
         """
 
         if self.selected_player:
@@ -807,9 +995,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def bank_score(self):
         """
-        Add the selected player's score
-        to their game total,
-        then set each player's score to 0.
+        Add the selected player's score to their game total, then set
+        each player's score to 0.
+
+        :return: None
         """
 
         self.add_total(self.get_score())
@@ -824,8 +1013,9 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def cash_settings(self):
         """
-        Open a Popup prompting the user
-        to fill in some game settings.
+        Open a Popup prompting the user to fill in some game settings.
+
+        :return: None
         """
 
         popup = prompts.ManagerSettingsPrompt()
@@ -836,6 +1026,11 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def load_settings(self, _instance=None):
         """
         Load settings from file.
+
+        :param _instance: The widget that called this function,
+                          defaults to None
+        :type _instance: kivy.uix.widget.Widget, optional
+        :return: None
         """
 
         settings = data_caching.get_variables()
@@ -882,6 +1077,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def play_sound(filename):
         """
         Play the audio file specified by `filename`.
+
+        :param filename: A filename
+        :type filename: str
+        :return: None
         """
 
         sound = SoundLoader.load(filename)
@@ -892,6 +1091,9 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
         Play the buzz sound.
         Does nothing if the puzzle has already been solved.
+
+        :param _dt: The time elapsed between scheduling and calling
+        :return: None
         """
 
         if self.timer.final_spin_started:
@@ -899,9 +1101,10 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
     def update_dropdown(self):
         """
-        Update the cash values dropdown
-        so that it indicates if the
+        Update the cash values dropdown so that it indicates if the
         final spin bonus is applied.
+
+        :return: None
         """
 
         # this function will be called every time the text changes.
@@ -933,6 +1136,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def exit_app(self):
         """
         Tell all apps to stop, then stop this app.
+
+        :return: None
         """
 
         self.exit_other_apps()
@@ -941,6 +1146,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     def exit_other_apps(self):
         """
         Tell all other apps to stop.
+
+        :return: None
         """
 
         for q in [self.puzzle_queue.a, self.red_q, self.ylw_q, self.blu_q]:
@@ -953,18 +1160,35 @@ class ManagerApp(App):
     An app to manage the PuzzleboardApp.
     """
 
-    def __init__(self, *args, **kwargs):
-        """Create the app."""
+    def __init__(self, *layout_args, **kwargs):
+        """
+        Create the app.
+        Any `layout_args` will be used by
+        :meth:`ManagerLayout.__init__`,
+        while `kwargs` will used by :meth:`App.__init__`.
+
+        :param layout_args: See arguments for
+                               :meth:`ManagerLayout.__init__`
+        :param kwargs: Keyword arguments for :meth:`App.__init__`
+        """
+
         super(ManagerApp, self).__init__(**kwargs)
-        self.args = args
+        self.args = layout_args
 
     def build(self):
-        """Build the app."""
+        """
+        Build the app.
+
+        :return: The root layout of the app
+        :rtype: ManagerLayout
+        """
         return ManagerLayout(*self.args)
 
     def on_stop(self):
         """
         Close other apps when this app is closed.
+
+        :return: None
         """
 
         self.root.exit_other_apps()
@@ -976,13 +1200,31 @@ class ScoreApp(App):
     """
 
     def __init__(self, bg_color, q, **kwargs):
-        """Create the app."""
+        """
+        Create the app.
+        `bg_color` should be a tuple of rgba values between 0 and 1.
+        `q` is a :class:`multiprocessing.Queue` used to communicate
+        with the main app.
+
+        :param bg_color: The background color
+        :type bg_color: tuple
+        :param q: A Queue
+        :type q: multiprocessing.Queue
+        :param kwargs: Additional keyword arguments for the app
+        """
+
         super(ScoreApp, self).__init__(**kwargs)
         self.bg_color = bg_color
         self.queue = q
 
     def build(self):
-        """Build the app."""
+        """
+        Build the app.
+
+        :return: The root layout of the app
+        :rtype: score.ScoreLayout
+        """
+
         return score.ScoreLayout(self.bg_color, q=self.queue)
 
 
@@ -993,18 +1235,36 @@ class LetterboardApp(App):
     """
 
     def __init__(self, q, **kwargs):
-        """Create the app."""
+        """
+        Create the app.
+        `q` is a :class:`multiprocessing.Queue` used to communicate
+        with the main app.
+
+        :param q: A Queue
+        :type q: multiprocessing.Queue
+        :param kwargs: Additional keyword arguments for the app
+        """
+
         super(LetterboardApp, self).__init__(**kwargs)
         self.queue = q
 
     def build(self):
-        """Build the app."""
+        """
+        Build the app.
+
+        :return: The root layout of the app.
+        :rtype: used_letters.LettersWithScore
+        """
+
         return used_letters.LettersWithScore(q=self.queue)
 
 
 def launch_manager(*args):
     """
     Launch a ManagerApp.
+
+    :param args: Arguments used to create the app
+    :return: None
     """
 
     ManagerApp(*args).run()
@@ -1013,6 +1273,9 @@ def launch_manager(*args):
 def launch_score(*args):
     """
     Launch a ScoreApp.
+
+    :param args: Arguments used to create the app
+    :return: None
     """
 
     ScoreApp(*args).run()
@@ -1021,6 +1284,9 @@ def launch_score(*args):
 def launch_letterboard(*args):
     """
     Launch a LetterboardApp.
+
+    :param args: Arguments used to create the app
+    :return: None
     """
 
     LetterboardApp(*args).run()
