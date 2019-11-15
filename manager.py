@@ -1257,37 +1257,36 @@ class LetterboardApp(App):
         return used_letters.LettersWithScore(q=self.queue)
 
 
-def launch_manager(*args):
+def launch_app(app, args=(), new_window=True):
     """
-    Launch a ManagerApp.
+    Launch an App.
 
-    :param args: Arguments used to create the app
+    If `new_window` is True, the app will be launched in a separate
+    process.
+
+    `app` should be a subclass of App (not an instance), and `args` a
+    tuple of any arguments to use for the initialization of the app.
+
+    :param app: A subclass of App (not an instance)
+    :type app: type
+    :param args: Arguments for initializing the App
+    :type args: tuple
+    :param new_window: True if the app should be opened in a new
+                       process, otherwise False, defaults to True
+    :type new_window: bool, optional
     :return: None
     """
 
-    ManagerApp(*args).run()
-
-
-def launch_score(*args):
-    """
-    Launch a ScoreApp.
-
-    :param args: Arguments used to create the app
-    :return: None
-    """
-
-    ScoreApp(*args).run()
-
-
-def launch_letterboard(*args):
-    """
-    Launch a LetterboardApp.
-
-    :param args: Arguments used to create the app
-    :return: None
-    """
-
-    LetterboardApp(*args).run()
+    if new_window:
+        # `target=App().run` doesn't work
+        # because the App instances cannot be pickled
+        multiprocessing.Process(
+            target=launch_app,
+            args=(app, args),
+            kwargs={'new_window': False}
+        ).start()
+    else:
+        app(*args).run()
 
 
 if __name__ == '__main__':
@@ -1297,26 +1296,22 @@ if __name__ == '__main__':
     blue_queue = multiprocessing.Queue()
     letters_queue = multiprocessing.Queue()
 
-    manager_process = multiprocessing.Process(
-        target=launch_manager,
-        args=(puzzle_q, red_queue, yellow_queue, blue_queue, letters_queue))
-    red_process = multiprocessing.Process(
-        target=launch_score,
+    launch_app(
+        puzzleboard.PuzzleboardApp,
+        args=(puzzle_q,))
+    launch_app(
+        ScoreApp,
         args=(values.color_red, red_queue))
-    ylw_process = multiprocessing.Process(
-        target=launch_score,
+    launch_app(
+        ScoreApp,
         args=(values.color_yellow, yellow_queue))
-    blu_process = multiprocessing.Process(
-        target=launch_score,
+    launch_app(
+        ScoreApp,
         args=(values.color_blue, blue_queue))
-    letters_process = multiprocessing.Process(
-        target=launch_letterboard,
+    launch_app(
+        LetterboardApp,
         args=(letters_queue,))
-
-    manager_process.start()
-    red_process.start()
-    ylw_process.start()
-    blu_process.start()
-    letters_process.start()
-
-    puzzleboard.PuzzleboardApp(puzzle_q).run()
+    launch_app(
+        ManagerApp,
+        args=(puzzle_q, red_queue, yellow_queue, blue_queue, letters_queue),
+        new_window=False)
