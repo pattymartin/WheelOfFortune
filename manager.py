@@ -23,29 +23,6 @@ from my_widgets import Fullscreenable, KeyboardBindable
 Builder.load_file(values.file_kv_manager)
 
 
-class CommQueue:
-    """
-    Contains two Queues named `a` and `b`.
-    This way, a parent process can write to `a`
-    and read from `b`, and the child process
-    can do the opposite.
-    """
-
-    def __init__(self):
-        """Create queues `a` and `b`."""
-        self.a = multiprocessing.Queue()
-        self.b = multiprocessing.Queue()
-
-
-class PlayerButton(ButtonBehavior, score.ScoreLayout):
-    """
-    A ScoreLayout which also serves as a button
-    to select a player.
-    """
-
-    pass
-
-
 class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     """
     The root layout for the ManagerApp.
@@ -59,12 +36,18 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
     selected_player = NumericProperty(0)
     matches = NumericProperty(0)
 
-    def __init__(self, puzzle_queue, red_q, ylw_q, blu_q, letters_q, **kwargs):
+    def __init__(
+            self, puzzle_queue_out, puzzle_queue_in,
+            red_q, ylw_q, blu_q, letters_q, **kwargs):
         """
         Create the layout.
 
-        :param puzzle_queue: Queue to use for the puzzleboard
-        :type puzzle_queue: CommQueue
+        :param puzzle_queue_out: Queue to send information to the
+                                 puzzleboard
+        :type puzzle_queue_out: multiprocessing.Queue
+        :param puzzle_queue_in: Queue to receive information from the
+                                puzzleboard
+        :type puzzle_queue_in: multiprocessing.Queue
         :param red_q: Queue to use for the 1st scoreboard
         :type red_q: multiprocessing.Queue
         :param ylw_q: Queue to use for the 2nd scoreboard
@@ -79,7 +62,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
         super(ManagerLayout, self).__init__(**kwargs)
 
-        self.puzzle_queue = puzzle_queue
+        self.puzzle_queue_out = puzzle_queue_out
+        self.puzzle_queue_in = puzzle_queue_in
         self.red_q = red_q
         self.ylw_q = ylw_q
         self.blu_q = blu_q
@@ -104,7 +88,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
         self.get_keyboard()
 
-        if self.puzzle_queue:
+        if self.puzzle_queue_in:
             Clock.schedule_once(self.check_queue, values.queue_start)
 
     def on_touch_down(self, touch):
@@ -306,7 +290,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
 
         try:
-            command, args = self.puzzle_queue.b.get(block=False)
+            command, args = self.puzzle_queue_in.get(block=False)
             if command == 'puzzle_loaded':
                 self.puzzle_string = ' '.join(args['puzzle'].split())
                 if self.puzzle_string:
@@ -659,7 +643,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         if self.tossup_running:
             self.tossup()
         self.unavailable_letters = []
-        self.puzzle_queue.a.put(('load', puzzle))
+        self.puzzle_queue_out.put(('load', puzzle))
         self.letters_q.put(('reload', None, None))
         self.tossup_players_done = []
         self.consonants_remaining = True
@@ -725,7 +709,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             self.tossup_players_done.append(player)
 
         if self.tossup_running:
-            self.puzzle_queue.a.put(('pause_tossup', None))
+            self.puzzle_queue_out.put(('pause_tossup', None))
             self.tossup_button.disabled = False
 
             if player in [1, 2, 3]:
@@ -734,7 +718,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             if set(self.tossup_players_done) == {1, 2, 3}:
                 return
             self.tossup_button.disabled = True
-            self.puzzle_queue.a.put(('tossup', None))
+            self.puzzle_queue_out.put(('tossup', None))
             self.select_player(0)
 
         self.tossup_running = not self.tossup_running
@@ -791,7 +775,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                         self.play_sound(values.file_sound_solve)
 
                 self.add_total(int(self.game[0]['round_reward']))
-        self.puzzle_queue.a.put(('reveal', None))
+        self.puzzle_queue_out.put(('reveal', None))
         self.stop_all_flashing()
 
         self.revealed = True
@@ -841,7 +825,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
 
         self.unavailable_letters.append(letter.lower())
-        self.puzzle_queue.a.put(('letter', letter))
+        self.puzzle_queue_out.put(('letter', letter))
         self.letters_q.put(('remove_letter', None, letter))
 
     def buy_vowel(self):
@@ -866,7 +850,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         """
 
         self.unavailable_letters.extend(letters)
-        self.puzzle_queue.a.put(('bonus_round_letters', letters))
+        self.puzzle_queue_out.put(('bonus_round_letters', letters))
         self.letters_q.put(('remove_letters', None, letters))
 
     def get_value(self):
@@ -1148,9 +1132,17 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         :return: None
         """
 
-        for q in [self.puzzle_queue.a, self.red_q, self.ylw_q, self.blu_q]:
+        for q in [self.puzzle_queue_out, self.red_q, self.ylw_q, self.blu_q]:
             q.put(('exit', None))
         self.letters_q.put(('exit', None, None))
+
+
+class PlayerButton(ButtonBehavior, score.ScoreLayout):
+    """
+    A ScoreLayout which also serves as a button to select a player.
+    """
+
+    pass
 
 
 class ManagerApp(App):
@@ -1166,7 +1158,7 @@ class ManagerApp(App):
         while `kwargs` will used by :meth:`App.__init__`.
 
         :param layout_args: See arguments for
-                               :meth:`ManagerLayout.__init__`
+                            :meth:`ManagerLayout.__init__`
         :param kwargs: Keyword arguments for :meth:`App.__init__`
         """
 
@@ -1190,6 +1182,35 @@ class ManagerApp(App):
         """
 
         self.root.exit_other_apps()
+
+
+class PuzzleboardApp(App):
+    """An app displaying the puzzleboard."""
+
+    def __init__(self, q_in, q_out, **kwargs):
+        """
+        Create the App.
+
+        :param q_in: A Queue to receive information from the manager app
+        :type q_in: multiprocessing.Queue
+        :param q_out: A Queue to send information to the manager app
+        :type q_out: multiprocessing.Queue
+        :param kwargs: Additional keyword arguments for the app.
+        """
+
+        super(PuzzleboardApp, self).__init__(**kwargs)
+        self.queue_in = q_in
+        self.queue_out = q_out
+
+    def build(self):
+        """
+        Build the app.
+
+        :return: The root layout.
+        :rtype: puzzleboard.PuzzleWithCategory
+        """
+
+        return puzzleboard.PuzzleWithCategory(self.queue_in, self.queue_out)
 
 
 class ScoreApp(App):
@@ -1250,7 +1271,7 @@ class LetterboardApp(App):
         """
         Build the app.
 
-        :return: The root layout of the app.
+        :return: The root layout of the app
         :rtype: used_letters.LettersWithScore
         """
 
@@ -1290,15 +1311,16 @@ def launch_app(app, args=(), new_window=True):
 
 
 if __name__ == '__main__':
-    puzzle_q = CommQueue()
+    puzzle_q1 = multiprocessing.Queue()
+    puzzle_q2 = multiprocessing.Queue()
     red_queue = multiprocessing.Queue()
     yellow_queue = multiprocessing.Queue()
     blue_queue = multiprocessing.Queue()
     letters_queue = multiprocessing.Queue()
 
     launch_app(
-        puzzleboard.PuzzleboardApp,
-        args=(puzzle_q,))
+        PuzzleboardApp,
+        args=(puzzle_q1, puzzle_q2))
     launch_app(
         ScoreApp,
         args=(values.color_red, red_queue))
@@ -1313,5 +1335,7 @@ if __name__ == '__main__':
         args=(letters_queue,))
     launch_app(
         ManagerApp,
-        args=(puzzle_q, red_queue, yellow_queue, blue_queue, letters_queue),
+        args=(
+            puzzle_q1, puzzle_q2, red_queue, yellow_queue, blue_queue,
+            letters_queue),
         new_window=False)

@@ -21,40 +21,47 @@ Builder.load_file(values.file_kv_puzzleboard)
 class PuzzleWithCategory(BoxLayout, Fullscreenable):
     """A BoxLayout containing the puzzleboard and category strip."""
 
-    def __init__(self, q=None, **kwargs):
+    def __init__(self, q_in=None, q_out=None, **kwargs):
         """
         Create the layout.
 
-        :param q: A CommQueue to communicate with the manager app,
-                  defaults to None
-        :type q: manager.CommQueue, optional
+        :param q_in: A Queue to receive information from the manager app,
+                     defaults to None
+        :type q_in: multiprocessing.Queue, optional
+        :param q_out: A Queue to send information to the manager app,
+                      defaults to None
+        :type q_out: multiprocessing.Queue, optional
         :param kwargs: Additional keyword arguments for the layout
         """
 
         super(PuzzleWithCategory, self).__init__(**kwargs)
-        self.puzzle_layout = PuzzleLayout(self.category, q)
+        self.puzzle_layout = PuzzleLayout(self.category, q_in, q_out)
 
 
 class PuzzleLayout(GridLayout, KeyboardBindable):
     """A GridLayout containing all :class:`Panel`\\s."""
 
-    def __init__(self, category_label=None, q=None, **kwargs):
+    def __init__(self, category_label=None, q_in=None, q_out=None, **kwargs):
         """
         Create the layout.
 
         :param category_label: The Label displaying the category,
                                defaults to None
         :type category_label: kivy.uix.label.Label, optional
-        :param q: A CommQueue to communicate with the manager app,
-                  defaults to None
-        :type q: manager.CommQueue, optional
+        :param q_in: A Queue to receive information from the manager app,
+                     defaults to None
+        :type q_in: multiprocessing.Queue, optional
+        :param q_out: A Queue to send information to the manager app,
+                      defaults to None
+        :type q_out: multiprocessing.Queue, optional
         :param kwargs: Additional keyword arguments for the layout
         """
 
         super(PuzzleLayout, self).__init__(**kwargs)
 
         self.category_label = category_label
-        self.queue = q
+        self.queue_in = q_in
+        self.queue_out = q_out
         self.tossup_running = False
 
         for i in range(self.rows):
@@ -72,7 +79,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
 
         self.get_keyboard()
 
-        if self.queue:
+        if self.queue_in:
             Clock.schedule_once(self.check_queue, values.queue_start)
 
     def check_queue(self, _dt):
@@ -113,7 +120,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         """
 
         try:
-            command, args = self.queue.a.get(block=False)
+            command, args = self.queue_in.get(block=False)
             if command == 'letter':
                 # args is a guessed letter
                 self.check_all(args)
@@ -183,7 +190,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                             values.interval_blue * matches)
                         # schedule "ding" sound
                         Clock.schedule_once(
-                            lambda i: self.queue.b.put(('ding', None)),
+                            lambda i: self.queue_out.put(('ding', None)),
                             values.interval_blue * matches)
                         # schedule panel to be revealed
                         Clock.schedule_once(
@@ -204,20 +211,20 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         no_more_consonants = matches and not any(
             letter.lower() in strings.consonants
             for letter in remaining_letters)
-        if self.queue and len(letters) == 1:
-            self.queue.b.put(('matches', (letters[0], matches)))
+        if self.queue_out and len(letters) == 1:
+            self.queue_out.put(('matches', (letters[0], matches)))
             Clock.schedule_once(
-                lambda i: self.queue.b.put(('reveal_finished', None)),
+                lambda i: self.queue_out.put(('reveal_finished', None)),
                 values.interval_reveal * matches)
             if no_more_vowels:
                 # indicate no more vowels in the middle of letter reveals
                 Clock.schedule_once(
-                    lambda i: self.queue.b.put(('no_more_vowels', None)),
+                    lambda i: self.queue_out.put(('no_more_vowels', None)),
                     values.interval_reveal * matches / 2)
             if no_more_consonants:
                 # indicate no more consonants after all letters revealed
                 Clock.schedule_once(
-                    lambda i: self.queue.b.put(('no_more_consonants', None)),
+                    lambda i: self.queue_out.put(('no_more_consonants', None)),
                     values.interval_reveal * matches)
 
     def check_all(self, letter):
@@ -320,8 +327,8 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         if self.category_label:
             self.category_label.text = puzzle['category'].upper()
 
-        if self.queue:
-            self.queue.b.put(('puzzle_loaded', puzzle))
+        if self.queue_out:
+            self.queue_out.put(('puzzle_loaded', puzzle))
 
         # set letters
         for widget in self.children[::-1]:
@@ -395,7 +402,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                 values.interval_tossup)
         else:
             # no more letters on board, end tossup
-            self.queue.b.put(('tossup_timeout', None))
+            self.queue_out.put(('tossup_timeout', None))
             self.tossup_running = False
 
     def get_random_letter(self):
@@ -441,7 +448,7 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                 values.interval_tossup)
         else:
             # no more letters, end tossup
-            self.queue.b.put(('tossup_timeout', None))
+            self.queue_out.put(('tossup_timeout', None))
             self.tossup_running = False
 
     def pause_tossup(self):
@@ -713,32 +720,3 @@ class Panel(Button, KeyboardBindable):
             except AttributeError:
                 # empty widget
                 pass
-
-
-class PuzzleboardApp(App):
-    """Puzzleboard Kivy App"""
-
-    queue = None
-
-    def __init__(self, q=None, **kwargs):
-        """
-        Create the App.
-
-        :param q: A Queue to communicate with the manager app,
-                  defaults to None
-        :type q: manager.CommQueue, optional
-        :param kwargs: Additional keyword arguments for the app.
-        """
-
-        super(PuzzleboardApp, self).__init__(**kwargs)
-        self.queue = q
-
-    def build(self):
-        """
-        Build the app.
-
-        :return: The root layout.
-        :rtype: PuzzleWithCategory
-        """
-
-        return PuzzleWithCategory(self.queue)
