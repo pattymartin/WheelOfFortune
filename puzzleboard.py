@@ -472,7 +472,8 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         :type _text: str
         :param modifiers: A list of modifiers
         :type modifiers: list
-        :return: None
+        :return: True if key was handled, otherwise False
+        :rtype: bool
         """
 
         letter = keycode[1]
@@ -481,10 +482,15 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
                 self.save_puzzle()
             elif letter == 'o':
                 self.choose_puzzle()
+            else:
+                return False
         elif keycode[1] == 'enter':
             self.reveal_all()
-        else:
+        elif letter in strings.alphabet:
             self.check_all(letter)
+        else:
+            return False
+        return True
 
 
 class Panel(Button, KeyboardBindable):
@@ -621,7 +627,8 @@ class Panel(Button, KeyboardBindable):
         :type _text: str
         :param modifiers: A list of modifiers
         :type modifiers: list
-        :return: None
+        :return: True if key was handled, otherwise False
+        :rtype: bool
         """
 
         letter = keycode[1]
@@ -639,11 +646,13 @@ class Panel(Button, KeyboardBindable):
                 self.parent.save_puzzle()
             elif letter == 'o':
                 self.parent.choose_puzzle()
+            else:
+                return False
         elif 'shift' in modifiers and letter in shifts.keys():
             # shift is held, get shift symbol
             self.text_label.text = shifts[letter]
             self.select_next()
-        elif letter in strings.alphabet + '1234567890-=[]\\;\',./':
+        elif letter in strings.alphabet + ''.join(shifts.keys()):
             # set text and move to next panel
             self.text_label.text = letter.upper()
             self.select_next()
@@ -659,6 +668,9 @@ class Panel(Button, KeyboardBindable):
         elif letter == 'spacebar':
             # move to next panel
             self.select_next()
+        else:
+            return False
+        return True
 
     def select_next(self):
         """

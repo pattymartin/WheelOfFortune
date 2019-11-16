@@ -100,7 +100,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
         :param touch: A touch down event
         :type touch: kivy.input.motionevent.MotionEvent
-        :return: None
+        :return: True if the touch was consumed, otherwise False
+        :rtype: bool
         """
 
         def filter_children(widget):
@@ -145,7 +146,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         :type _text: str
         :param modifiers: A list of modifiers
         :type modifiers: list
-        :return: None
+        :return: True if key was handled, otherwise False
+        :rtype: bool
         """
 
         valid_hotkey_modifiers = ['ctrl', 'alt', 'shift']
@@ -243,6 +245,11 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
                 self.buy_vowel()
             elif combination == self.hotkeys.get('bank_score'):
                 self.bank_score()
+            else:
+                return False
+        else:
+            return False
+        return True
 
     def check_queue(self, _dt):
         """
@@ -1138,21 +1145,30 @@ class BaseApp(App):
     The layout provided to __init__ will be used as the root of the App.
     """
 
-    def __init__(self, layout_class, layout_args, **kwargs):
+    def __init__(self, layout_class, layout_args, title=None, **kwargs):
         """
         Create an App with an instance of `layout_class` as the root
         layout.
+
+        If `title` is not specified, the string `strings.app_title` will
+        be used as the title of the window.
 
         :param layout_class: A subclass of Widget (not an instance)
         :type layout_class: type
         :param layout_args: Arguments for initializing the layout
         :type layout_args: tuple
+        :param title: The title of the app window, defaults to None
+        :type title: str
         :param kwargs: Additional keyword arguments for the App
         """
 
         super(BaseApp, self).__init__(**kwargs)
         self.layout = layout_class
         self.args = layout_args
+        if title is None:
+            self.title = strings.app_title
+        else:
+            self.title = title
 
     def build(self):
         """
@@ -1165,7 +1181,7 @@ class BaseApp(App):
         return self.layout(*self.args)
 
 
-def launch_app(root_layout_class, args=(), new_window=True):
+def launch_app(root_layout_class, args=(), title=None, new_window=True):
     """
     Create and launch a :class:`BaseApp`\\, using an instance of
      `root_layout_class` as the root layout. Use the tuple `args` to
@@ -1178,6 +1194,8 @@ def launch_app(root_layout_class, args=(), new_window=True):
     :type root_layout_class: type
     :param args: Arguments for initializing the layout, defaults to ()
     :type args: tuple, optional
+    :param title: The title of the app window, defaults to None
+    :type title: str, optional
     :param new_window: True if the app should be opened in a new
                        process, otherwise False, defaults to True
     :type new_window: bool, optional
@@ -1190,10 +1208,10 @@ def launch_app(root_layout_class, args=(), new_window=True):
         multiprocessing.Process(
             target=launch_app,
             args=(root_layout_class,),
-            kwargs={'args': args, 'new_window': False}
+            kwargs={'args': args, 'title': title, 'new_window': False}
         ).start()
     else:
-        BaseApp(root_layout_class, args).run()
+        BaseApp(root_layout_class, args, title=title).run()
 
 
 if __name__ == '__main__':
@@ -1206,22 +1224,28 @@ if __name__ == '__main__':
 
     launch_app(
         puzzleboard.PuzzleWithCategory,
-        args=(puzzle_q1, puzzle_q2))
+        args=(puzzle_q1, puzzle_q2),
+        title=strings.app_title_puzzleboard)
     launch_app(
         score.ScoreLayout,
-        args=(values.color_red, red_queue))
+        args=(values.color_red, red_queue),
+        title=strings.app_title_score)
     launch_app(
         score.ScoreLayout,
-        args=(values.color_yellow, yellow_queue))
+        args=(values.color_yellow, yellow_queue),
+        title=strings.app_title_score)
     launch_app(
         score.ScoreLayout,
-        args=(values.color_blue, blue_queue))
+        args=(values.color_blue, blue_queue),
+        title=strings.app_title_score)
     launch_app(
         used_letters.LettersWithScore,
-        args=(letters_queue,))
+        args=(letters_queue,),
+        title=strings.app_title_used_letters)
     launch_app(
         ManagerLayout,
         args=(
             puzzle_q1, puzzle_q2, red_queue, yellow_queue, blue_queue,
             letters_queue),
+        title=strings.app_title_manager,
         new_window=False)

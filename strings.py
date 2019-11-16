@@ -1,3 +1,9 @@
+app_title = 'Wheel of Fortune'
+app_title_manager = '{} - Manager'.format(app_title)
+app_title_puzzleboard = '{} - Puzzleboard'.format(app_title)
+app_title_score = '{} - Score'.format(app_title)
+app_title_used_letters = '{} - Used Letters'.format(app_title)
+
 alphabet = 'abcdefghijklmnopqrstuvwxyz'
 vowels = 'aeiou'
 consonants = ''.join([c for c in alphabet if c not in vowels])

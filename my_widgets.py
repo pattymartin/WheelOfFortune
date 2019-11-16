@@ -48,10 +48,11 @@ class KeyboardBindable(Widget):
         :type text: str
         :param modifiers: A list of modifiers
         :type modifiers: list
-        :return: None
+        :return: True to consume the key, otherwise False
+        :rtype: bool
         """
 
-        pass
+        return False
 
     def _keyboard_closed(self):
         """
@@ -98,7 +99,8 @@ class Fullscreenable(Widget):
 
         :param touch: A touch down event
         :type touch: kivy.input.motionevent.MotionEvent
-        :return: None
+        :return: True if the touch was consumed, otherwise False
+        :rtype: bool
         """
 
         if touch.button == 'right':
@@ -109,8 +111,9 @@ class Fullscreenable(Widget):
                     'x': pos_x / self.width,
                     'y': pos_y / self.height}
             ).open()
+            return True
         else:
-            super(Fullscreenable, self).on_touch_down(touch)
+            return super(Fullscreenable, self).on_touch_down(touch)
 
 
 class TabCyclable(TextInput):

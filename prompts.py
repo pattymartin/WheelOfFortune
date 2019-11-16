@@ -603,13 +603,17 @@ class ChooseLetterPrompt(Popup, KeyboardBindable):
         :type _text: str
         :param _modifiers: A list of modifiers
         :type _modifiers: list
-        :return: None
+        :return: True if key was handled, otherwise False
+        :rtype: bool
         """
 
         letter = keycode[1]
-        if letter.lower() in self.unavailable_letters:
-            return
-        self.letter_chosen(letter)
+        if letter in list(strings.alphabet):
+            if letter not in self.unavailable_letters:
+                self.letter_chosen(letter)
+        else:
+            return False
+        return True
 
 
 class ManagerSettingsPrompt(Popup):
