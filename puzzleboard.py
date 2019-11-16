@@ -25,8 +25,8 @@ class PuzzleWithCategory(BoxLayout, Fullscreenable):
         """
         Create the layout.
 
-        :param q_in: A Queue to receive information from the manager app,
-                     defaults to None
+        :param q_in: A Queue to receive information from the manager
+                     app, defaults to None
         :type q_in: multiprocessing.Queue, optional
         :param q_out: A Queue to send information to the manager app,
                       defaults to None
@@ -35,7 +35,8 @@ class PuzzleWithCategory(BoxLayout, Fullscreenable):
         """
 
         super(PuzzleWithCategory, self).__init__(**kwargs)
-        self.puzzle_layout = PuzzleLayout(self.category, q_in, q_out)
+        self.splitter_center.add_widget(
+            PuzzleLayout(self.category, q_in, q_out))
 
 
 class PuzzleLayout(GridLayout, KeyboardBindable):

@@ -2,7 +2,7 @@
 #:import values values
 
 <PuzzleWithCategory>:
-    puzzle_layout: None
+    splitter_center: splitter_layout.center_layout
     category: category
     orientation: 'vertical'
     SavableSplitter:
@@ -12,7 +12,7 @@
             id: category
     SplitterSurround:
         name: 'puzzleboard'
-        widget: root.puzzle_layout
+        id: splitter_layout
 
 <Panel>:
     letter_layout: letter_layout
@@ -117,11 +117,7 @@
 
 <SplitterSurround@BoxLayout>:
     name: ''
-    widget: None
-    on_widget:
-        if self.widget: \
-        center_layout.clear_widgets(); \
-        center_layout.add_widget(self.widget)
+    center_layout: center_layout
     orientation: 'vertical'
     SavableSplitter:
         name: root.name + '_top_splitter' if root.name else ''
