@@ -613,11 +613,33 @@ class Panel(Button, KeyboardBindable):
         self.show_letter()
         self.get_keyboard()
 
+    def _on_textinput(self, _keyboard, text):
+        """
+        Get text entered on the keyboard and put the text in the text
+        label. Then, move focus to the next panel.
+
+        :param _keyboard: A Keyboard
+        :type _keyboard: kivy.core.window.Keyboard
+        :param text: The text entered
+        :type text: str
+        :return: None
+        """
+
+        # don't set text if spacebar is pressed
+        if text.strip():
+            self.text_label.text = text.upper()
+        self.select_next()
+
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
         """
-        Receive a pressed key, and put the letter in the text label.
-        Then, move focus to the next panel (or previous if backspace is
-        pressed).
+        Respond to keyboard input.
+
+        If 'Ctrl+S' is pressed, save the puzzle.
+        If 'Ctrl+O' is pressed, open a puzzle.
+        If Backspace is pressed, remove text from the text label and
+        move focus to the previous panel.
+        If Enter is pressed, hide all panels and move focus to the
+        parent layout to indicate that text entry is finished.
 
         :param _keyboard: A Keyboard
         :type _keyboard: kivy.core.window.Keyboard
@@ -631,43 +653,22 @@ class Panel(Button, KeyboardBindable):
         :rtype: bool
         """
 
-        letter = keycode[1]
-        # map non-alphabetic characters to their shift symbols
-        # on a standard US keyboard
-        shifts = {'1': '!', '2': '@', '3': '#',
-                  '4': '$', '5': '%', '6': '^',
-                  '7': '&', '8': '*', '9': '(',
-                  '0': ')', '-': '_', '=': '+',
-                  '[': '{', ']': '}', '\\': '|',
-                  ';': ':', '\'': '"', ',': '<',
-                  '.': '>', '/': '?'}
         if 'ctrl' in modifiers:
-            if letter == 's':
+            if keycode[0] == 115:  # 'S'
                 self.parent.save_puzzle()
-            elif letter == 'o':
+            elif keycode[0] == 111:  # 'O'
                 self.parent.choose_puzzle()
             else:
                 return False
-        elif 'shift' in modifiers and letter in shifts.keys():
-            # shift is held, get shift symbol
-            self.text_label.text = shifts[letter]
-            self.select_next()
-        elif letter in strings.alphabet + ''.join(shifts.keys()):
-            # set text and move to next panel
-            self.text_label.text = letter.upper()
-            self.select_next()
-        elif letter == 'backspace':
+        elif keycode[0] == 8:  # backspace
             # remove this panel's text, select previous panel
             self.text_label.text = ''
             self.select_prev()
-        elif letter == 'enter':
+        elif keycode[0] == 13:  # enter
             # entry finished, hide all letters
             # and bind keyboard to main PuzzleLayout
             self.hide_all()
             self.parent.get_keyboard()
-        elif letter == 'spacebar':
-            # move to next panel
-            self.select_next()
         else:
             return False
         return True

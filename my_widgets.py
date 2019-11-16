@@ -17,9 +17,11 @@ class KeyboardBindable(Widget):
     """
     A widget that can attempt to obtain keyboard focus with the method
     :meth:`get_keyboard`.
-    Classes that inherit from this class should override the method
+
+    Classes that inherit from this class may override the method
     :meth:`_on_keyboard_down` to define what should happen when a key
-    is pressed.
+    is pressed, and/or :meth:`_on_textinput` to respond to
+    alphanumeric keyboard input.
     """
 
     _keyboard = None
@@ -34,6 +36,7 @@ class KeyboardBindable(Widget):
         self._keyboard = Window.request_keyboard(
             self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        self._keyboard.bind(on_textinput=self._on_textinput)
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         """
@@ -54,6 +57,20 @@ class KeyboardBindable(Widget):
 
         return False
 
+    def _on_textinput(self, keyboard, text):
+        """
+        Override this method to define what should happen when text is
+        entered.
+
+        :param keyboard: A Keyboard
+        :type keyboard: kivy.core.window.Keyboard
+        :param text:The text entered
+        :type text: str
+        :return: None
+        """
+
+        pass
+
     def _keyboard_closed(self):
         """
         Remove keyboard binding when the keyboard is closed.
@@ -62,6 +79,7 @@ class KeyboardBindable(Widget):
         """
 
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
+        self._keyboard.unbind(on_textinput=self._on_textinput)
         self._keyboard = None
 
 
