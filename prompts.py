@@ -792,6 +792,9 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
         :return: None
         """
 
+        # stop listening to keyboard
+        if self._keyboard:
+            self._keyboard.release()
         for hotkey in values.hotkeys:
             if hotkey['name'] == self.name:
                 self.text = hotkey['default'].title()
@@ -873,6 +876,18 @@ class RecordHotkeyLabel(ButtonBehavior, Label, KeyboardBindable):
             self.text = '+'.join(mods + [key]).title()
             keyboard.release()
         return True
+
+    def _keyboard_closed(self):
+        """
+        When the keyboard is closed, make sure the clock is stopped.
+
+        :return: None
+        """
+
+        if not self.hotkey_entered:
+            self.hotkey_entered = True
+            self.text = self.initial_text
+        super(RecordHotkeyLabel, self)._keyboard_closed()
 
 
 class FileChooserPrompt(Popup):
