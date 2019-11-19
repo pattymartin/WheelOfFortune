@@ -90,6 +90,9 @@ file_sound_bankrupt = os.path.join(
 file_sound_buzz = os.path.join(
     dir_assets,
     r'buzz.wav')
+file_sound_buzz_double = os.path.join(
+    dir_assets,
+    r'double_buzzer.wav')
 file_sound_clue_correct = os.path.join(
     dir_assets,
     r'clue_correct.wav')
@@ -123,6 +126,9 @@ file_sound_solve_tossup = os.path.join(
 file_sound_solve_triple_tossup = os.path.join(
     dir_assets,
     r'triple_tossup_1-2_solve.wav')
+file_sound_tossup = os.path.join(
+    dir_assets,
+    r'tossup.mp3')
 
 font_category = 'Gotham_Black_Regular'
 font_category_size = 0.75

@@ -74,10 +74,7 @@
                             else 'solve?' if (
                             (		root.game and
                             (		root.game[0]['round_type'] ==
-                            (			strings.round_type_bonus))
-                            )	or
-                            (		set(root.tossup_players_done) == {1, 2, 3})
-                            ) \
+                            (			strings.round_type_bonus)))) \
                             else 'solve'
                         on_curr:
                             if self.curr != self.current: \

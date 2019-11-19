@@ -70,6 +70,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
 
         self.unavailable_letters = []
         self.tossup_running = False
+        self.tossup_sound = SoundLoader.load(values.file_sound_tossup)
         self.puzzle_clue = ''
         self.speedup_consonants_remaining = True
         self.consonants_remaining = True
@@ -208,6 +209,7 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         elif combination == self.hotkeys.get('start_tossup'):
             if (
                     self.puzzle_string
+                    and not self.tossup_button.disabled
                     and self.game
                     and self.game[0]['round_type'] in [
                         strings.round_type_tossup,
@@ -720,14 +722,23 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
             self.puzzle_queue_out.put(('pause_tossup', None))
             self.tossup_button.disabled = False
 
+            if self.revealed:
+                self.tossup_sound.stop()
+                self.play_sound(values.file_sound_buzz_double)
+
             if player in [1, 2, 3]:
                 self.select_player(player)
         else:
-            if set(self.tossup_players_done) == {1, 2, 3}:
-                return
             self.tossup_button.disabled = True
-            self.puzzle_queue_out.put(('tossup', None))
+            if not self.tossup_players_done:
+                # start tossup
+                self.puzzle_queue_out.put(('tossup', None))
+            else:
+                # tossup already started, resume
+                self.puzzle_queue_out.put(('resume_tossup', None))
             self.select_player(0)
+            if not self.tossup_sound.state == 'play':
+                self.tossup_sound.play()
 
         self.tossup_running = not self.tossup_running
 
@@ -756,6 +767,8 @@ class ManagerLayout(BoxLayout, Fullscreenable, KeyboardBindable):
         :type player_solved: bool, optional
         :return: None
         """
+
+        self.tossup_sound.stop()
 
         if player_solved:
             if self.game:

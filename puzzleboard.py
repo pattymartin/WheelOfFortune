@@ -108,6 +108,9 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         'pause_tossup':
             Pause a tossup.
             *args* is ignored.
+        'resume_tossup':
+            Resume a paused tossup.
+            *args* is ignored.
         'reveal':
             Reveal the entire puzzle.
             *args* is ignored.
@@ -134,7 +137,9 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
             elif command == 'tossup':
                 self.start_tossup()
             elif command == 'pause_tossup':
-                self.pause_tossup()
+                self.tossup_running = False
+            elif command == 'resume_tossup':
+                self.tossup_running = True
             elif command == 'reveal':
                 self.reveal_all()
             elif command == 'exit':
@@ -436,12 +441,10 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
         :return: None
         """
 
-        if not self.tossup_running:
-            return
-
-        # show the letter, choose another
-        letter.show_letter()
-        letter = self.get_random_letter()
+        if self.tossup_running:
+            # show the letter, choose another
+            letter.show_letter()
+            letter = self.get_random_letter()
 
         if letter:
             Clock.schedule_once(
@@ -451,15 +454,6 @@ class PuzzleLayout(GridLayout, KeyboardBindable):
             # no more letters, end tossup
             self.queue_out.put(('tossup_timeout', None))
             self.tossup_running = False
-
-    def pause_tossup(self):
-        """
-        Pause a tossup.
-
-        :return: None
-        """
-
-        self.tossup_running = False
 
     def _on_keyboard_down(self, _keyboard, keycode, _text, modifiers):
         """
